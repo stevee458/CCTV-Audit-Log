@@ -409,6 +409,9 @@ router.post("/drives/:id/release", requireMaintenance, async (req, res) => {
       if (d.status !== "In Maintenance possession") {
         throw new Error(`Drive must be in maintenance possession to release (current: ${d.status})`);
       }
+      if (d.holderUserId !== req.user!.id) {
+        throw new Error("Only the current maintenance holder may release this drive");
+      }
       const [target] = await tx.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, toUserId));
       if (!target) throw new Error("Target user not found");
       if (target.role !== "inspector") throw new Error("Drives can only be released to an inspector");
