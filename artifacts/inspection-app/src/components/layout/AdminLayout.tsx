@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, LayoutDashboard, Search, Users, ShieldAlert, Menu } from "lucide-react";
+import { LogOut, LayoutDashboard, Search, Users, Menu } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -31,9 +32,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </SheetTrigger>
           <SheetContent side="left" className="w-[240px] sm:w-[300px]">
             <nav className="grid gap-6 text-lg font-medium mt-6">
-              <Link href="/admin" className="flex items-center gap-2 text-lg font-bold">
-                <ShieldAlert className="h-6 w-6 text-primary" />
-                <span>Digital Inspector</span>
+              <Link href="/admin" className="flex items-center gap-2">
+                <Logo className="h-9 w-auto" />
               </Link>
               {navItems.map((item) => {
                 const isActive = location === item.href;
@@ -54,9 +54,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </SheetContent>
         </Sheet>
         
-        <Link href="/admin" className="hidden md:flex items-center gap-2 text-lg font-bold mr-6">
-          <ShieldAlert className="h-6 w-6 text-primary" />
-          <span className="hidden sm:inline-block">Digital Inspector</span>
+        <Link href="/admin" className="hidden md:flex items-center gap-2 mr-6">
+          <Logo className="h-9 w-auto" />
         </Link>
 
         <nav className="hidden md:flex flex-1 items-center gap-6 text-sm font-medium">

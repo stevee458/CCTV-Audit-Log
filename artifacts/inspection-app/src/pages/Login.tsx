@@ -4,7 +4,8 @@ import * as z from "zod";
 import { useLogin, useGetCurrentUser, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShieldAlert, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { useAuth } from "@/lib/auth";
 
 import { Button } from "@/components/ui/button";
@@ -77,11 +78,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center text-center space-y-2">
-          <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
-            <ShieldAlert size={24} />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Digital Inspector</h1>
+        <div className="flex flex-col items-center text-center space-y-3">
+          <Logo className="h-24 w-auto" />
           <p className="text-muted-foreground">Sign in to your account</p>
         </div>
 

@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, Home, ShieldAlert, PlusCircle } from "lucide-react";
+import { LogOut, Home, PlusCircle } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -15,9 +16,8 @@ export function InspectorLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh] bg-muted/10 flex flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 shadow-sm">
-        <Link href="/inspector" className="flex items-center gap-2 text-lg font-bold flex-1">
-          <ShieldAlert className="h-5 w-5 text-primary" />
-          <span>Inspector</span>
+        <Link href="/inspector" className="flex items-center gap-2 flex-1">
+          <Logo className="h-8 w-auto" />
         </Link>
 
         <DropdownMenu>
