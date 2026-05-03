@@ -67,18 +67,20 @@ export default function MyDrives() {
                     <ConfirmDriveDialog
                       open={acceptFor === d.id}
                       onOpenChange={(v) => setAcceptFor(v ? d.id : null)}
+                      driveId={d.id}
                       driveName={d.name}
                       title={`Accept ${d.name}`}
                       description="Confirm the drive identity before taking custody."
                       trigger={<Button size="sm" data-testid={`btn-accept-${d.id}`}>Accept</Button>}
                       busy={accept.isPending}
-                      onConfirm={(confirmDriveName) => accept.mutate({ id: d.id, data: { confirmDriveName } })}
+                      onConfirm={(payload) => accept.mutate({ id: d.id, data: payload })}
                     />
                   )}
                   {d.status === "With Inspector" && (
                     <ConfirmDriveDialog
                       open={returnFor === d.id}
                       onOpenChange={(v) => setReturnFor(v ? d.id : null)}
+                      driveId={d.id}
                       driveName={d.name}
                       title={`Return ${d.name}`}
                       description="Confirm the drive identity before handing back to maintenance."
@@ -93,7 +95,7 @@ export default function MyDrives() {
                           </Select>
                         </div>
                       }
-                      onConfirm={(confirmDriveName) => ret.mutate({ id: d.id, data: { toUserId: Number(returnTo), confirmDriveName } })}
+                      onConfirm={(payload) => ret.mutate({ id: d.id, data: { toUserId: Number(returnTo), ...payload } })}
                     />
                   )}
                 </div>

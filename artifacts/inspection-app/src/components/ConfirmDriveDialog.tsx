@@ -3,27 +3,34 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { QrCode } from "lucide-react";
+import { QrCode, ScanLine } from "lucide-react";
 
 type BarcodeDetectorCtor = new (opts: { formats: string[] }) => {
   detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue: string }>>;
 };
 
+export interface CustodyConfirmation {
+  confirmDriveId?: number;
+  confirmDriveName?: string;
+}
+
 interface Props {
   trigger: ReactNode;
+  driveId: number;
   driveName: string;
   title: string;
   description?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   busy?: boolean;
-  onConfirm: (confirmDriveName: string) => void;
+  onConfirm: (payload: CustodyConfirmation) => void;
   extra?: ReactNode;
   confirmDisabled?: boolean;
 }
 
-export function ConfirmDriveDialog({ trigger, driveName, title, description, open, onOpenChange, busy, onConfirm, extra, confirmDisabled }: Props) {
+export function ConfirmDriveDialog({ trigger, driveId, driveName, title, description, open, onOpenChange, busy, onConfirm, extra, confirmDisabled }: Props) {
   const [typed, setTyped] = useState("");
+  const [scannedId, setScannedId] = useState<number | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -32,6 +39,7 @@ export function ConfirmDriveDialog({ trigger, driveName, title, description, ope
   useEffect(() => {
     if (!open) {
       setTyped("");
+      setScannedId(null);
       setScanning(false);
       setScanError(null);
     }
@@ -56,16 +64,18 @@ export function ConfirmDriveDialog({ trigger, driveName, title, description, ope
             const codes = await detector.detect(videoRef.current);
             const raw = codes[0]?.rawValue;
             if (raw) {
-              let value = raw;
               try {
-                const parsed = JSON.parse(raw) as { kind?: string; name?: string };
-                if (parsed && parsed.kind === "drive" && typeof parsed.name === "string") {
-                  value = parsed.name;
+                const parsed = JSON.parse(raw) as { kind?: string; id?: number; name?: string };
+                if (parsed && parsed.kind === "drive" && typeof parsed.id === "number") {
+                  setScannedId(parsed.id);
+                  if (typeof parsed.name === "string") setTyped(parsed.name);
+                  setScanning(false);
+                  return;
                 }
               } catch {
-                // raw value is not JSON — use as-is
+                // not JSON — treat raw value as a typed name fallback
               }
-              setTyped(value);
+              setTyped(raw);
               setScanning(false);
               return;
             }
@@ -87,8 +97,15 @@ export function ConfirmDriveDialog({ trigger, driveName, title, description, ope
     };
   }, [scanning]);
 
-  const matches = typed.trim() === driveName;
+  const scannedMatches = scannedId === driveId;
+  const typedMatches = typed.trim() === driveName;
+  const matches = scannedMatches || typedMatches;
   const scannerSupported = typeof window !== "undefined" && "BarcodeDetector" in window;
+
+  const handleConfirm = () => {
+    if (scannedMatches) onConfirm({ confirmDriveId: driveId });
+    else onConfirm({ confirmDriveName: typed.trim() });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,7 +122,7 @@ export function ConfirmDriveDialog({ trigger, driveName, title, description, ope
             <Input
               id="confirm-drive-name"
               value={typed}
-              onChange={(e) => setTyped(e.target.value)}
+              onChange={(e) => { setTyped(e.target.value); setScannedId(null); }}
               placeholder={driveName}
               data-testid="input-confirm-drive-name"
               autoComplete="off"
@@ -123,13 +140,16 @@ export function ConfirmDriveDialog({ trigger, driveName, title, description, ope
               <Button type="button" variant="ghost" size="sm" onClick={() => setScanning(false)}>Cancel scan</Button>
             </div>
           )}
+          {scannedMatches && (
+            <p className="text-xs text-emerald-600 flex items-center gap-1"><ScanLine className="h-3 w-3" />QR code verified.</p>
+          )}
           {scanError && <p className="text-xs text-destructive">{scanError}</p>}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
             disabled={!matches || busy || confirmDisabled}
-            onClick={() => onConfirm(typed.trim())}
+            onClick={handleConfirm}
             data-testid="btn-confirm-custody"
           >
             Confirm

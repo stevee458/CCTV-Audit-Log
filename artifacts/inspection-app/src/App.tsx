@@ -43,12 +43,12 @@ function Router() {
       <Route path="/admin/inspections"><ProtectedRoute allowedRoles={["admin"]}><AdminInspections /></ProtectedRoute></Route>
       <Route path="/admin/inspections/:id"><ProtectedRoute allowedRoles={["admin"]}><AdminInspectionDetail /></ProtectedRoute></Route>
       <Route path="/admin/users"><ProtectedRoute allowedRoles={["admin"]}><AdminUsers /></ProtectedRoute></Route>
-      <Route path="/admin/drives"><ProtectedRoute allowedRoles={["admin"]}><AdminDrives /></ProtectedRoute></Route>
-      <Route path="/admin/drives/:id"><ProtectedRoute allowedRoles={["admin"]}><AdminDriveDetail /></ProtectedRoute></Route>
-      <Route path="/admin/assets"><ProtectedRoute allowedRoles={["admin"]}><AdminAssets /></ProtectedRoute></Route>
-      <Route path="/admin/stock"><ProtectedRoute allowedRoles={["admin"]}><AdminStock /></ProtectedRoute></Route>
-      <Route path="/admin/visits"><ProtectedRoute allowedRoles={["admin"]}><AdminVisits /></ProtectedRoute></Route>
-      <Route path="/admin/whereabouts"><ProtectedRoute allowedRoles={["admin"]}><AdminWhereabouts /></ProtectedRoute></Route>
+      <Route path="/admin/drives"><ProtectedRoute><AdminDrives /></ProtectedRoute></Route>
+      <Route path="/admin/drives/:id"><ProtectedRoute><AdminDriveDetail /></ProtectedRoute></Route>
+      <Route path="/admin/assets"><ProtectedRoute><AdminAssets /></ProtectedRoute></Route>
+      <Route path="/admin/stock"><ProtectedRoute><AdminStock /></ProtectedRoute></Route>
+      <Route path="/admin/visits"><ProtectedRoute><AdminVisits /></ProtectedRoute></Route>
+      <Route path="/admin/whereabouts"><ProtectedRoute><AdminWhereabouts /></ProtectedRoute></Route>
 
       <Route path="/inspector"><ProtectedRoute allowedRoles={["inspector"]}><InspectorDashboard /></ProtectedRoute></Route>
       <Route path="/inspector/new"><ProtectedRoute allowedRoles={["inspector"]}><NewInspection /></ProtectedRoute></Route>
@@ -56,13 +56,13 @@ function Router() {
       <Route path="/inspector/drives"><ProtectedRoute allowedRoles={["inspector"]}><MyDrives /></ProtectedRoute></Route>
 
       <Route path="/maintenance"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceDashboard /></ProtectedRoute></Route>
-      <Route path="/maintenance/drives"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceDrives /></ProtectedRoute></Route>
-      <Route path="/maintenance/drives/:id"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceDriveDetail /></ProtectedRoute></Route>
-      <Route path="/maintenance/visits"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceVisits /></ProtectedRoute></Route>
+      <Route path="/maintenance/drives"><ProtectedRoute><MaintenanceDrives /></ProtectedRoute></Route>
+      <Route path="/maintenance/drives/:id"><ProtectedRoute><MaintenanceDriveDetail /></ProtectedRoute></Route>
+      <Route path="/maintenance/visits"><ProtectedRoute><MaintenanceVisits /></ProtectedRoute></Route>
       <Route path="/maintenance/visits/new"><ProtectedRoute allowedRoles={["maintenance"]}><NewMaintenanceVisit /></ProtectedRoute></Route>
-      <Route path="/maintenance/visits/:id"><ProtectedRoute allowedRoles={["maintenance"]}><VisitDetail /></ProtectedRoute></Route>
-      <Route path="/maintenance/stock"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceStock /></ProtectedRoute></Route>
-      <Route path="/maintenance/requests"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceRequests /></ProtectedRoute></Route>
+      <Route path="/maintenance/visits/:id"><ProtectedRoute><VisitDetail /></ProtectedRoute></Route>
+      <Route path="/maintenance/stock"><ProtectedRoute><MaintenanceStock /></ProtectedRoute></Route>
+      <Route path="/maintenance/requests"><ProtectedRoute><MaintenanceRequests /></ProtectedRoute></Route>
       <Route path="/maintenance/requests/new"><ProtectedRoute allowedRoles={["maintenance"]}><NewStockRequest /></ProtectedRoute></Route>
 
       <Route component={NotFound} />

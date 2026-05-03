@@ -8,5 +8,6 @@
 
 export interface ReleaseDriveInput {
   toUserId: number;
-  confirmDriveName: string;
+  confirmDriveId?: number;
+  confirmDriveName?: string;
 }

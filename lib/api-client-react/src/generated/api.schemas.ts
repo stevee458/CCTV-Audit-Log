@@ -344,16 +344,19 @@ export interface SwapDriveInput {
 
 export interface ReleaseDriveInput {
   toUserId: number;
-  confirmDriveName: string;
+  confirmDriveId?: number;
+  confirmDriveName?: string;
 }
 
 export interface ReturnDriveInput {
   toUserId: number;
-  confirmDriveName: string;
+  confirmDriveId?: number;
+  confirmDriveName?: string;
 }
 
 export interface AcceptDriveInput {
-  confirmDriveName: string;
+  confirmDriveId?: number;
+  confirmDriveName?: string;
 }
 
 export interface WhereaboutsMatch {

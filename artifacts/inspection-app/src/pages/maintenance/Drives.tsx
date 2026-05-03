@@ -53,12 +53,13 @@ export default function MaintenanceDrives() {
                     <ConfirmDriveDialog
                       open={acceptFor === d.id}
                       onOpenChange={(v) => setAcceptFor(v ? d.id : null)}
+                      driveId={d.id}
                       driveName={d.name}
                       title={`Accept ${d.name}`}
                       description="Confirm the drive identity before taking custody."
                       trigger={<Button size="sm" data-testid={`accept-${d.id}`}>Accept</Button>}
                       busy={accept.isPending}
-                      onConfirm={(confirmDriveName) => accept.mutate({ id: d.id, data: { confirmDriveName } })}
+                      onConfirm={(payload) => accept.mutate({ id: d.id, data: payload })}
                     />
                   )}
                 </div>

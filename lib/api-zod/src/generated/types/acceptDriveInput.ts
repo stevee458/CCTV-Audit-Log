@@ -7,5 +7,6 @@
  */
 
 export interface AcceptDriveInput {
-  confirmDriveName: string;
+  confirmDriveId?: number;
+  confirmDriveName?: string;
 }

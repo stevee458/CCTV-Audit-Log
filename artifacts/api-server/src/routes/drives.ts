@@ -390,15 +390,22 @@ router.post("/drives/swap", requireMaintenance, async (req, res) => {
 router.post("/drives/:id/release", requireMaintenance, async (req, res) => {
   const driveId = Number(req.params.id);
   const toUserId = Number(req.body.toUserId);
+  const confirmDriveId = typeof req.body.confirmDriveId === "number" ? req.body.confirmDriveId : null;
   const confirmDriveName = typeof req.body.confirmDriveName === "string" ? req.body.confirmDriveName.trim() : "";
-  if (!Number.isInteger(driveId) || !Number.isInteger(toUserId) || !confirmDriveName)
+  if (!Number.isInteger(driveId) || !Number.isInteger(toUserId))
     return res.status(400).json({ error: "Invalid request" });
+  if (confirmDriveId === null && !confirmDriveName)
+    return res.status(400).json({ error: "Drive confirmation (scan or typed name) is required" });
   const now = new Date();
   try {
     await db.transaction(async (tx) => {
       const [d] = await tx.select().from(drivesTable).where(eq(drivesTable.id, driveId));
       if (!d) throw new Error("Drive not found");
-      if (confirmDriveName !== d.name) throw new Error("Drive name confirmation does not match");
+      if (confirmDriveId !== null) {
+        if (confirmDriveId !== d.id) throw new Error("Scanned drive does not match this drive");
+      } else if (confirmDriveName !== d.name) {
+        throw new Error("Drive name confirmation does not match");
+      }
       if (d.status !== "In Maintenance possession") {
         throw new Error(`Drive must be in maintenance possession to release (current: ${d.status})`);
       }
@@ -426,15 +433,21 @@ router.post("/drives/:id/release", requireMaintenance, async (req, res) => {
 // Inspector accepts a drive in transit to them
 router.post("/drives/:id/accept", requireAuth, async (req, res) => {
   const driveId = Number(req.params.id);
+  const confirmDriveId = typeof req.body.confirmDriveId === "number" ? req.body.confirmDriveId : null;
   const confirmDriveName = typeof req.body.confirmDriveName === "string" ? req.body.confirmDriveName.trim() : "";
   if (!Number.isInteger(driveId)) return res.status(400).json({ error: "Invalid id" });
-  if (!confirmDriveName) return res.status(400).json({ error: "Drive name confirmation is required" });
+  if (confirmDriveId === null && !confirmDriveName)
+    return res.status(400).json({ error: "Drive confirmation (scan or typed name) is required" });
   const now = new Date();
   try {
   await db.transaction(async (tx) => {
     const [d] = await tx.select().from(drivesTable).where(eq(drivesTable.id, driveId));
     if (!d) throw new Error("Drive not found");
-    if (confirmDriveName !== d.name) throw new Error("Drive name confirmation does not match");
+    if (confirmDriveId !== null) {
+      if (confirmDriveId !== d.id) throw new Error("Scanned drive does not match this drive");
+    } else if (confirmDriveName !== d.name) {
+      throw new Error("Drive name confirmation does not match");
+    }
     // Find latest open custody event
     const [pending] = await tx
       .select()
@@ -480,15 +493,22 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
 router.post("/drives/:id/return", requireInspector, async (req, res) => {
   const driveId = Number(req.params.id);
   const toUserId = Number(req.body.toUserId);
+  const confirmDriveId = typeof req.body.confirmDriveId === "number" ? req.body.confirmDriveId : null;
   const confirmDriveName = typeof req.body.confirmDriveName === "string" ? req.body.confirmDriveName.trim() : "";
-  if (!Number.isInteger(driveId) || !Number.isInteger(toUserId) || !confirmDriveName)
+  if (!Number.isInteger(driveId) || !Number.isInteger(toUserId))
     return res.status(400).json({ error: "Invalid request" });
+  if (confirmDriveId === null && !confirmDriveName)
+    return res.status(400).json({ error: "Drive confirmation (scan or typed name) is required" });
   const now = new Date();
   try {
     await db.transaction(async (tx) => {
       const [d] = await tx.select().from(drivesTable).where(eq(drivesTable.id, driveId));
       if (!d) throw new Error("Drive not found");
-      if (confirmDriveName !== d.name) throw new Error("Drive name confirmation does not match");
+      if (confirmDriveId !== null) {
+        if (confirmDriveId !== d.id) throw new Error("Scanned drive does not match this drive");
+      } else if (confirmDriveName !== d.name) {
+        throw new Error("Drive name confirmation does not match");
+      }
       // Only the current holder may initiate a return
       if (d.holderUserId !== req.user!.id) {
         throw new Error("Only the current holder may return this drive");

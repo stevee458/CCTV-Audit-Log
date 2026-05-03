@@ -1241,21 +1241,23 @@ components:
       type: object
       properties:
         toUserId: { type: integer }
+        confirmDriveId: { type: integer }
         confirmDriveName: { type: string }
-      required: [toUserId, confirmDriveName]
+      required: [toUserId]
 
     ReturnDriveInput:
       type: object
       properties:
         toUserId: { type: integer }
+        confirmDriveId: { type: integer }
         confirmDriveName: { type: string }
-      required: [toUserId, confirmDriveName]
+      required: [toUserId]
 
     AcceptDriveInput:
       type: object
       properties:
+        confirmDriveId: { type: integer }
         confirmDriveName: { type: string }
-      required: [confirmDriveName]
 
     WhereaboutsMatch:
       type: object
