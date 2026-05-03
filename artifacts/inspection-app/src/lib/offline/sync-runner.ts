@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { offlineDb, type QueuedMutation } from "./db";
 import { notifyChange } from "./queue";
 import { IDEMPOTENCY_HEADER } from "./headers";
@@ -9,9 +10,14 @@ export type SyncResult = {
 
 let running = false;
 let onProgress: ((mut: QueuedMutation, ok: boolean, error?: string) => void) | null = null;
+let registeredQueryClient: QueryClient | null = null;
 
 export function setSyncProgressListener(fn: typeof onProgress): void {
   onProgress = fn;
+}
+
+export function setSyncQueryClient(qc: QueryClient | null): void {
+  registeredQueryClient = qc;
 }
 
 async function sendOne(mut: QueuedMutation): Promise<{ ok: boolean; error?: string; terminal?: boolean }> {
@@ -86,6 +92,10 @@ export async function runSync(): Promise<SyncResult> {
   } finally {
     running = false;
     await notifyChange();
+    if (drained > 0 && registeredQueryClient) {
+      // Replayed mutations may have changed server state; refetch all queries.
+      registeredQueryClient.invalidateQueries().catch(() => {});
+    }
   }
   return { drained, failed };
 }

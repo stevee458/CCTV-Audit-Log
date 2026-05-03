@@ -8,7 +8,7 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider, ProtectedRoute } from "@/lib/auth";
 import { OfflineBanner } from "@/components/offline/OfflineBanner";
 import { installOfflineSupport } from "@/lib/offline/install";
-import { startSyncLoop } from "@/lib/offline/sync-runner";
+import { startSyncLoop, setSyncQueryClient } from "@/lib/offline/sync-runner";
 import { createReactQueryPersister } from "@/lib/offline/persister";
 
 import Login from "@/pages/Login";
@@ -93,7 +93,14 @@ function Router() {
 }
 
 function SyncBootstrap({ children }: { children: React.ReactNode }) {
-  useEffect(() => startSyncLoop(), []);
+  useEffect(() => {
+    setSyncQueryClient(queryClient);
+    const stop = startSyncLoop();
+    return () => {
+      stop();
+      setSyncQueryClient(null);
+    };
+  }, []);
   return <>{children}</>;
 }
 

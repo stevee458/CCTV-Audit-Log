@@ -112,6 +112,7 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
         subCategoryId: outcome === "violation" ? subCategoryId ?? null : null,
         severity: outcome === "violation" ? severity ?? null : null,
         notes: notes ?? null,
+        clientId: typeof req.body?.clientId === "string" ? req.body.clientId : null,
       })
       .returning();
     return created;

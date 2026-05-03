@@ -1,25 +1,34 @@
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { Persister } from "@tanstack/react-query-persist-client";
+import { offlineDb } from "./db";
 
-const STORAGE_KEY = "inspection-app-rq-cache-v1";
+const PERSIST_KEY = "react-query-cache";
+
+const idbStorage = {
+  async getItem(key: string): Promise<string | null> {
+    const row = await offlineDb.cache.get(key);
+    return row ? (row.value as string) : null;
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    await offlineDb.cache.put({ key, value, updatedAt: Date.now() });
+  },
+  async removeItem(key: string): Promise<void> {
+    await offlineDb.cache.delete(key);
+  },
+};
 
 export function createReactQueryPersister(): Persister {
-  if (typeof window === "undefined" || !window.localStorage) {
-    return {
-      persistClient: async () => {},
-      restoreClient: async () => undefined,
-      removeClient: async () => {},
-    };
-  }
-  return createSyncStoragePersister({
-    storage: window.localStorage,
-    key: STORAGE_KEY,
+  return createAsyncStoragePersister({
+    storage: idbStorage,
+    key: PERSIST_KEY,
     throttleTime: 1000,
   });
 }
 
-export function clearPersistedQueryCache(): void {
-  if (typeof window !== "undefined" && window.localStorage) {
-    window.localStorage.removeItem(STORAGE_KEY);
+export async function clearPersistedQueryCache(): Promise<void> {
+  try {
+    await offlineDb.cache.delete(PERSIST_KEY);
+  } catch {
+    // ignore
   }
 }

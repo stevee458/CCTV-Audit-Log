@@ -332,7 +332,11 @@ export const inspectionsTable = pgTable(
       .defaultNow(),
     status: varchar("status", { length: 16 }).notNull().default("in_progress"),
     notes: text("notes"),
+    clientId: text("client_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -367,7 +371,11 @@ export const findingsTable = pgTable(
     ),
     severity: varchar("severity", { length: 1 }),
     notes: text("notes"),
+    clientId: text("client_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },

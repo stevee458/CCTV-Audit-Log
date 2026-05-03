@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutation: {
       onSuccess: async () => {
         queryClient.removeQueries();
-        clearPersistedQueryCache();
+        await clearPersistedQueryCache();
         clearStoredScope();
         await clearOfflineData();
         setLocation("/login");

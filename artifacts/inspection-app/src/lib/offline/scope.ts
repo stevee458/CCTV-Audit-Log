@@ -29,6 +29,6 @@ export async function ensureScopeForUser(userId: number | string): Promise<void>
   if (stored === next) return;
   await offlineDb.mutations.clear();
   await offlineDb.cache.clear();
-  clearPersistedQueryCache();
+  await clearPersistedQueryCache();
   setStoredScope(next);
 }

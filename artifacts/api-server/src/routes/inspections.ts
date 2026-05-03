@@ -443,10 +443,12 @@ router.post("/inspections", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Footage date is not within any window for this drive at this venue" });
     }
   }
+  const clientId = typeof req.body?.clientId === "string" ? req.body.clientId : null;
   const [created] = await db
     .insert(inspectionsTable)
     .values({
       inspectorId: req.user!.id,
+      clientId,
       dvrNumber: dvrNumber.trim(),
       depotId,
       venueId,
