@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { useGetInspection } from "@workspace/api-client-react";
+import { useGetInspection, getGetInspectionQueryKey } from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { format } from "date-fns";
 
@@ -22,7 +22,7 @@ export default function AdminInspectionDetail() {
   const { id } = useParams<{ id: string }>();
   const inspectionId = parseInt(id || "0", 10);
   
-  const { data: inspection, isLoading } = useGetInspection(inspectionId, { query: { enabled: !!inspectionId }});
+  const { data: inspection, isLoading } = useGetInspection(inspectionId, { query: { enabled: !!inspectionId, queryKey: getGetInspectionQueryKey(inspectionId) }});
 
   return (
     <AdminLayout>

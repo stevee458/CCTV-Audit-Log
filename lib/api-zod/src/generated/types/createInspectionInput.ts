@@ -10,6 +10,8 @@ export interface CreateInspectionInput {
   dvrNumber: string;
   depotId: number;
   venueId: number;
+  /** @nullable */
+  driveId?: number | null;
   footageDate: Date;
   inspectionDate?: Date;
   /** @nullable */

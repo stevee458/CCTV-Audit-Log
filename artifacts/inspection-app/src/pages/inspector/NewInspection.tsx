@@ -2,7 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLocation } from "wouter";
-import { useCreateInspection, useListDepots, getListInspectionsQueryKey, getGetStatsOverviewQueryKey } from "@workspace/api-client-react";
+import { useCreateInspection, useListDepots, useListDrives, getListInspectionsQueryKey, getGetStatsOverviewQueryKey } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { InspectorLayout } from "@/components/layout/InspectorLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ const newInspectionSchema = z.object({
   dvrNumber: z.string().min(1, "DVR number is required"),
   depotId: z.coerce.number().min(1, "Depot is required"),
   venueId: z.coerce.number().min(1, "Venue is required"),
+  driveId: z.coerce.number().min(1, "Drive is required"),
   footageDate: z.date({
     required_error: "Footage date is required",
   }),
@@ -42,7 +44,9 @@ export default function NewInspection() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const { user } = useAuth();
   const { data: depots, isLoading: depotsLoading } = useListDepots();
+  const { data: myDrives } = useListDrives({ holderUserId: user?.id });
 
   const form = useForm<z.infer<typeof newInspectionSchema>>({
     resolver: zodResolver(newInspectionSchema),
@@ -56,6 +60,11 @@ export default function NewInspection() {
   const selectedDepot = depots?.find(d => d.id === selectedDepotId);
   const venues = selectedDepot?.venues || [];
 
+  const heldDrives = (myDrives ?? []).filter(d => d.status === "With Inspector");
+  const selectedDriveId = Number(form.watch("driveId"));
+  const selectedDrive = heldDrives.find(d => d.id === selectedDriveId);
+  const driveWindows = selectedDrive ? [] : []; // detail loaded via list (windows on getDrive). For UI hint we list summary windows below.
+
   const createMutation = useCreateInspection({
     mutation: {
       onSuccess: (data) => {
@@ -67,7 +76,7 @@ export default function NewInspection() {
       onError: (error) => {
         toast({
           title: "Failed to create inspection",
-          description: error.error || "An unexpected error occurred",
+          description: (error.data as any)?.error || "An unexpected error occurred",
           variant: "destructive",
         });
       },
@@ -80,6 +89,7 @@ export default function NewInspection() {
         dvrNumber: values.dvrNumber,
         depotId: values.depotId,
         venueId: values.venueId,
+        driveId: values.driveId,
         footageDate: format(values.footageDate, "yyyy-MM-dd"),
         notes: values.notes || null,
       }
@@ -187,6 +197,38 @@ export default function NewInspection() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="driveId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Drive</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value?.toString() || ""}
+                        disabled={heldDrives.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-drive">
+                            <SelectValue placeholder={
+                              heldDrives.length === 0 ? "No drives in your possession" : "Select drive you collected"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {heldDrives.map((d) => (
+                            <SelectItem key={d.id} value={d.id.toString()}>
+                              {d.name} {d.homeVenueCode ? `(${d.homeVenueCode})` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>You can only inspect footage from drives you currently hold.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

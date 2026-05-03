@@ -20,6 +20,10 @@ export interface Inspection {
   inspectionDate: Date;
   inspectorId: number;
   inspectorName: string;
+  /** @nullable */
+  driveId: number | null;
+  /** @nullable */
+  driveName: string | null;
   status: InspectionStatus;
   /** @nullable */
   notes: string | null;

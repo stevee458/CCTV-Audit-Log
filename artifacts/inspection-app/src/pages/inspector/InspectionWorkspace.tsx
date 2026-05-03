@@ -56,7 +56,7 @@ export default function InspectionWorkspace() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: inspection, isLoading } = useGetInspection(inspectionId, { query: { enabled: !!inspectionId }});
+  const { data: inspection, isLoading } = useGetInspection(inspectionId, { query: { enabled: !!inspectionId, queryKey: getGetInspectionQueryKey(inspectionId) }});
   const { data: categories } = useListViolationCategories();
   
   const [findingDialogOpen, setFindingDialogOpen] = useState(false);
@@ -73,7 +73,7 @@ export default function InspectionWorkspace() {
         toast({ title: "Inspection marked complete" });
         setLocation("/inspector");
       },
-      onError: (err) => toast({ title: "Error", description: err.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: (err.data as any)?.error, variant: "destructive" })
     }
   });
 
@@ -87,7 +87,7 @@ export default function InspectionWorkspace() {
         toast({ title: "Finding added" });
         setFindingDialogOpen(false);
       },
-      onError: (err) => toast({ title: "Error", description: err.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: (err.data as any)?.error, variant: "destructive" })
     }
   });
 
@@ -100,7 +100,7 @@ export default function InspectionWorkspace() {
         toast({ title: "Finding updated" });
         setFindingDialogOpen(false);
       },
-      onError: (err) => toast({ title: "Error", description: err.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: (err.data as any)?.error, variant: "destructive" })
     }
   });
 

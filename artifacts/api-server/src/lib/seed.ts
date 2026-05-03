@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -7,6 +7,10 @@ import {
   venuesTable,
   violationCategoriesTable,
   violationSubCategoriesTable,
+  drivesTable,
+  driveFootageWindowsTable,
+  assetsTable,
+  stockSkusTable,
 } from "@workspace/db";
 import { logger } from "./logger";
 
@@ -109,173 +113,37 @@ type CategorySeed = {
 };
 
 const VIOLATION_SEED: CategorySeed[] = [
-  {
-    name: "Left unattended",
-    subs: [
-      { name: "Note period of unattendance", description: null, severity: "C" },
-    ],
-  },
-  {
-    name: "Left unsecured",
-    subs: [
-      {
-        name: "Note the period the area was left unsecured",
-        description: null,
-        severity: "C",
-      },
-    ],
-  },
-  {
-    name: "Security risk",
-    subs: [
-      {
-        name: "Mobile garage door / Cash office door left open",
-        description: "Mobile garage door left open / Cash office door left open",
-        severity: "A",
-      },
-    ],
-  },
-  {
-    name: "Arrival after start time",
-    subs: [
-      { name: "Post lunch / tea break", description: null, severity: "B" },
-    ],
-  },
-  {
-    name: "Leaving early",
-    subs: [
-      {
-        name: "Lunch / tea break / end of day",
-        description:
-          "Lunch is taken by technical staff between 12:00 - 12:30",
-        severity: "B",
-      },
-    ],
-  },
-  {
-    name: "Suspicious activity",
-    subs: [
-      { name: "Nature of incident", description: null, severity: "A" },
-    ],
-  },
-  {
-    name: "Sleeping on duty",
-    subs: [
-      { name: "Note duration slept", description: null, severity: "C" },
-    ],
-  },
-  {
-    name: "Inattentive",
-    subs: [
-      {
-        name: "Note period of inattentiveness",
-        description: null,
-        severity: "C",
-      },
-    ],
-  },
-  {
-    name: "Suspected misuse of company resource/s",
-    subs: [
-      { name: "Nature of misuse", description: null, severity: "A" },
-    ],
-  },
-  {
-    name: "Fuel Spillage",
-    subs: [{ name: "Note details", description: null, severity: "C" }],
-  },
-  {
-    name: "Incident - Requiring scrutiny",
-    subs: [{ name: "Nature of incident", description: null, severity: "A" }],
-  },
-  {
-    name: "Accident",
-    subs: [{ name: "Nature of accident", description: null, severity: "A" }],
-  },
-  {
-    name: "Extended period of inactivity",
-    subs: [
-      { name: "Note duration of inactivity", description: null, severity: "D" },
-    ],
-  },
-  {
-    name: "Suspected theft",
-    subs: [{ name: "Nature of incident", description: null, severity: "A" }],
-  },
-  {
-    name: "Unauthorised access",
-    subs: [
-      {
-        name: "Unknown person / driver in unauthorised area",
-        description: null,
-        severity: "A",
-      },
-    ],
-  },
-  {
-    name: "Loitering",
-    subs: [{ name: "Note duration", description: null, severity: "D" }],
-  },
-  {
-    name: "Potential for incident",
-    subs: [{ name: "Nature of risk", description: null, severity: "A" }],
-  },
-  {
-    name: "Following company procedure",
-    subs: [
-      {
-        name: "Bus & vehicles checks complete",
-        description:
-          "Paperwork submitted, pedestrian gate checks. Fuel spillage cleaned. Bus checked at the back (oil check)",
-        severity: "E",
-      },
-    ],
-  },
-  {
-    name: "Failure to implement company procedure",
-    subs: [
-      {
-        name: "Metal detector / paperwork / pedestrian gate failure",
-        description:
-          "Metal detector not used / paperwork not submitted / pedestrian gate not used on exit / using vehicle gate to exit or enter",
-        severity: "A",
-      },
-    ],
-  },
+  { name: "Left unattended", subs: [{ name: "Note period of unattendance", description: null, severity: "C" }] },
+  { name: "Left unsecured", subs: [{ name: "Note the period the area was left unsecured", description: null, severity: "C" }] },
+  { name: "Security risk", subs: [{ name: "Mobile garage door / Cash office door left open", description: "Mobile garage door left open / Cash office door left open", severity: "A" }] },
+  { name: "Arrival after start time", subs: [{ name: "Post lunch / tea break", description: null, severity: "B" }] },
+  { name: "Leaving early", subs: [{ name: "Lunch / tea break / end of day", description: "Lunch is taken by technical staff between 12:00 - 12:30", severity: "B" }] },
+  { name: "Suspicious activity", subs: [{ name: "Nature of incident", description: null, severity: "A" }] },
+  { name: "Sleeping on duty", subs: [{ name: "Note duration slept", description: null, severity: "C" }] },
+  { name: "Inattentive", subs: [{ name: "Note period of inattentiveness", description: null, severity: "C" }] },
+  { name: "Suspected misuse of company resource/s", subs: [{ name: "Nature of misuse", description: null, severity: "A" }] },
+  { name: "Fuel Spillage", subs: [{ name: "Note details", description: null, severity: "C" }] },
+  { name: "Incident - Requiring scrutiny", subs: [{ name: "Nature of incident", description: null, severity: "A" }] },
+  { name: "Accident", subs: [{ name: "Nature of accident", description: null, severity: "A" }] },
+  { name: "Extended period of inactivity", subs: [{ name: "Note duration of inactivity", description: null, severity: "D" }] },
+  { name: "Suspected theft", subs: [{ name: "Nature of incident", description: null, severity: "A" }] },
+  { name: "Unauthorised access", subs: [{ name: "Unknown person / driver in unauthorised area", description: null, severity: "A" }] },
+  { name: "Loitering", subs: [{ name: "Note duration", description: null, severity: "D" }] },
+  { name: "Potential for incident", subs: [{ name: "Nature of risk", description: null, severity: "A" }] },
+  { name: "Following company procedure", subs: [{ name: "Bus & vehicles checks complete", description: "Paperwork submitted, pedestrian gate checks. Fuel spillage cleaned. Bus checked at the back (oil check)", severity: "E" }] },
+  { name: "Failure to implement company procedure", subs: [{ name: "Metal detector / paperwork / pedestrian gate failure", description: "Metal detector not used / paperwork not submitted / pedestrian gate not used on exit / using vehicle gate to exit or enter", severity: "A" }] },
   {
     name: "Failure to follow company procedure",
     subs: [
-      {
-        name: "Gate: Engine compartment not closed or bus check not complete",
-        description: "Luggage compartments not checked",
-        severity: "B",
-      },
-      {
-        name: "Gate: Bus / vehicles check - clip at end of report",
-        description:
-          "Make clip at the end of the report noting the number of unchecked buses / vehicles",
-        severity: "B",
-      },
-      {
-        name: "Gate: Vehicles leaving with tyres",
-        description:
-          "Note number of tyres on exit and entry, also check corresponding dates from other depots",
-        severity: "B",
-      },
+      { name: "Gate: Engine compartment not closed or bus check not complete", description: "Luggage compartments not checked", severity: "B" },
+      { name: "Gate: Bus / vehicles check - clip at end of report", description: "Make clip at the end of the report noting the number of unchecked buses / vehicles", severity: "B" },
+      { name: "Gate: Vehicles leaving with tyres", description: "Note number of tyres on exit and entry, also check corresponding dates from other depots", severity: "B" },
     ],
   },
-  {
-    name: "Procedure check",
-    subs: [
-      {
-        name: "Random activity not understood",
-        description:
-          "Any random activity you do not understand - note it as 'Procedure check' and comment on the activity observed",
-        severity: "A",
-      },
-    ],
-  },
+  { name: "Procedure check", subs: [{ name: "Random activity not understood", description: "Any random activity you do not understand - note it as 'Procedure check' and comment on the activity observed", severity: "A" }] },
 ];
+
+const ASSET_TYPES = ["DVR", "Camera", "Power Supply", "Hard Drive", "Cable"] as const;
 
 export async function seedReferenceData(): Promise<void> {
   // Depots and venues
@@ -354,18 +222,9 @@ export async function seedReferenceData(): Promise<void> {
 
   // Demo accounts
   const demoUsers = [
-    {
-      email: "admin@demo.local",
-      name: "Demo Admin",
-      role: "admin" as const,
-      password: "admin123",
-    },
-    {
-      email: "inspector@demo.local",
-      name: "Demo Inspector",
-      role: "inspector" as const,
-      password: "inspector123",
-    },
+    { email: "admin@demo.local", name: "Demo Admin", role: "admin" as const, password: "admin123" },
+    { email: "inspector@demo.local", name: "Demo Inspector", role: "inspector" as const, password: "inspector123" },
+    { email: "maintenance@demo.local", name: "Demo Maintenance", role: "maintenance" as const, password: "maintenance123" },
   ];
   for (const u of demoUsers) {
     const existing = await db
@@ -382,6 +241,108 @@ export async function seedReferenceData(): Promise<void> {
         passwordHash,
         active: true,
       });
+    }
+  }
+
+  // Get the maintenance user id (for drive holders / inspector pool)
+  const maintenanceUser = (
+    await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, "maintenance@demo.local"))
+      .limit(1)
+  )[0];
+
+  // Drives — two venue drives per venue, 4 inspector drives held by Maintenance
+  const allVenues = await db.select().from(venuesTable);
+  for (const venue of allVenues) {
+    for (const suffix of ["A", "B"] as const) {
+      const driveName = `${venue.code}-${suffix}`;
+      const existing = await db
+        .select()
+        .from(drivesTable)
+        .where(eq(drivesTable.name, driveName))
+        .limit(1);
+      if (existing.length === 0) {
+        // First drive (A) is "In DVR" with a baseline footage window installed today
+        const isInstalled = suffix === "A";
+        const [drive] = await db
+          .insert(drivesTable)
+          .values({
+            name: driveName,
+            type: "venue",
+            homeVenueId: venue.id,
+            status: isInstalled ? "In DVR" : "In Maintenance possession",
+            holderUserId: isInstalled ? null : maintenanceUser?.id ?? null,
+          })
+          .returning();
+        if (isInstalled) {
+          // Baseline window starting 7 days ago
+          await db.insert(driveFootageWindowsTable).values({
+            driveId: drive.id,
+            venueId: venue.id,
+            installedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          });
+        }
+      }
+    }
+  }
+
+  for (let i = 1; i <= 4; i += 1) {
+    const driveName = `INSP-${String(i).padStart(2, "0")}`;
+    const existing = await db
+      .select()
+      .from(drivesTable)
+      .where(eq(drivesTable.name, driveName))
+      .limit(1);
+    if (existing.length === 0) {
+      await db.insert(drivesTable).values({
+        name: driveName,
+        type: "inspector",
+        status: "In Maintenance possession",
+        holderUserId: maintenanceUser?.id ?? null,
+      });
+    }
+  }
+
+  // Assets — 2 of each type per venue
+  for (const venue of allVenues) {
+    const existing = await db
+      .select()
+      .from(assetsTable)
+      .where(eq(assetsTable.venueId, venue.id))
+      .limit(1);
+    if (existing.length === 0) {
+      for (const type of ASSET_TYPES) {
+        for (let n = 1; n <= 2; n += 1) {
+          await db.insert(assetsTable).values({
+            venueId: venue.id,
+            type,
+            label: `${venue.code} ${type} #${n}`,
+            status: "Operational",
+          });
+        }
+      }
+    }
+  }
+
+  // Stock — 2 items of each type + 2 accessories
+  const STOCK_SEED = [
+    ...ASSET_TYPES.flatMap((cat) => [
+      { name: `${cat} (spare unit A)`, kind: "item" as const, category: cat, description: null, onHand: 2 },
+      { name: `${cat} (spare unit B)`, kind: "item" as const, category: cat, description: null, onHand: 1 },
+    ]),
+    { name: "BNC Connector", kind: "accessory" as const, category: "Connector", description: "BNC connector, pack of 20", onHand: 50 },
+    { name: "RJ45 Connector", kind: "accessory" as const, category: "Connector", description: "RJ45 crimp connector, pack of 100", onHand: 200 },
+  ];
+  for (const s of STOCK_SEED) {
+    const existing = await db
+      .select()
+      .from(stockSkusTable)
+      .where(eq(stockSkusTable.name, s.name))
+      .limit(1);
+    if (existing.length === 0) {
+      await db.insert(stockSkusTable).values(s);
     }
   }
 

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, LayoutDashboard, Search, Users, Menu } from "lucide-react";
+import { LogOut, LayoutDashboard, Search, Users, Menu, HardDrive, Wrench, Package, MapPin, Boxes } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,6 +15,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const navItems = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
     { href: "/admin/inspections", label: "Inspections", icon: Search },
+    { href: "/admin/drives", label: "Drives", icon: HardDrive },
+    { href: "/admin/whereabouts", label: "Whereabouts", icon: MapPin },
+    { href: "/admin/assets", label: "Assets", icon: Boxes },
+    { href: "/admin/stock", label: "Stock", icon: Package },
+    { href: "/admin/visits", label: "Maintenance", icon: Wrench },
     { href: "/admin/users", label: "Team", icon: Users },
   ];
 

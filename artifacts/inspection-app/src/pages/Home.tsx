@@ -11,6 +11,8 @@ export default function Home() {
       setLocation("/admin");
     } else if (user?.role === "inspector") {
       setLocation("/inspector");
+    } else if (user?.role === "maintenance") {
+      setLocation("/maintenance");
     }
   }, [user, setLocation]);
 

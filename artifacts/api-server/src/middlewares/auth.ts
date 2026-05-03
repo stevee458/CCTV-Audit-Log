@@ -6,11 +6,13 @@ import { db, sessionsTable, usersTable } from "@workspace/db";
 export const SESSION_COOKIE = "inspection_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 
+export type UserRoleName = "admin" | "inspector" | "maintenance";
+
 export type SessionUser = {
   id: number;
   email: string;
   name: string;
-  role: "admin" | "inspector";
+  role: UserRoleName;
   active: boolean;
   createdAt: string;
 };
@@ -77,7 +79,7 @@ export async function loadUserFromSession(
     id: r.id,
     email: r.email,
     name: r.name,
-    role: r.role as "admin" | "inspector",
+    role: r.role as UserRoleName,
     active: r.active,
     createdAt: r.createdAt.toISOString(),
   };
@@ -111,6 +113,30 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   }
   if (req.user.role !== "admin") {
     res.status(403).json({ error: "Admin access required" });
+    return;
+  }
+  next();
+}
+
+export function requireMaintenance(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: "Not signed in" });
+    return;
+  }
+  if (req.user.role !== "maintenance" && req.user.role !== "admin") {
+    res.status(403).json({ error: "Maintenance access required" });
+    return;
+  }
+  next();
+}
+
+export function requireInspector(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: "Not signed in" });
+    return;
+  }
+  if (req.user.role !== "inspector" && req.user.role !== "admin") {
+    res.status(403).json({ error: "Inspector access required" });
     return;
   }
   next();

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq, asc } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { CreateUserBody, UpdateUserBody } from "@workspace/api-zod";
-import { requireAdmin } from "../middlewares/auth";
+import { requireAdmin, requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
@@ -18,7 +18,7 @@ function serialize(u: typeof usersTable.$inferSelect) {
   };
 }
 
-router.get("/users", requireAdmin, async (_req, res) => {
+router.get("/users", requireAuth, async (_req, res) => {
   const rows = await db
     .select()
     .from(usersTable)

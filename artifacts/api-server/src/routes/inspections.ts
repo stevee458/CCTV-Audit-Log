@@ -9,6 +9,7 @@ import {
   usersTable,
   violationCategoriesTable,
   violationSubCategoriesTable,
+  drivesTable,
 } from "@workspace/db";
 import {
   CreateInspectionBody,
@@ -35,6 +36,8 @@ async function loadSummaries(inspectionIds: number[]) {
       inspectionDate: inspectionsTable.inspectionDate,
       inspectorId: inspectionsTable.inspectorId,
       inspectorName: usersTable.name,
+      driveId: inspectionsTable.driveId,
+      driveName: drivesTable.name,
       status: inspectionsTable.status,
       createdAt: inspectionsTable.createdAt,
       completedAt: inspectionsTable.completedAt,
@@ -43,6 +46,7 @@ async function loadSummaries(inspectionIds: number[]) {
     .innerJoin(depotsTable, eq(depotsTable.id, inspectionsTable.depotId))
     .innerJoin(venuesTable, eq(venuesTable.id, inspectionsTable.venueId))
     .innerJoin(usersTable, eq(usersTable.id, inspectionsTable.inspectorId))
+    .leftJoin(drivesTable, eq(drivesTable.id, inspectionsTable.driveId))
     .where(inArray(inspectionsTable.id, inspectionIds));
 
   const findings = await db
@@ -73,6 +77,8 @@ async function loadSummaries(inspectionIds: number[]) {
         inspectionDate: r.inspectionDate.toISOString(),
         inspectorId: r.inspectorId,
         inspectorName: r.inspectorName,
+        driveId: r.driveId,
+        driveName: r.driveName,
         status: r.status,
         findingsCount: fs.length,
         violationsCount: violations.length,
@@ -213,6 +219,7 @@ router.get("/inspections/export.csv", requireAuth, async (req, res) => {
     "Depot",
     "Venue Name",
     "Venue Code",
+    "Drive",
     "Footage Date",
     "Inspection Date",
     "Inspector",
@@ -238,6 +245,7 @@ router.get("/inspections/export.csv", requireAuth, async (req, res) => {
           f.depotName,
           f.venueName,
           f.venueCode,
+          f.driveName ?? "",
           f.footageDate,
           f.inspectionDate,
           f.inspectorName,
@@ -265,6 +273,7 @@ router.get("/inspections/export.csv", requireAuth, async (req, res) => {
           f.depotName,
           f.venueName,
           f.venueCode,
+          f.driveName ?? "",
           f.footageDate,
           f.inspectionDate,
           f.inspectorName,
@@ -306,6 +315,8 @@ async function loadFullInspection(id: number) {
       inspectionDate: inspectionsTable.inspectionDate,
       inspectorId: inspectionsTable.inspectorId,
       inspectorName: usersTable.name,
+      driveId: inspectionsTable.driveId,
+      driveName: drivesTable.name,
       status: inspectionsTable.status,
       notes: inspectionsTable.notes,
       createdAt: inspectionsTable.createdAt,
@@ -315,6 +326,7 @@ async function loadFullInspection(id: number) {
     .innerJoin(depotsTable, eq(depotsTable.id, inspectionsTable.depotId))
     .innerJoin(venuesTable, eq(venuesTable.id, inspectionsTable.venueId))
     .innerJoin(usersTable, eq(usersTable.id, inspectionsTable.inspectorId))
+    .leftJoin(drivesTable, eq(drivesTable.id, inspectionsTable.driveId))
     .where(eq(inspectionsTable.id, id))
     .limit(1);
   if (rows.length === 0) return null;
@@ -359,6 +371,8 @@ async function loadFullInspection(id: number) {
     inspectionDate: insp.inspectionDate.toISOString(),
     inspectorId: insp.inspectorId,
     inspectorName: insp.inspectorName,
+    driveId: insp.driveId,
+    driveName: insp.driveName,
     status: insp.status,
     notes: insp.notes,
     findings: findings.map((f) => ({
@@ -385,6 +399,7 @@ router.post("/inspections", requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: "Invalid request" });
   const { dvrNumber, depotId, venueId, footageDate, inspectionDate, notes } =
     parsed.data;
+  const driveId = req.body.driveId ? Number(req.body.driveId) : null;
   const venue = await db
     .select()
     .from(venuesTable)
@@ -393,6 +408,21 @@ router.post("/inspections", requireAuth, async (req, res) => {
   if (venue.length === 0 || venue[0].depotId !== depotId) {
     return res.status(400).json({ error: "Venue does not belong to depot" });
   }
+  if (driveId !== null) {
+    const [drive] = await db
+      .select()
+      .from(drivesTable)
+      .where(eq(drivesTable.id, driveId))
+      .limit(1);
+    if (!drive) {
+      return res.status(400).json({ error: "Drive not found" });
+    }
+    if (req.user!.role !== "admin") {
+      if (drive.holderUserId !== req.user!.id || drive.status !== "With Inspector") {
+        return res.status(400).json({ error: "Drive must be in your possession to start an inspection" });
+      }
+    }
+  }
   const [created] = await db
     .insert(inspectionsTable)
     .values({
@@ -400,6 +430,7 @@ router.post("/inspections", requireAuth, async (req, res) => {
       dvrNumber: dvrNumber.trim(),
       depotId,
       venueId,
+      driveId,
       footageDate,
       inspectionDate: inspectionDate ? new Date(inspectionDate) : new Date(),
       notes: notes ?? null,

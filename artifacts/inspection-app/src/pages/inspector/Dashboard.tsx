@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Video, Clock, MapPin, CheckCircle2 } from "lucide-react";
+import { Plus, Video, Clock, MapPin, CheckCircle2, HardDrive } from "lucide-react";
 
 export default function InspectorDashboard() {
   const { data: inspections, isLoading } = useListInspections({ mine: true, status: "all" });
@@ -23,12 +23,20 @@ export default function InspectorDashboard() {
           <p className="text-muted-foreground text-sm">Resume an active inspection or start a new review.</p>
         </div>
 
-        <Link href="/inspector/new">
-          <Button size="lg" className="w-full h-16 text-lg font-semibold shadow-sm hover-elevate">
-            <Plus className="mr-2 h-6 w-6" />
-            Start New Inspection
-          </Button>
-        </Link>
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/inspector/new">
+            <Button size="lg" className="w-full h-16 font-semibold shadow-sm hover-elevate" data-testid="btn-new-inspection">
+              <Plus className="mr-2 h-5 w-5" />
+              New Inspection
+            </Button>
+          </Link>
+          <Link href="/inspector/drives">
+            <Button size="lg" variant="secondary" className="w-full h-16 font-semibold hover-elevate" data-testid="btn-my-drives">
+              <HardDrive className="mr-2 h-5 w-5" />
+              My Drives
+            </Button>
+          </Link>
+        </div>
 
         <div className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center">

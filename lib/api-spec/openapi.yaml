@@ -367,6 +367,441 @@ paths:
                 items:
                   $ref: "#/components/schemas/InspectionSummary"
 
+  /drives:
+    get:
+      operationId: listDrives
+      tags: [drives]
+      summary: List drives
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string, enum: [venue, inspector] }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: venueId
+          schema: { type: integer }
+        - in: query
+          name: holderUserId
+          schema: { type: integer }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: mine
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Drives
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DriveSummary" }
+  /drives/{id}:
+    get:
+      operationId: getDrive
+      tags: [drives]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      responses:
+        "200":
+          description: Drive
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Drive" }
+    patch:
+      operationId: updateDrive
+      tags: [drives]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateDriveInput" }
+      responses:
+        "200":
+          description: Drive
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Drive" }
+  /drives/swap:
+    post:
+      operationId: swapDrive
+      tags: [drives]
+      summary: Swap a drive at a venue (extract and/or install)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SwapDriveInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /drives/{id}/release:
+    post:
+      operationId: releaseDrive
+      tags: [drives]
+      summary: Maintenance releases a drive to an inspector
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReleaseDriveInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /drives/{id}/accept:
+    post:
+      operationId: acceptDrive
+      tags: [drives]
+      summary: Accept a drive in transit
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /drives/{id}/return:
+    post:
+      operationId: returnDrive
+      tags: [drives]
+      summary: Inspector returns a drive to maintenance
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReturnDriveInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /drives/whereabouts:
+    get:
+      operationId: driveWhereabouts
+      tags: [drives]
+      summary: Find drive holding footage for a venue + datetime
+      parameters:
+        - in: query
+          name: venueId
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: datetime
+          required: true
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Whereabouts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WhereaboutsResult" }
+
+  /assets:
+    get:
+      operationId: listAssets
+      tags: [assets]
+      parameters:
+        - in: query
+          name: venueId
+          schema: { type: integer }
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Asset" }
+    post:
+      operationId: createAsset
+      tags: [assets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAssetInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+  /assets/{id}:
+    patch:
+      operationId: updateAsset
+      tags: [assets]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateAssetInput" }
+      responses:
+        "200":
+          description: Asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+
+  /stock/skus:
+    get:
+      operationId: listStockSkus
+      tags: [stock]
+      parameters:
+        - in: query
+          name: kind
+          schema: { type: string, enum: [item, accessory] }
+      responses:
+        "200":
+          description: SKUs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StockSku" }
+    post:
+      operationId: createStockSku
+      tags: [stock]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateStockSkuInput" }
+      responses:
+        "201":
+          description: SKU
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockSku" }
+  /stock/skus/{id}:
+    patch:
+      operationId: updateStockSku
+      tags: [stock]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateStockSkuInput" }
+      responses:
+        "200":
+          description: SKU
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockSku" }
+  /stock/skus/{id}/adjust:
+    post:
+      operationId: adjustStockSku
+      tags: [stock]
+      summary: Stock check / adjustment
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdjustStockInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /stock/requests:
+    get:
+      operationId: listStockRequests
+      tags: [stock]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        "200":
+          description: Requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StockRequest" }
+    post:
+      operationId: createStockRequest
+      tags: [stock]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateStockRequestInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockRequest" }
+  /stock/requests/{id}/reject:
+    post:
+      operationId: rejectStockRequest
+      tags: [stock]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockRequest" }
+  /stock/requests/{id}/purchase:
+    post:
+      operationId: createStockPurchase
+      tags: [stock]
+      summary: Admin records purchase against request
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateStockPurchaseInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /stock/purchases:
+    get:
+      operationId: listStockPurchases
+      tags: [stock]
+      responses:
+        "200":
+          description: Purchases
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StockPurchase" }
+  /stock/purchases/{id}/collect:
+    post:
+      operationId: collectStockPurchase
+      tags: [stock]
+      summary: Maintenance confirms collection
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /stock/movements:
+    get:
+      operationId: listStockMovements
+      tags: [stock]
+      responses:
+        "200":
+          description: Movements
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StockMovement" }
+
+  /maintenance/visits:
+    get:
+      operationId: listMaintenanceVisits
+      tags: [maintenance]
+      responses:
+        "200":
+          description: Visits
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MaintenanceVisit" }
+    post:
+      operationId: createMaintenanceVisit
+      tags: [maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateMaintenanceVisitInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MaintenanceVisit" }
+  /maintenance/visits/{id}:
+    get:
+      operationId: getMaintenanceVisit
+      tags: [maintenance]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      responses:
+        "200":
+          description: Visit detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MaintenanceVisitDetail" }
+  /maintenance/visits/{id}/venues:
+    post:
+      operationId: addVenueInspectionVisit
+      tags: [maintenance]
+      parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddVenueVisitInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VenueInspectionVisit" }
+  /maintenance/repairs:
+    get:
+      operationId: listRepairs
+      tags: [maintenance]
+      responses:
+        "200":
+          description: Repairs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RepairEvent" }
+    post:
+      operationId: createRepair
+      tags: [maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRepairInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RepairEvent" }
+
 components:
   parameters:
     IdParam:
@@ -389,7 +824,7 @@ components:
 
     UserRole:
       type: string
-      enum: [admin, inspector]
+      enum: [admin, inspector, maintenance]
 
     User:
       type: object
@@ -477,6 +912,8 @@ components:
         dvrNumber: { type: string }
         depotId: { type: integer }
         venueId: { type: integer }
+        driveId:
+          type: ["integer", "null"]
         footageDate: { type: string, format: date }
         inspectionDate: { type: string, format: date-time }
         notes:
@@ -580,6 +1017,10 @@ components:
         inspectionDate: { type: string, format: date-time }
         inspectorId: { type: integer }
         inspectorName: { type: string }
+        driveId:
+          type: ["integer", "null"]
+        driveName:
+          type: ["string", "null"]
         status: { $ref: "#/components/schemas/InspectionStatus" }
         findingsCount: { type: integer }
         violationsCount: { type: integer }
@@ -603,6 +1044,8 @@ components:
         - inspectionDate
         - inspectorId
         - inspectorName
+        - driveId
+        - driveName
         - status
         - findingsCount
         - violationsCount
@@ -624,6 +1067,10 @@ components:
         inspectionDate: { type: string, format: date-time }
         inspectorId: { type: integer }
         inspectorName: { type: string }
+        driveId:
+          type: ["integer", "null"]
+        driveName:
+          type: ["string", "null"]
         status: { $ref: "#/components/schemas/InspectionStatus" }
         notes:
           type: ["string", "null"]
@@ -647,6 +1094,8 @@ components:
         - inspectionDate
         - inspectorId
         - inspectorName
+        - driveId
+        - driveName
         - status
         - notes
         - findings
@@ -694,3 +1143,448 @@ components:
         - bySeverity
         - byDepot
         - last7DaysInspections
+
+    OkResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+      required: [ok]
+
+    DriveType:
+      type: string
+      enum: [venue, inspector]
+
+    DriveSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { $ref: "#/components/schemas/DriveType" }
+        homeVenueId:
+          type: ["integer", "null"]
+        homeVenueName:
+          type: ["string", "null"]
+        homeVenueCode:
+          type: ["string", "null"]
+        status: { type: string }
+        holderUserId:
+          type: ["integer", "null"]
+        holderName:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, name, type, homeVenueId, homeVenueName, homeVenueCode, status, holderUserId, holderName, createdAt, updatedAt]
+
+    DriveFootageWindow:
+      type: object
+      properties:
+        id: { type: integer }
+        driveId: { type: integer }
+        venueId: { type: integer }
+        venueName: { type: string }
+        venueCode: { type: string }
+        installedAt: { type: string, format: date-time }
+        extractedAt:
+          type: ["string", "null"]
+          format: date-time
+      required: [id, driveId, venueId, venueName, venueCode, installedAt, extractedAt]
+
+    Drive:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { $ref: "#/components/schemas/DriveType" }
+        homeVenueId:
+          type: ["integer", "null"]
+        homeVenueName:
+          type: ["string", "null"]
+        homeVenueCode:
+          type: ["string", "null"]
+        status: { type: string }
+        holderUserId:
+          type: ["integer", "null"]
+        holderName:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        footageWindows:
+          type: array
+          items: { $ref: "#/components/schemas/DriveFootageWindow" }
+      required: [id, name, type, homeVenueId, homeVenueName, homeVenueCode, status, holderUserId, holderName, notes, createdAt, updatedAt, footageWindows]
+
+    UpdateDriveInput:
+      type: object
+      properties:
+        status: { type: string }
+        notes:
+          type: ["string", "null"]
+
+    SwapDriveInput:
+      type: object
+      properties:
+        venueId: { type: integer }
+        installDriveId:
+          type: ["integer", "null"]
+        extractDriveId:
+          type: ["integer", "null"]
+      required: [venueId]
+
+    ReleaseDriveInput:
+      type: object
+      properties:
+        toUserId: { type: integer }
+      required: [toUserId]
+
+    ReturnDriveInput:
+      type: object
+      properties:
+        toUserId: { type: integer }
+      required: [toUserId]
+
+    WhereaboutsMatch:
+      type: object
+      properties:
+        windowId: { type: integer }
+        driveId: { type: integer }
+        driveName: { type: string }
+        driveStatus: { type: string }
+        holderUserId:
+          type: ["integer", "null"]
+        holderName:
+          type: ["string", "null"]
+        installedAt: { type: string, format: date-time }
+        extractedAt:
+          type: ["string", "null"]
+          format: date-time
+        likelyOverwritten: { type: boolean }
+      required: [windowId, driveId, driveName, driveStatus, holderUserId, holderName, installedAt, extractedAt, likelyOverwritten]
+
+    WhereaboutsInspection:
+      type: object
+      properties:
+        id: { type: integer }
+        dvrNumber: { type: string }
+        footageDate: { type: string, format: date }
+        driveId:
+          type: ["integer", "null"]
+      required: [id, dvrNumber, footageDate, driveId]
+
+    WhereaboutsResult:
+      type: object
+      properties:
+        matches:
+          type: array
+          items: { $ref: "#/components/schemas/WhereaboutsMatch" }
+        inspections:
+          type: array
+          items: { $ref: "#/components/schemas/WhereaboutsInspection" }
+      required: [matches, inspections]
+
+    Asset:
+      type: object
+      properties:
+        id: { type: integer }
+        venueId: { type: integer }
+        venueName: { type: string }
+        venueCode: { type: string }
+        type: { type: string }
+        label: { type: string }
+        serial:
+          type: ["string", "null"]
+        installedAt:
+          type: ["string", "null"]
+          format: date
+        status: { type: string }
+        notes:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+      required: [id, venueId, venueName, venueCode, type, label, serial, installedAt, status, notes, createdAt]
+
+    CreateAssetInput:
+      type: object
+      properties:
+        venueId: { type: integer }
+        type: { type: string }
+        label: { type: string }
+        serial:
+          type: ["string", "null"]
+        installedAt:
+          type: ["string", "null"]
+          format: date
+        status:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required: [venueId, type, label]
+
+    UpdateAssetInput:
+      type: object
+      properties:
+        type: { type: string }
+        label: { type: string }
+        serial:
+          type: ["string", "null"]
+        installedAt:
+          type: ["string", "null"]
+          format: date
+        status: { type: string }
+        notes:
+          type: ["string", "null"]
+
+    StockSku:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        kind: { type: string, enum: [item, accessory] }
+        category:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        onHand: { type: integer }
+        createdAt: { type: string, format: date-time }
+      required: [id, name, kind, category, description, onHand, createdAt]
+
+    CreateStockSkuInput:
+      type: object
+      properties:
+        name: { type: string }
+        kind: { type: string, enum: [item, accessory] }
+        category:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        onHand:
+          type: ["integer", "null"]
+      required: [name, kind]
+
+    UpdateStockSkuInput:
+      type: object
+      properties:
+        name: { type: string }
+        kind: { type: string, enum: [item, accessory] }
+        category:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+
+    AdjustStockInput:
+      type: object
+      properties:
+        counted: { type: integer }
+        reason:
+          type: ["string", "null"]
+      required: [counted]
+
+    StockRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        skuId: { type: integer }
+        skuName: { type: string }
+        skuKind: { type: string }
+        requestedBy: { type: integer }
+        requesterName: { type: string }
+        quantity: { type: integer }
+        reason:
+          type: ["string", "null"]
+        status: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, skuId, skuName, skuKind, requestedBy, requesterName, quantity, reason, status, createdAt, updatedAt]
+
+    CreateStockRequestInput:
+      type: object
+      properties:
+        skuId: { type: integer }
+        quantity: { type: integer }
+        reason:
+          type: ["string", "null"]
+      required: [skuId, quantity]
+
+    CreateStockPurchaseInput:
+      type: object
+      properties:
+        quantity: { type: integer }
+        unitCostCents: { type: integer }
+        supplier:
+          type: ["string", "null"]
+        poRef:
+          type: ["string", "null"]
+        expectedAt:
+          type: ["string", "null"]
+          format: date
+      required: [quantity, unitCostCents]
+
+    StockPurchase:
+      type: object
+      properties:
+        id: { type: integer }
+        skuId: { type: integer }
+        skuName: { type: string }
+        quantity: { type: integer }
+        unitCostCents: { type: integer }
+        totalCostCents: { type: integer }
+        supplier:
+          type: ["string", "null"]
+        poRef:
+          type: ["string", "null"]
+        expectedAt:
+          type: ["string", "null"]
+          format: date
+        collectedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt: { type: string, format: date-time }
+      required: [id, skuId, skuName, quantity, unitCostCents, totalCostCents, supplier, poRef, expectedAt, collectedAt, createdAt]
+
+    StockMovement:
+      type: object
+      properties:
+        id: { type: integer }
+        skuId: { type: integer }
+        skuName: { type: string }
+        changeQty: { type: integer }
+        reason: { type: string }
+        notes:
+          type: ["string", "null"]
+        refTable:
+          type: ["string", "null"]
+        refId:
+          type: ["integer", "null"]
+        createdBy: { type: integer }
+        createdByName: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, skuId, skuName, changeQty, reason, notes, refTable, refId, createdBy, createdByName, createdAt]
+
+    MaintenanceVisit:
+      type: object
+      properties:
+        id: { type: integer }
+        maintainerId: { type: integer }
+        maintainerName: { type: string }
+        depotId: { type: integer }
+        depotName: { type: string }
+        visitDate: { type: string, format: date-time }
+        notes:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+      required: [id, maintainerId, maintainerName, depotId, depotName, visitDate, notes, createdAt]
+
+    CreateMaintenanceVisitInput:
+      type: object
+      properties:
+        depotId: { type: integer }
+        visitDate:
+          type: ["string", "null"]
+          format: date-time
+        notes:
+          type: ["string", "null"]
+      required: [depotId]
+
+    VenueInspectionVisit:
+      type: object
+      properties:
+        id: { type: integer }
+        visitId: { type: integer }
+        venueId: { type: integer }
+        venueName: { type: string }
+        venueCode: { type: string }
+        visitedAt: { type: string, format: date-time }
+        notes:
+          type: ["string", "null"]
+      required: [id, visitId, venueId, venueName, venueCode, visitedAt, notes]
+
+    AddVenueVisitInput:
+      type: object
+      properties:
+        venueId: { type: integer }
+        visitedAt:
+          type: ["string", "null"]
+          format: date-time
+        notes:
+          type: ["string", "null"]
+      required: [venueId]
+
+    RepairEvent:
+      type: object
+      properties:
+        id: { type: integer }
+        visitId:
+          type: ["integer", "null"]
+        venueId: { type: integer }
+        venueName: { type: string }
+        venueCode:
+          type: ["string", "null"]
+        assetId:
+          type: ["integer", "null"]
+        assetLabel:
+          type: ["string", "null"]
+        action: { type: string, enum: [repair, replace] }
+        description:
+          type: ["string", "null"]
+        partsCostCents: { type: integer }
+        labourCostCents: { type: integer }
+        clientChargeCents: { type: integer }
+        occurredAt: { type: string, format: date-time }
+        createdBy:
+          type: ["integer", "null"]
+        createdByName:
+          type: ["string", "null"]
+      required: [id, venueId, venueName, action, partsCostCents, labourCostCents, clientChargeCents, occurredAt]
+
+    RepairConsumptionInput:
+      type: object
+      properties:
+        skuId: { type: integer }
+        quantity: { type: integer }
+      required: [skuId, quantity]
+
+    CreateRepairInput:
+      type: object
+      properties:
+        visitId:
+          type: ["integer", "null"]
+        venueId: { type: integer }
+        assetId:
+          type: ["integer", "null"]
+        action: { type: string, enum: [repair, replace] }
+        description:
+          type: ["string", "null"]
+        partsCostCents:
+          type: ["integer", "null"]
+        labourCostCents:
+          type: ["integer", "null"]
+        clientChargeCents:
+          type: ["integer", "null"]
+        occurredAt:
+          type: ["string", "null"]
+          format: date-time
+        consumption:
+          type: array
+          items: { $ref: "#/components/schemas/RepairConsumptionInput" }
+      required: [venueId, action]
+
+    MaintenanceVisitDetail:
+      type: object
+      properties:
+        id: { type: integer }
+        maintainerId: { type: integer }
+        maintainerName: { type: string }
+        depotId: { type: integer }
+        depotName: { type: string }
+        visitDate: { type: string, format: date-time }
+        notes:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+        venueVisits:
+          type: array
+          items: { $ref: "#/components/schemas/VenueInspectionVisit" }
+        repairs:
+          type: array
+          items: { $ref: "#/components/schemas/RepairEvent" }
+      required: [id, maintainerId, maintainerName, depotId, depotName, visitDate, notes, createdAt, venueVisits, repairs]
+

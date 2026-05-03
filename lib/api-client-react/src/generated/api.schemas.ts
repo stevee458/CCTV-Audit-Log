@@ -18,6 +18,7 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 export const UserRole = {
   admin: "admin",
   inspector: "inspector",
+  maintenance: "maintenance",
 } as const;
 
 export interface User {
@@ -98,6 +99,8 @@ export interface CreateInspectionInput {
   dvrNumber: string;
   depotId: number;
   venueId: number;
+  /** @nullable */
+  driveId?: number | null;
   footageDate: string;
   inspectionDate?: string;
   /** @nullable */
@@ -202,6 +205,10 @@ export interface InspectionSummary {
   inspectionDate: string;
   inspectorId: number;
   inspectorName: string;
+  /** @nullable */
+  driveId: number | null;
+  /** @nullable */
+  driveName: string | null;
   status: InspectionStatus;
   findingsCount: number;
   violationsCount: number;
@@ -223,6 +230,10 @@ export interface Inspection {
   inspectionDate: string;
   inspectorId: number;
   inspectorName: string;
+  /** @nullable */
+  driveId: number | null;
+  /** @nullable */
+  driveName: string | null;
   status: InspectionStatus;
   /** @nullable */
   notes: string | null;
@@ -252,6 +263,410 @@ export interface StatsOverview {
   bySeverity: SeverityCount[];
   byDepot: DepotCount[];
   last7DaysInspections: number;
+}
+
+export interface OkResponse {
+  ok: boolean;
+}
+
+export type DriveType = (typeof DriveType)[keyof typeof DriveType];
+
+export const DriveType = {
+  venue: "venue",
+  inspector: "inspector",
+} as const;
+
+export interface DriveSummary {
+  id: number;
+  name: string;
+  type: DriveType;
+  /** @nullable */
+  homeVenueId: number | null;
+  /** @nullable */
+  homeVenueName: string | null;
+  /** @nullable */
+  homeVenueCode: string | null;
+  status: string;
+  /** @nullable */
+  holderUserId: number | null;
+  /** @nullable */
+  holderName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DriveFootageWindow {
+  id: number;
+  driveId: number;
+  venueId: number;
+  venueName: string;
+  venueCode: string;
+  installedAt: string;
+  /** @nullable */
+  extractedAt: string | null;
+}
+
+export interface Drive {
+  id: number;
+  name: string;
+  type: DriveType;
+  /** @nullable */
+  homeVenueId: number | null;
+  /** @nullable */
+  homeVenueName: string | null;
+  /** @nullable */
+  homeVenueCode: string | null;
+  status: string;
+  /** @nullable */
+  holderUserId: number | null;
+  /** @nullable */
+  holderName: string | null;
+  /** @nullable */
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  footageWindows: DriveFootageWindow[];
+}
+
+export interface UpdateDriveInput {
+  status?: string;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface SwapDriveInput {
+  venueId: number;
+  /** @nullable */
+  installDriveId?: number | null;
+  /** @nullable */
+  extractDriveId?: number | null;
+}
+
+export interface ReleaseDriveInput {
+  toUserId: number;
+}
+
+export interface ReturnDriveInput {
+  toUserId: number;
+}
+
+export interface WhereaboutsMatch {
+  windowId: number;
+  driveId: number;
+  driveName: string;
+  driveStatus: string;
+  /** @nullable */
+  holderUserId: number | null;
+  /** @nullable */
+  holderName: string | null;
+  installedAt: string;
+  /** @nullable */
+  extractedAt: string | null;
+  likelyOverwritten: boolean;
+}
+
+export interface WhereaboutsInspection {
+  id: number;
+  dvrNumber: string;
+  footageDate: string;
+  /** @nullable */
+  driveId: number | null;
+}
+
+export interface WhereaboutsResult {
+  matches: WhereaboutsMatch[];
+  inspections: WhereaboutsInspection[];
+}
+
+export interface Asset {
+  id: number;
+  venueId: number;
+  venueName: string;
+  venueCode: string;
+  type: string;
+  label: string;
+  /** @nullable */
+  serial: string | null;
+  /** @nullable */
+  installedAt: string | null;
+  status: string;
+  /** @nullable */
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface CreateAssetInput {
+  venueId: number;
+  type: string;
+  label: string;
+  /** @nullable */
+  serial?: string | null;
+  /** @nullable */
+  installedAt?: string | null;
+  /** @nullable */
+  status?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface UpdateAssetInput {
+  type?: string;
+  label?: string;
+  /** @nullable */
+  serial?: string | null;
+  /** @nullable */
+  installedAt?: string | null;
+  status?: string;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export type StockSkuKind = (typeof StockSkuKind)[keyof typeof StockSkuKind];
+
+export const StockSkuKind = {
+  item: "item",
+  accessory: "accessory",
+} as const;
+
+export interface StockSku {
+  id: number;
+  name: string;
+  kind: StockSkuKind;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  description: string | null;
+  onHand: number;
+  createdAt: string;
+}
+
+export type CreateStockSkuInputKind =
+  (typeof CreateStockSkuInputKind)[keyof typeof CreateStockSkuInputKind];
+
+export const CreateStockSkuInputKind = {
+  item: "item",
+  accessory: "accessory",
+} as const;
+
+export interface CreateStockSkuInput {
+  name: string;
+  kind: CreateStockSkuInputKind;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  onHand?: number | null;
+}
+
+export type UpdateStockSkuInputKind =
+  (typeof UpdateStockSkuInputKind)[keyof typeof UpdateStockSkuInputKind];
+
+export const UpdateStockSkuInputKind = {
+  item: "item",
+  accessory: "accessory",
+} as const;
+
+export interface UpdateStockSkuInput {
+  name?: string;
+  kind?: UpdateStockSkuInputKind;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  description?: string | null;
+}
+
+export interface AdjustStockInput {
+  counted: number;
+  /** @nullable */
+  reason?: string | null;
+}
+
+export interface StockRequest {
+  id: number;
+  skuId: number;
+  skuName: string;
+  skuKind: string;
+  requestedBy: number;
+  requesterName: string;
+  quantity: number;
+  /** @nullable */
+  reason: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateStockRequestInput {
+  skuId: number;
+  quantity: number;
+  /** @nullable */
+  reason?: string | null;
+}
+
+export interface CreateStockPurchaseInput {
+  quantity: number;
+  unitCostCents: number;
+  /** @nullable */
+  supplier?: string | null;
+  /** @nullable */
+  poRef?: string | null;
+  /** @nullable */
+  expectedAt?: string | null;
+}
+
+export interface StockPurchase {
+  id: number;
+  skuId: number;
+  skuName: string;
+  quantity: number;
+  unitCostCents: number;
+  totalCostCents: number;
+  /** @nullable */
+  supplier: string | null;
+  /** @nullable */
+  poRef: string | null;
+  /** @nullable */
+  expectedAt: string | null;
+  /** @nullable */
+  collectedAt: string | null;
+  createdAt: string;
+}
+
+export interface StockMovement {
+  id: number;
+  skuId: number;
+  skuName: string;
+  changeQty: number;
+  reason: string;
+  /** @nullable */
+  notes: string | null;
+  /** @nullable */
+  refTable: string | null;
+  /** @nullable */
+  refId: number | null;
+  createdBy: number;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface MaintenanceVisit {
+  id: number;
+  maintainerId: number;
+  maintainerName: string;
+  depotId: number;
+  depotName: string;
+  visitDate: string;
+  /** @nullable */
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface CreateMaintenanceVisitInput {
+  depotId: number;
+  /** @nullable */
+  visitDate?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface VenueInspectionVisit {
+  id: number;
+  visitId: number;
+  venueId: number;
+  venueName: string;
+  venueCode: string;
+  visitedAt: string;
+  /** @nullable */
+  notes: string | null;
+}
+
+export interface AddVenueVisitInput {
+  venueId: number;
+  /** @nullable */
+  visitedAt?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export type RepairEventAction =
+  (typeof RepairEventAction)[keyof typeof RepairEventAction];
+
+export const RepairEventAction = {
+  repair: "repair",
+  replace: "replace",
+} as const;
+
+export interface RepairEvent {
+  id: number;
+  /** @nullable */
+  visitId?: number | null;
+  venueId: number;
+  venueName: string;
+  /** @nullable */
+  venueCode?: string | null;
+  /** @nullable */
+  assetId?: number | null;
+  /** @nullable */
+  assetLabel?: string | null;
+  action: RepairEventAction;
+  /** @nullable */
+  description?: string | null;
+  partsCostCents: number;
+  labourCostCents: number;
+  clientChargeCents: number;
+  occurredAt: string;
+  /** @nullable */
+  createdBy?: number | null;
+  /** @nullable */
+  createdByName?: string | null;
+}
+
+export interface RepairConsumptionInput {
+  skuId: number;
+  quantity: number;
+}
+
+export type CreateRepairInputAction =
+  (typeof CreateRepairInputAction)[keyof typeof CreateRepairInputAction];
+
+export const CreateRepairInputAction = {
+  repair: "repair",
+  replace: "replace",
+} as const;
+
+export interface CreateRepairInput {
+  /** @nullable */
+  visitId?: number | null;
+  venueId: number;
+  /** @nullable */
+  assetId?: number | null;
+  action: CreateRepairInputAction;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  partsCostCents?: number | null;
+  /** @nullable */
+  labourCostCents?: number | null;
+  /** @nullable */
+  clientChargeCents?: number | null;
+  /** @nullable */
+  occurredAt?: string | null;
+  consumption?: RepairConsumptionInput[];
+}
+
+export interface MaintenanceVisitDetail {
+  id: number;
+  maintainerId: number;
+  maintainerName: string;
+  depotId: number;
+  depotName: string;
+  visitDate: string;
+  /** @nullable */
+  notes: string | null;
+  createdAt: string;
+  venueVisits: VenueInspectionVisit[];
+  repairs: RepairEvent[];
 }
 
 export type ListInspectionsParams = {
@@ -299,3 +714,48 @@ export const ListInspectionsStatus = {
   completed: "completed",
   all: "all",
 } as const;
+
+export type ListDrivesParams = {
+  type?: ListDrivesType;
+  status?: string;
+  venueId?: number;
+  holderUserId?: number;
+  search?: string;
+  mine?: boolean;
+};
+
+export type ListDrivesType =
+  (typeof ListDrivesType)[keyof typeof ListDrivesType];
+
+export const ListDrivesType = {
+  venue: "venue",
+  inspector: "inspector",
+} as const;
+
+export type DriveWhereaboutsParams = {
+  venueId: number;
+  datetime: string;
+};
+
+export type ListAssetsParams = {
+  venueId?: number;
+  type?: string;
+  status?: string;
+  search?: string;
+};
+
+export type ListStockSkusParams = {
+  kind?: ListStockSkusKind;
+};
+
+export type ListStockSkusKind =
+  (typeof ListStockSkusKind)[keyof typeof ListStockSkusKind];
+
+export const ListStockSkusKind = {
+  item: "item",
+  accessory: "accessory",
+} as const;
+
+export type ListStockRequestsParams = {
+  status?: string;
+};

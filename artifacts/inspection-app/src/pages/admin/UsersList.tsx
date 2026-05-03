@@ -41,7 +41,7 @@ export default function UsersList() {
         setCreateOpen(false);
         form.reset();
       },
-      onError: (err) => toast({ title: "Failed to create user", description: err.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Failed to create user", description: (err.data as any)?.error, variant: "destructive" })
     }
   });
 
@@ -51,7 +51,7 @@ export default function UsersList() {
         queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
         toast({ title: "User updated" });
       },
-      onError: (err) => toast({ title: "Failed to update user", description: err.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Failed to update user", description: (err.data as any)?.error, variant: "destructive" })
     }
   });
 

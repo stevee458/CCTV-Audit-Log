@@ -26,7 +26,7 @@ export const LoginResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector"]),
+  role: zod.enum(["admin", "inspector", "maintenance"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -38,7 +38,7 @@ export const GetCurrentUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector"]),
+  role: zod.enum(["admin", "inspector", "maintenance"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -50,7 +50,7 @@ export const ListUsersResponseItem = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector"]),
+  role: zod.enum(["admin", "inspector", "maintenance"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -63,7 +63,7 @@ export const CreateUserBody = zod.object({
   email: zod.string(),
   name: zod.string(),
   password: zod.string(),
-  role: zod.enum(["admin", "inspector"]),
+  role: zod.enum(["admin", "inspector", "maintenance"]),
 });
 
 /**
@@ -75,7 +75,7 @@ export const UpdateUserParams = zod.object({
 
 export const UpdateUserBody = zod.object({
   name: zod.string().optional(),
-  role: zod.enum(["admin", "inspector"]).optional(),
+  role: zod.enum(["admin", "inspector", "maintenance"]).optional(),
   active: zod.boolean().optional(),
   password: zod.string().optional(),
 });
@@ -84,7 +84,7 @@ export const UpdateUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector"]),
+  role: zod.enum(["admin", "inspector", "maintenance"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -157,6 +157,8 @@ export const ListInspectionsResponseItem = zod.object({
   inspectionDate: zod.coerce.date(),
   inspectorId: zod.number(),
   inspectorName: zod.string(),
+  driveId: zod.number().nullable(),
+  driveName: zod.string().nullable(),
   status: zod.enum(["in_progress", "completed"]),
   findingsCount: zod.number(),
   violationsCount: zod.number(),
@@ -173,6 +175,7 @@ export const CreateInspectionBody = zod.object({
   dvrNumber: zod.string(),
   depotId: zod.number(),
   venueId: zod.number(),
+  driveId: zod.number().nullish(),
   footageDate: zod.coerce.date(),
   inspectionDate: zod.coerce.date().optional(),
   notes: zod.string().nullish(),
@@ -197,6 +200,8 @@ export const GetInspectionResponse = zod.object({
   inspectionDate: zod.coerce.date(),
   inspectorId: zod.number(),
   inspectorName: zod.string(),
+  driveId: zod.number().nullable(),
+  driveName: zod.string().nullable(),
   status: zod.enum(["in_progress", "completed"]),
   notes: zod.string().nullable(),
   findings: zod.array(
@@ -247,6 +252,8 @@ export const UpdateInspectionResponse = zod.object({
   inspectionDate: zod.coerce.date(),
   inspectorId: zod.number(),
   inspectorName: zod.string(),
+  driveId: zod.number().nullable(),
+  driveName: zod.string().nullable(),
   status: zod.enum(["in_progress", "completed"]),
   notes: zod.string().nullable(),
   findings: zod.array(
@@ -288,6 +295,8 @@ export const CompleteInspectionResponse = zod.object({
   inspectionDate: zod.coerce.date(),
   inspectorId: zod.number(),
   inspectorName: zod.string(),
+  driveId: zod.number().nullable(),
+  driveName: zod.string().nullable(),
   status: zod.enum(["in_progress", "completed"]),
   notes: zod.string().nullable(),
   findings: zod.array(
@@ -406,6 +415,8 @@ export const GetRecentInspectionsResponseItem = zod.object({
   inspectionDate: zod.coerce.date(),
   inspectorId: zod.number(),
   inspectorName: zod.string(),
+  driveId: zod.number().nullable(),
+  driveName: zod.string().nullable(),
   status: zod.enum(["in_progress", "completed"]),
   findingsCount: zod.number(),
   violationsCount: zod.number(),
@@ -416,3 +427,523 @@ export const GetRecentInspectionsResponseItem = zod.object({
 export const GetRecentInspectionsResponse = zod.array(
   GetRecentInspectionsResponseItem,
 );
+
+/**
+ * @summary List drives
+ */
+export const ListDrivesQueryParams = zod.object({
+  type: zod.enum(["venue", "inspector"]).optional(),
+  status: zod.coerce.string().optional(),
+  venueId: zod.coerce.number().optional(),
+  holderUserId: zod.coerce.number().optional(),
+  search: zod.coerce.string().optional(),
+  mine: zod.coerce.boolean().optional(),
+});
+
+export const ListDrivesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["venue", "inspector"]),
+  homeVenueId: zod.number().nullable(),
+  homeVenueName: zod.string().nullable(),
+  homeVenueCode: zod.string().nullable(),
+  status: zod.string(),
+  holderUserId: zod.number().nullable(),
+  holderName: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListDrivesResponse = zod.array(ListDrivesResponseItem);
+
+export const GetDriveParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDriveResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["venue", "inspector"]),
+  homeVenueId: zod.number().nullable(),
+  homeVenueName: zod.string().nullable(),
+  homeVenueCode: zod.string().nullable(),
+  status: zod.string(),
+  holderUserId: zod.number().nullable(),
+  holderName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+  footageWindows: zod.array(
+    zod.object({
+      id: zod.number(),
+      driveId: zod.number(),
+      venueId: zod.number(),
+      venueName: zod.string(),
+      venueCode: zod.string(),
+      installedAt: zod.coerce.date(),
+      extractedAt: zod.coerce.date().nullable(),
+    }),
+  ),
+});
+
+export const UpdateDriveParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDriveBody = zod.object({
+  status: zod.string().optional(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateDriveResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["venue", "inspector"]),
+  homeVenueId: zod.number().nullable(),
+  homeVenueName: zod.string().nullable(),
+  homeVenueCode: zod.string().nullable(),
+  status: zod.string(),
+  holderUserId: zod.number().nullable(),
+  holderName: zod.string().nullable(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+  footageWindows: zod.array(
+    zod.object({
+      id: zod.number(),
+      driveId: zod.number(),
+      venueId: zod.number(),
+      venueName: zod.string(),
+      venueCode: zod.string(),
+      installedAt: zod.coerce.date(),
+      extractedAt: zod.coerce.date().nullable(),
+    }),
+  ),
+});
+
+/**
+ * @summary Swap a drive at a venue (extract and/or install)
+ */
+export const SwapDriveBody = zod.object({
+  venueId: zod.number(),
+  installDriveId: zod.number().nullish(),
+  extractDriveId: zod.number().nullish(),
+});
+
+export const SwapDriveResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Maintenance releases a drive to an inspector
+ */
+export const ReleaseDriveParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ReleaseDriveBody = zod.object({
+  toUserId: zod.number(),
+});
+
+export const ReleaseDriveResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Accept a drive in transit
+ */
+export const AcceptDriveParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptDriveResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Inspector returns a drive to maintenance
+ */
+export const ReturnDriveParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ReturnDriveBody = zod.object({
+  toUserId: zod.number(),
+});
+
+export const ReturnDriveResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Find drive holding footage for a venue + datetime
+ */
+export const DriveWhereaboutsQueryParams = zod.object({
+  venueId: zod.coerce.number(),
+  datetime: zod.date(),
+});
+
+export const DriveWhereaboutsResponse = zod.object({
+  matches: zod.array(
+    zod.object({
+      windowId: zod.number(),
+      driveId: zod.number(),
+      driveName: zod.string(),
+      driveStatus: zod.string(),
+      holderUserId: zod.number().nullable(),
+      holderName: zod.string().nullable(),
+      installedAt: zod.coerce.date(),
+      extractedAt: zod.coerce.date().nullable(),
+      likelyOverwritten: zod.boolean(),
+    }),
+  ),
+  inspections: zod.array(
+    zod.object({
+      id: zod.number(),
+      dvrNumber: zod.string(),
+      footageDate: zod.coerce.date(),
+      driveId: zod.number().nullable(),
+    }),
+  ),
+});
+
+export const ListAssetsQueryParams = zod.object({
+  venueId: zod.coerce.number().optional(),
+  type: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListAssetsResponseItem = zod.object({
+  id: zod.number(),
+  venueId: zod.number(),
+  venueName: zod.string(),
+  venueCode: zod.string(),
+  type: zod.string(),
+  label: zod.string(),
+  serial: zod.string().nullable(),
+  installedAt: zod.coerce.date().nullable(),
+  status: zod.string(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+});
+export const ListAssetsResponse = zod.array(ListAssetsResponseItem);
+
+export const CreateAssetBody = zod.object({
+  venueId: zod.number(),
+  type: zod.string(),
+  label: zod.string(),
+  serial: zod.string().nullish(),
+  installedAt: zod.coerce.date().nullish(),
+  status: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateAssetParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateAssetBody = zod.object({
+  type: zod.string().optional(),
+  label: zod.string().optional(),
+  serial: zod.string().nullish(),
+  installedAt: zod.coerce.date().nullish(),
+  status: zod.string().optional(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateAssetResponse = zod.object({
+  id: zod.number(),
+  venueId: zod.number(),
+  venueName: zod.string(),
+  venueCode: zod.string(),
+  type: zod.string(),
+  label: zod.string(),
+  serial: zod.string().nullable(),
+  installedAt: zod.coerce.date().nullable(),
+  status: zod.string(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+});
+
+export const ListStockSkusQueryParams = zod.object({
+  kind: zod.enum(["item", "accessory"]).optional(),
+});
+
+export const ListStockSkusResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  kind: zod.enum(["item", "accessory"]),
+  category: zod.string().nullable(),
+  description: zod.string().nullable(),
+  onHand: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+export const ListStockSkusResponse = zod.array(ListStockSkusResponseItem);
+
+export const CreateStockSkuBody = zod.object({
+  name: zod.string(),
+  kind: zod.enum(["item", "accessory"]),
+  category: zod.string().nullish(),
+  description: zod.string().nullish(),
+  onHand: zod.number().nullish(),
+});
+
+export const UpdateStockSkuParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateStockSkuBody = zod.object({
+  name: zod.string().optional(),
+  kind: zod.enum(["item", "accessory"]).optional(),
+  category: zod.string().nullish(),
+  description: zod.string().nullish(),
+});
+
+export const UpdateStockSkuResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  kind: zod.enum(["item", "accessory"]),
+  category: zod.string().nullable(),
+  description: zod.string().nullable(),
+  onHand: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Stock check / adjustment
+ */
+export const AdjustStockSkuParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdjustStockSkuBody = zod.object({
+  counted: zod.number(),
+  reason: zod.string().nullish(),
+});
+
+export const AdjustStockSkuResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+export const ListStockRequestsQueryParams = zod.object({
+  status: zod.coerce.string().optional(),
+});
+
+export const ListStockRequestsResponseItem = zod.object({
+  id: zod.number(),
+  skuId: zod.number(),
+  skuName: zod.string(),
+  skuKind: zod.string(),
+  requestedBy: zod.number(),
+  requesterName: zod.string(),
+  quantity: zod.number(),
+  reason: zod.string().nullable(),
+  status: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListStockRequestsResponse = zod.array(
+  ListStockRequestsResponseItem,
+);
+
+export const CreateStockRequestBody = zod.object({
+  skuId: zod.number(),
+  quantity: zod.number(),
+  reason: zod.string().nullish(),
+});
+
+export const RejectStockRequestParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RejectStockRequestResponse = zod.object({
+  id: zod.number(),
+  skuId: zod.number(),
+  skuName: zod.string(),
+  skuKind: zod.string(),
+  requestedBy: zod.number(),
+  requesterName: zod.string(),
+  quantity: zod.number(),
+  reason: zod.string().nullable(),
+  status: zod.string(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Admin records purchase against request
+ */
+export const CreateStockPurchaseParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateStockPurchaseBody = zod.object({
+  quantity: zod.number(),
+  unitCostCents: zod.number(),
+  supplier: zod.string().nullish(),
+  poRef: zod.string().nullish(),
+  expectedAt: zod.coerce.date().nullish(),
+});
+
+export const CreateStockPurchaseResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+export const ListStockPurchasesResponseItem = zod.object({
+  id: zod.number(),
+  skuId: zod.number(),
+  skuName: zod.string(),
+  quantity: zod.number(),
+  unitCostCents: zod.number(),
+  totalCostCents: zod.number(),
+  supplier: zod.string().nullable(),
+  poRef: zod.string().nullable(),
+  expectedAt: zod.coerce.date().nullable(),
+  collectedAt: zod.coerce.date().nullable(),
+  createdAt: zod.coerce.date(),
+});
+export const ListStockPurchasesResponse = zod.array(
+  ListStockPurchasesResponseItem,
+);
+
+/**
+ * @summary Maintenance confirms collection
+ */
+export const CollectStockPurchaseParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CollectStockPurchaseResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+export const ListStockMovementsResponseItem = zod.object({
+  id: zod.number(),
+  skuId: zod.number(),
+  skuName: zod.string(),
+  changeQty: zod.number(),
+  reason: zod.string(),
+  notes: zod.string().nullable(),
+  refTable: zod.string().nullable(),
+  refId: zod.number().nullable(),
+  createdBy: zod.number(),
+  createdByName: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListStockMovementsResponse = zod.array(
+  ListStockMovementsResponseItem,
+);
+
+export const ListMaintenanceVisitsResponseItem = zod.object({
+  id: zod.number(),
+  maintainerId: zod.number(),
+  maintainerName: zod.string(),
+  depotId: zod.number(),
+  depotName: zod.string(),
+  visitDate: zod.coerce.date(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+});
+export const ListMaintenanceVisitsResponse = zod.array(
+  ListMaintenanceVisitsResponseItem,
+);
+
+export const CreateMaintenanceVisitBody = zod.object({
+  depotId: zod.number(),
+  visitDate: zod.coerce.date().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const GetMaintenanceVisitParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetMaintenanceVisitResponse = zod.object({
+  id: zod.number(),
+  maintainerId: zod.number(),
+  maintainerName: zod.string(),
+  depotId: zod.number(),
+  depotName: zod.string(),
+  visitDate: zod.coerce.date(),
+  notes: zod.string().nullable(),
+  createdAt: zod.coerce.date(),
+  venueVisits: zod.array(
+    zod.object({
+      id: zod.number(),
+      visitId: zod.number(),
+      venueId: zod.number(),
+      venueName: zod.string(),
+      venueCode: zod.string(),
+      visitedAt: zod.coerce.date(),
+      notes: zod.string().nullable(),
+    }),
+  ),
+  repairs: zod.array(
+    zod.object({
+      id: zod.number(),
+      visitId: zod.number().nullish(),
+      venueId: zod.number(),
+      venueName: zod.string(),
+      venueCode: zod.string().nullish(),
+      assetId: zod.number().nullish(),
+      assetLabel: zod.string().nullish(),
+      action: zod.enum(["repair", "replace"]),
+      description: zod.string().nullish(),
+      partsCostCents: zod.number(),
+      labourCostCents: zod.number(),
+      clientChargeCents: zod.number(),
+      occurredAt: zod.coerce.date(),
+      createdBy: zod.number().nullish(),
+      createdByName: zod.string().nullish(),
+    }),
+  ),
+});
+
+export const AddVenueInspectionVisitParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AddVenueInspectionVisitBody = zod.object({
+  venueId: zod.number(),
+  visitedAt: zod.coerce.date().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const ListRepairsResponseItem = zod.object({
+  id: zod.number(),
+  visitId: zod.number().nullish(),
+  venueId: zod.number(),
+  venueName: zod.string(),
+  venueCode: zod.string().nullish(),
+  assetId: zod.number().nullish(),
+  assetLabel: zod.string().nullish(),
+  action: zod.enum(["repair", "replace"]),
+  description: zod.string().nullish(),
+  partsCostCents: zod.number(),
+  labourCostCents: zod.number(),
+  clientChargeCents: zod.number(),
+  occurredAt: zod.coerce.date(),
+  createdBy: zod.number().nullish(),
+  createdByName: zod.string().nullish(),
+});
+export const ListRepairsResponse = zod.array(ListRepairsResponseItem);
+
+export const CreateRepairBody = zod.object({
+  visitId: zod.number().nullish(),
+  venueId: zod.number(),
+  assetId: zod.number().nullish(),
+  action: zod.enum(["repair", "replace"]),
+  description: zod.string().nullish(),
+  partsCostCents: zod.number().nullish(),
+  labourCostCents: zod.number().nullish(),
+  clientChargeCents: zod.number().nullish(),
+  occurredAt: zod.coerce.date().nullish(),
+  consumption: zod
+    .array(
+      zod.object({
+        skuId: zod.number(),
+        quantity: zod.number(),
+      }),
+    )
+    .optional(),
+});
