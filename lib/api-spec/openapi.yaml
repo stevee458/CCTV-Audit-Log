@@ -3,20 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Digital Inspection App API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: users
+  - name: reference
+  - name: inspections
+  - name: findings
+  - name: stats
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +28,669 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "204":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the currently signed-in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin)
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user (admin) - role, active status, name, password
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /reference/depots:
+    get:
+      operationId: listDepots
+      tags: [reference]
+      summary: List depots with their venues
+      responses:
+        "200":
+          description: Depots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Depot"
+
+  /reference/violations:
+    get:
+      operationId: listViolationCategories
+      tags: [reference]
+      summary: List violation categories with sub-categories
+      responses:
+        "200":
+          description: Violation taxonomy
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ViolationCategory"
+
+  /inspections:
+    get:
+      operationId: listInspections
+      tags: [inspections]
+      summary: List inspections with filters
+      parameters:
+        - in: query
+          name: outcome
+          schema: { type: string, enum: [all, violation, no_violation] }
+        - in: query
+          name: categoryId
+          schema: { type: integer }
+        - in: query
+          name: subCategoryId
+          schema: { type: integer }
+        - in: query
+          name: severity
+          schema: { type: string, enum: [A, B, C, D, E] }
+        - in: query
+          name: depotId
+          schema: { type: integer }
+        - in: query
+          name: venueId
+          schema: { type: integer }
+        - in: query
+          name: inspectorId
+          schema: { type: integer }
+        - in: query
+          name: footageDateFrom
+          schema: { type: string, format: date }
+        - in: query
+          name: footageDateTo
+          schema: { type: string, format: date }
+        - in: query
+          name: inspectionDateFrom
+          schema: { type: string, format: date }
+        - in: query
+          name: inspectionDateTo
+          schema: { type: string, format: date }
+        - in: query
+          name: status
+          schema: { type: string, enum: [in_progress, completed, all] }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: mine
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Inspections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InspectionSummary"
+    post:
+      operationId: createInspection
+      tags: [inspections]
+      summary: Create an inspection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInspectionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+
+  /inspections/{id}:
+    get:
+      operationId: getInspection
+      tags: [inspections]
+      summary: Get full inspection with findings
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+    patch:
+      operationId: updateInspection
+      tags: [inspections]
+      summary: Update inspection header
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInspectionInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+
+  /inspections/{id}/complete:
+    post:
+      operationId: completeInspection
+      tags: [inspections]
+      summary: Mark an inspection as complete
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+
+  /inspections/{id}/findings:
+    post:
+      operationId: addFinding
+      tags: [findings]
+      summary: Add a finding to an inspection
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFindingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Finding"
+
+  /findings/{id}:
+    patch:
+      operationId: updateFinding
+      tags: [findings]
+      summary: Update a finding
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFindingInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Finding"
+    delete:
+      operationId: deleteFinding
+      tags: [findings]
+      summary: Delete a finding
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: Deleted
+
+  /stats/overview:
+    get:
+      operationId: getStatsOverview
+      tags: [stats]
+      summary: Top-level admin dashboard stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsOverview"
+
+  /stats/recent:
+    get:
+      operationId: getRecentInspections
+      tags: [stats]
+      summary: Recent inspections (for dashboard activity feed)
+      responses:
+        "200":
+          description: Recent
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InspectionSummary"
+
 components:
+  parameters:
+    IdParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+      required: [status]
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
 
+    UserRole:
+      type: string
+      enum: [admin, inspector]
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        name: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required: [id, email, name, role, active, createdAt]
+
+    LoginInput:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+      required: [email, password]
+
+    CreateUserInput:
+      type: object
+      properties:
+        email: { type: string }
+        name: { type: string }
+        password: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+      required: [email, name, password, role]
+
+    UpdateUserInput:
+      type: object
+      properties:
+        name: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+        active: { type: boolean }
+        password: { type: string }
+
+    Venue:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        code: { type: string }
+        cameraCount: { type: integer }
+      required: [id, name, code, cameraCount]
+
+    Depot:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        venues:
+          type: array
+          items:
+            $ref: "#/components/schemas/Venue"
+      required: [id, name, venues]
+
+    ViolationSubCategory:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description:
+          type: ["string", "null"]
+        defaultSeverity: { type: string, enum: [A, B, C, D, E] }
+      required: [id, name, defaultSeverity, description]
+
+    ViolationCategory:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        subCategories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ViolationSubCategory"
+      required: [id, name, subCategories]
+
+    InspectionStatus:
+      type: string
+      enum: [in_progress, completed]
+
+    CreateInspectionInput:
+      type: object
+      properties:
+        dvrNumber: { type: string }
+        depotId: { type: integer }
+        venueId: { type: integer }
+        footageDate: { type: string, format: date }
+        inspectionDate: { type: string, format: date-time }
+        notes:
+          type: ["string", "null"]
+      required: [dvrNumber, depotId, venueId, footageDate]
+
+    UpdateInspectionInput:
+      type: object
+      properties:
+        dvrNumber: { type: string }
+        depotId: { type: integer }
+        venueId: { type: integer }
+        footageDate: { type: string, format: date }
+        inspectionDate: { type: string, format: date-time }
+        notes:
+          type: ["string", "null"]
+
+    Severity:
+      type: string
+      enum: [A, B, C, D, E]
+
+    CreateFindingInput:
+      type: object
+      properties:
+        outcome: { type: string, enum: [no_violation, violation] }
+        categoryId:
+          type: ["integer", "null"]
+        subCategoryId:
+          type: ["integer", "null"]
+        severity:
+          oneOf:
+            - $ref: "#/components/schemas/Severity"
+            - type: "null"
+        notes:
+          type: ["string", "null"]
+      required: [outcome]
+
+    UpdateFindingInput:
+      type: object
+      properties:
+        outcome: { type: string, enum: [no_violation, violation] }
+        categoryId:
+          type: ["integer", "null"]
+        subCategoryId:
+          type: ["integer", "null"]
+        severity:
+          oneOf:
+            - $ref: "#/components/schemas/Severity"
+            - type: "null"
+        notes:
+          type: ["string", "null"]
+
+    Finding:
+      type: object
+      properties:
+        id: { type: integer }
+        inspectionId: { type: integer }
+        clipName: { type: string }
+        clipNumber: { type: integer }
+        outcome: { type: string, enum: [no_violation, violation] }
+        categoryId:
+          type: ["integer", "null"]
+        categoryName:
+          type: ["string", "null"]
+        subCategoryId:
+          type: ["integer", "null"]
+        subCategoryName:
+          type: ["string", "null"]
+        severity:
+          oneOf:
+            - $ref: "#/components/schemas/Severity"
+            - type: "null"
+        notes:
+          type: ["string", "null"]
+        createdAt: { type: string, format: date-time }
+      required:
+        - id
+        - inspectionId
+        - clipName
+        - clipNumber
+        - outcome
+        - categoryId
+        - categoryName
+        - subCategoryId
+        - subCategoryName
+        - severity
+        - notes
+        - createdAt
+
+    InspectionSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        dvrNumber: { type: string }
+        depotId: { type: integer }
+        depotName: { type: string }
+        venueId: { type: integer }
+        venueName: { type: string }
+        venueCode: { type: string }
+        footageDate: { type: string, format: date }
+        inspectionDate: { type: string, format: date-time }
+        inspectorId: { type: integer }
+        inspectorName: { type: string }
+        status: { $ref: "#/components/schemas/InspectionStatus" }
+        findingsCount: { type: integer }
+        violationsCount: { type: integer }
+        highestSeverity:
+          oneOf:
+            - $ref: "#/components/schemas/Severity"
+            - type: "null"
+        createdAt: { type: string, format: date-time }
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+      required:
+        - id
+        - dvrNumber
+        - depotId
+        - depotName
+        - venueId
+        - venueName
+        - venueCode
+        - footageDate
+        - inspectionDate
+        - inspectorId
+        - inspectorName
+        - status
+        - findingsCount
+        - violationsCount
+        - highestSeverity
+        - createdAt
+        - completedAt
+
+    Inspection:
+      type: object
+      properties:
+        id: { type: integer }
+        dvrNumber: { type: string }
+        depotId: { type: integer }
+        depotName: { type: string }
+        venueId: { type: integer }
+        venueName: { type: string }
+        venueCode: { type: string }
+        footageDate: { type: string, format: date }
+        inspectionDate: { type: string, format: date-time }
+        inspectorId: { type: integer }
+        inspectorName: { type: string }
+        status: { $ref: "#/components/schemas/InspectionStatus" }
+        notes:
+          type: ["string", "null"]
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Finding"
+        createdAt: { type: string, format: date-time }
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+      required:
+        - id
+        - dvrNumber
+        - depotId
+        - depotName
+        - venueId
+        - venueName
+        - venueCode
+        - footageDate
+        - inspectionDate
+        - inspectorId
+        - inspectorName
+        - status
+        - notes
+        - findings
+        - createdAt
+        - completedAt
+
+    SeverityCount:
+      type: object
+      properties:
+        severity: { $ref: "#/components/schemas/Severity" }
+        count: { type: integer }
+      required: [severity, count]
+
+    DepotCount:
+      type: object
+      properties:
+        depotId: { type: integer }
+        depotName: { type: string }
+        count: { type: integer }
+      required: [depotId, depotName, count]
+
+    StatsOverview:
+      type: object
+      properties:
+        totalInspections: { type: integer }
+        completedInspections: { type: integer }
+        inProgressInspections: { type: integer }
+        totalFindings: { type: integer }
+        totalViolations: { type: integer }
+        bySeverity:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeverityCount"
+        byDepot:
+          type: array
+          items:
+            $ref: "#/components/schemas/DepotCount"
+        last7DaysInspections: { type: integer }
+      required:
+        - totalInspections
+        - completedInspections
+        - inProgressInspections
+        - totalFindings
+        - totalViolations
+        - bySeverity
+        - byDepot
+        - last7DaysInspections

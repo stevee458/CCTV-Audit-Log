@@ -1,8 +1,11 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { attachUser } from "./middlewares/auth";
+import { seedReferenceData } from "./lib/seed";
 
 const app: Express = express();
 
@@ -25,10 +28,15 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", router);
+app.use("/api", attachUser, router);
+
+seedReferenceData().catch((err) => {
+  logger.error({ err }, "Failed to seed reference data");
+});
 
 export default app;

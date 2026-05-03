@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Digital Inspection App"
+version = "1.0.0"
+id = "artifacts/inspection-app"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22581
+
+[services.development]
+run = "pnpm --filter @workspace/inspection-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/inspection-app", "run", "build" ]
+publicDir = "artifacts/inspection-app/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22581"
+BASE_PATH = "/"
