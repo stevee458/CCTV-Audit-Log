@@ -152,7 +152,8 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   }
 
   const updates: Partial<typeof findingsTable.$inferInsert> = {};
-  const outcome = parsed.data.outcome ?? rows[0].finding.outcome;
+  const existing = rows[0].finding;
+  const outcome = parsed.data.outcome ?? existing.outcome;
   if (parsed.data.outcome !== undefined) updates.outcome = parsed.data.outcome;
   if (outcome === "no_violation") {
     updates.categoryId = null;
@@ -165,6 +166,19 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
       updates.subCategoryId = parsed.data.subCategoryId;
     if (parsed.data.severity !== undefined)
       updates.severity = parsed.data.severity ?? null;
+    const finalCategoryId =
+      updates.categoryId !== undefined ? updates.categoryId : existing.categoryId;
+    const finalSubCategoryId =
+      updates.subCategoryId !== undefined
+        ? updates.subCategoryId
+        : existing.subCategoryId;
+    const finalSeverity =
+      updates.severity !== undefined ? updates.severity : existing.severity;
+    if (!finalCategoryId || !finalSubCategoryId || !finalSeverity) {
+      return res.status(400).json({
+        error: "Violation findings require category, sub-category and severity",
+      });
+    }
   }
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
 
