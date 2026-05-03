@@ -426,6 +426,7 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
   const driveId = Number(req.params.id);
   if (!Number.isInteger(driveId)) return res.status(400).json({ error: "Invalid id" });
   const now = new Date();
+  try {
   await db.transaction(async (tx) => {
     const [d] = await tx.select().from(drivesTable).where(eq(drivesTable.id, driveId));
     if (!d) throw new Error("Drive not found");
@@ -464,6 +465,9 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
       .set({ status: newStatus, holderUserId: pending.toUserId, updatedAt: now })
       .where(eq(drivesTable.id, driveId));
   });
+  } catch (e: any) {
+    return res.status(400).json({ error: e?.message || "Accept failed" });
+  }
   res.json({ ok: true });
 });
 
