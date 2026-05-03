@@ -10,7 +10,7 @@ import {
   usersTable,
   inspectionsTable,
 } from "@workspace/db";
-import { requireAuth, requireMaintenance, requireAdmin } from "../middlewares/auth";
+import { requireAuth, requireMaintenance, requireInspector, requireAdmin } from "../middlewares/auth";
 import { sendCsv } from "../lib/csv";
 
 const router: IRouter = Router();
@@ -400,6 +400,9 @@ router.post("/drives/:id/release", requireMaintenance, async (req, res) => {
       if (d.status !== "In Maintenance possession") {
         throw new Error(`Drive must be in maintenance possession to release (current: ${d.status})`);
       }
+      const [target] = await tx.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, toUserId));
+      if (!target) throw new Error("Target user not found");
+      if (target.role !== "inspector") throw new Error("Drives can only be released to an inspector");
       await tx
         .update(drivesTable)
         .set({ status: "In transit to Inspector", holderUserId: toUserId, updatedAt: now })
@@ -442,6 +445,12 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
     if (pending.toUserId !== req.user!.id) {
       throw new Error("This drive is not pending acceptance for you");
     }
+    if (pending.direction === "maintenance_to_inspector" && req.user!.role !== "inspector") {
+      throw new Error("Only an inspector may accept this drive");
+    }
+    if (pending.direction === "inspector_to_maintenance" && req.user!.role !== "maintenance") {
+      throw new Error("Only a maintenance user may accept this drive");
+    }
     await tx
       .update(driveCustodyEventsTable)
       .set({ acceptedAt: now })
@@ -459,7 +468,7 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
 });
 
 // Inspector returns drive to Maintenance
-router.post("/drives/:id/return", requireAuth, async (req, res) => {
+router.post("/drives/:id/return", requireInspector, async (req, res) => {
   const driveId = Number(req.params.id);
   const toUserId = Number(req.body.toUserId);
   if (!Number.isInteger(driveId) || !Number.isInteger(toUserId))
@@ -476,6 +485,9 @@ router.post("/drives/:id/return", requireAuth, async (req, res) => {
       if (d.status !== "With Inspector" && d.status !== "In transit to Inspector") {
         throw new Error(`Drive cannot be returned from status: ${d.status}`);
       }
+      const [target] = await tx.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, toUserId));
+      if (!target) throw new Error("Target user not found");
+      if (target.role !== "maintenance") throw new Error("Drives can only be returned to a maintenance user");
       await tx
         .update(drivesTable)
         .set({ status: "In transit to Maintenance", holderUserId: toUserId, updatedAt: now })

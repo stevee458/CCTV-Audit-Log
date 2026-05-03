@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 
-const ASSET_TYPES = ["Hard drive", "DVR", "Camera", "Monitor", "Network switch"];
+const ASSET_TYPES = ["DVR", "Camera", "Power Supply", "Hard Drive", "Cable"];
 
 export default function AdminAssets() {
   const [search, setSearch] = useState("");
