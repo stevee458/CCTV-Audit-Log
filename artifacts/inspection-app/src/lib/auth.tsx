@@ -1,8 +1,11 @@
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useGetCurrentUser, useLogout, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import type { User, UserRole } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { clearOfflineData } from "@/lib/offline/db";
+import { clearPersistedQueryCache } from "@/lib/offline/persister";
+import { clearStoredScope, ensureScopeForUser } from "@/lib/offline/scope";
 
 interface AuthContextType {
   user: User | undefined;
@@ -23,11 +26,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  
+
+  // When the authenticated user changes (or first appears), make sure persisted
+  // offline data belongs to them. If not, wipe to prevent cross-user leakage.
+  useEffect(() => {
+    if (user?.id !== undefined) {
+      ensureScopeForUser(user.id).catch(() => {});
+    }
+  }, [user?.id]);
+
   const logoutMutation = useLogout({
     mutation: {
-      onSuccess: () => {
-        queryClient.removeQueries({ queryKey: getGetCurrentUserQueryKey() });
+      onSuccess: async () => {
+        queryClient.removeQueries();
+        clearPersistedQueryCache();
+        clearStoredScope();
+        await clearOfflineData();
         setLocation("/login");
       }
     }
@@ -74,7 +88,7 @@ export function ProtectedRoute({
   }, [user, isLoading, setLocation, allowedRoles]);
 
   if (isLoading || !user || (allowedRoles && !allowedRoles.includes(user.role))) {
-    return null; // Or a full-screen loading skeleton
+    return null;
   }
 
   return <>{children}</>;

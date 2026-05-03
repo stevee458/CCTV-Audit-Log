@@ -1,9 +1,15 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, ProtectedRoute } from "@/lib/auth";
+import { OfflineBanner } from "@/components/offline/OfflineBanner";
+import { installOfflineSupport } from "@/lib/offline/install";
+import { startSyncLoop } from "@/lib/offline/sync-runner";
+import { createReactQueryPersister } from "@/lib/offline/persister";
 
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
@@ -31,7 +37,23 @@ import MaintenanceStock from "@/pages/maintenance/Stock";
 import NewStockRequest from "@/pages/maintenance/NewStockRequest";
 import MaintenanceRequests from "@/pages/maintenance/Requests";
 
-const queryClient = new QueryClient();
+installOfflineSupport();
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24 * 7,
+      staleTime: 1000 * 30,
+      networkMode: "offlineFirst",
+      retry: false,
+    },
+    mutations: {
+      networkMode: "offlineFirst",
+    },
+  },
+});
+
+const persister = createReactQueryPersister();
 
 function Router() {
   return (
@@ -70,18 +92,35 @@ function Router() {
   );
 }
 
+function SyncBootstrap({ children }: { children: React.ReactNode }) {
+  useEffect(() => startSyncLoop(), []);
+  return <>{children}</>;
+}
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        dehydrateOptions: {
+          shouldDehydrateQuery: (q) => q.state.status === "success",
+        },
+      }}
+    >
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthProvider>
-            <Router />
+            <SyncBootstrap>
+              <OfflineBanner />
+              <Router />
+            </SyncBootstrap>
           </AuthProvider>
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
 

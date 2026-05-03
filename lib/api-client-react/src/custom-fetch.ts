@@ -17,6 +17,26 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _requestPreprocessor: RequestPreprocessor | null = null;
+let _offlineMutationHandler: OfflineMutationHandler | null = null;
+
+export type PreparedRequest = {
+  method: string;
+  url: string;
+  headers: Headers;
+  body: BodyInit | null | undefined;
+};
+
+export type RequestPreprocessor = (req: PreparedRequest) => void | Promise<void>;
+export type OfflineMutationHandler = (req: PreparedRequest) => unknown | Promise<unknown>;
+
+export function setRequestPreprocessor(fn: RequestPreprocessor | null): void {
+  _requestPreprocessor = fn;
+}
+
+export function setOfflineMutationHandler(fn: OfflineMutationHandler | null): void {
+  _offlineMutationHandler = fn;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -359,6 +379,29 @@ export async function customFetch<T = unknown>(
   }
 
   const requestInfo = { method, url: resolveUrl(input) };
+
+  if (_requestPreprocessor) {
+    await _requestPreprocessor({
+      method,
+      url: requestInfo.url,
+      headers,
+      body: init.body as BodyInit | null | undefined,
+    });
+  }
+
+  const isMutation = method !== "GET" && method !== "HEAD";
+  const isOffline =
+    typeof navigator !== "undefined" && navigator.onLine === false;
+
+  if (isMutation && isOffline && _offlineMutationHandler) {
+    const handled = await _offlineMutationHandler({
+      method,
+      url: requestInfo.url,
+      headers,
+      body: init.body as BodyInit | null | undefined,
+    });
+    return handled as T;
+  }
 
   const response = await fetch(input, {
     credentials: "include",

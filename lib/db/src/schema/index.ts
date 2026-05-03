@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   varchar,
   index,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -427,6 +428,27 @@ export const findingsRelations = relations(findingsTable, ({ one }) => ({
     references: [venuesTable.id],
   }),
 }));
+
+export const idempotencyKeysTable = pgTable(
+  "idempotency_keys",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    method: text("method").notNull(),
+    path: text("path").notNull(),
+    requestHash: text("request_hash").notNull(),
+    status: integer("status"),
+    response: text("response"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.key] }),
+  }),
+);
 
 export type User = typeof usersTable.$inferSelect;
 export type Depot = typeof depotsTable.$inferSelect;

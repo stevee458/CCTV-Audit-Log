@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/lib/auth";
+import { precacheReferenceData } from "@/lib/offline/precache";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +55,8 @@ export default function Login() {
         await refetch();
         queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
         toast({ title: "Welcome back" });
+        // Warm offline cache with reference data so the app stays usable when offline.
+        precacheReferenceData(queryClient).catch(() => {});
       },
       onError: (error) => {
         toast({

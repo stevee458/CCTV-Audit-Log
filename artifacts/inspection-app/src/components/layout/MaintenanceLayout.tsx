@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SyncStatus } from "@/components/offline/SyncStatus";
 
 export function MaintenanceLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -27,6 +28,7 @@ export function MaintenanceLayout({ children }: { children: ReactNode }) {
           <Logo className="h-8 w-auto" />
           <span className="font-semibold text-sm hidden sm:inline">Maintenance</span>
         </Link>
+        <SyncStatus />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
