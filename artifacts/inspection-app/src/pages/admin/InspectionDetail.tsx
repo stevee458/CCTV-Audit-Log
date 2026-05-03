@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Video, AlertTriangle, CheckCircle2, FileText, User } from "lucide-react";
+import { CopyButton } from "@/components/CopyButton";
 
 const severityColors: Record<string, string> = {
   A: "bg-red-500/15 text-red-700 border-red-500/20",
@@ -86,6 +87,7 @@ export default function AdminInspectionDetail() {
                               <div className="font-mono text-sm font-semibold flex items-center">
                                 <Video className="mr-2 h-4 w-4 text-muted-foreground" />
                                 {finding.clipName}
+                                <CopyButton value={finding.clipName} />
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {format(new Date(finding.createdAt), 'HH:mm')}

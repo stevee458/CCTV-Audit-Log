@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CopyButton } from "@/components/CopyButton";
 
 const severityColors: Record<string, string> = {
   A: "bg-red-500/15 text-red-700 border-red-500/20",
@@ -265,6 +266,7 @@ export default function InspectionWorkspace() {
                       <span className="font-mono text-sm font-semibold flex items-center text-foreground/80">
                         <Video className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
                         {finding.clipName}
+                        <CopyButton value={finding.clipName} />
                       </span>
                       
                       {finding.outcome === "violation" ? (

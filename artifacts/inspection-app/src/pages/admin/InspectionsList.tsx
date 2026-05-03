@@ -1,6 +1,6 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useListInspections, useListDepots, useListViolationCategories, ListInspectionsStatus, ListInspectionsOutcome, ListInspectionsSeverity } from "@workspace/api-client-react";
-import { useState } from "react";
+import { useListInspections, useListDepots, useListViolationCategories, useListUsers, ListInspectionsStatus, ListInspectionsOutcome, ListInspectionsSeverity } from "@workspace/api-client-react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 
@@ -24,30 +24,68 @@ const severityColors: Record<string, string> = {
 
 export default function InspectionsList() {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<ListInspectionsStatus | "">("");
-  const [outcome, setOutcome] = useState<ListInspectionsOutcome | "">("");
-  const [severity, setSeverity] = useState<ListInspectionsSeverity | "">("");
+  const [status, setStatus] = useState<string>("");
+  const [outcome, setOutcome] = useState<string>("");
+  const [severity, setSeverity] = useState<string>("");
   const [depotId, setDepotId] = useState<string>("");
+  const [venueId, setVenueId] = useState<string>("");
+  const [inspectorId, setInspectorId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [subCategoryId, setSubCategoryId] = useState<string>("");
+  const [footageDateFrom, setFootageDateFrom] = useState<string>("");
+  const [footageDateTo, setFootageDateTo] = useState<string>("");
+  const [inspectionDateFrom, setInspectionDateFrom] = useState<string>("");
+  const [inspectionDateTo, setInspectionDateTo] = useState<string>("");
 
   const { data: depots } = useListDepots();
-  
-  const isReal = (v: string) => v && v !== "all" && v !== "none";
-  const depotIdNum = isReal(depotId) ? parseInt(depotId, 10) : undefined;
-  const { data: inspections, isLoading } = useListInspections({
+  const { data: categories } = useListViolationCategories();
+  const { data: users } = useListUsers();
+
+  const isReal = (v: string) => !!v && v !== "all" && v !== "none";
+  const num = (v: string) => (isReal(v) ? parseInt(v, 10) : undefined);
+  const depotIdNum = num(depotId);
+  const venueIdNum = num(venueId);
+  const inspectorIdNum = num(inspectorId);
+  const categoryIdNum = num(categoryId);
+  const subCategoryIdNum = num(subCategoryId);
+
+  const venues = useMemo(() => {
+    if (depotIdNum) {
+      return depots?.find((d) => d.id === depotIdNum)?.venues ?? [];
+    }
+    return depots?.flatMap((d) => d.venues) ?? [];
+  }, [depots, depotIdNum]);
+  const subCategories = useMemo(
+    () => categories?.find((c) => c.id === categoryIdNum)?.subCategories ?? [],
+    [categories, categoryIdNum],
+  );
+  const inspectors = useMemo(
+    () => (users ?? []).filter((u) => u.role === "inspector"),
+    [users],
+  );
+
+  const filterParams = {
     search: search || undefined,
     status: isReal(status) ? (status as ListInspectionsStatus) : undefined,
     outcome: isReal(outcome) ? (outcome as ListInspectionsOutcome) : undefined,
     severity: isReal(severity) ? (severity as ListInspectionsSeverity) : undefined,
-    depotId: Number.isFinite(depotIdNum) ? depotIdNum : undefined,
-  });
+    depotId: depotIdNum,
+    venueId: venueIdNum,
+    inspectorId: inspectorIdNum,
+    categoryId: categoryIdNum,
+    subCategoryId: subCategoryIdNum,
+    footageDateFrom: footageDateFrom || undefined,
+    footageDateTo: footageDateTo || undefined,
+    inspectionDateFrom: inspectionDateFrom || undefined,
+    inspectionDateTo: inspectionDateTo || undefined,
+  };
+  const { data: inspections, isLoading } = useListInspections(filterParams);
 
   const exportCsv = async () => {
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (isReal(status)) params.set("status", status);
-    if (isReal(outcome)) params.set("outcome", outcome);
-    if (isReal(severity)) params.set("severity", severity);
-    if (Number.isFinite(depotIdNum)) params.set("depotId", String(depotIdNum));
+    for (const [k, v] of Object.entries(filterParams)) {
+      if (v !== undefined && v !== "") params.set(k, String(v));
+    }
     const res = await fetch(`/api/inspections/export.csv?${params.toString()}`, {
       credentials: "include",
     });
@@ -113,17 +151,15 @@ export default function InspectionsList() {
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2" data-testid="more-filters">
                       <Filter className="h-4 w-4" /> More Filters
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 space-y-4" align="end">
+                  <PopoverContent className="w-96 max-h-[80vh] overflow-y-auto space-y-4" align="end">
                     <div className="space-y-2">
                       <h4 className="font-medium leading-none">Severity</h4>
-                      <Select value={severity} onValueChange={(val) => setSeverity(val as any)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any severity" />
-                        </SelectTrigger>
+                      <Select value={severity} onValueChange={setSeverity}>
+                        <SelectTrigger><SelectValue placeholder="Any severity" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Any severity</SelectItem>
                           {["A", "B", "C", "D", "E"].map(s => (
@@ -132,26 +168,90 @@ export default function InspectionsList() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Depot</h4>
+                        <Select value={depotId} onValueChange={(v) => { setDepotId(v); setVenueId(""); }}>
+                          <SelectTrigger><SelectValue placeholder="Any depot" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Any depot</SelectItem>
+                            {depots?.map(d => (
+                              <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Venue</h4>
+                        <Select value={venueId} onValueChange={setVenueId} disabled={venues.length === 0}>
+                          <SelectTrigger><SelectValue placeholder="Any venue" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Any venue</SelectItem>
+                            {venues.map(v => (
+                              <SelectItem key={v.id} value={v.id.toString()}>{v.name} ({v.code})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <h4 className="font-medium leading-none">Depot</h4>
-                      <Select value={depotId} onValueChange={setDepotId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any depot" />
-                        </SelectTrigger>
+                      <h4 className="font-medium leading-none">Inspector</h4>
+                      <Select value={inspectorId} onValueChange={setInspectorId}>
+                        <SelectTrigger><SelectValue placeholder="Any inspector" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">Any depot</SelectItem>
-                          {depots?.map(d => (
-                            <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                          <SelectItem value="none">Any inspector</SelectItem>
+                          {inspectors.map(u => (
+                            <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Category</h4>
+                        <Select value={categoryId} onValueChange={(v) => { setCategoryId(v); setSubCategoryId(""); }}>
+                          <SelectTrigger><SelectValue placeholder="Any category" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Any category</SelectItem>
+                            {categories?.map(c => (
+                              <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Sub-category</h4>
+                        <Select value={subCategoryId} onValueChange={setSubCategoryId} disabled={subCategories.length === 0}>
+                          <SelectTrigger><SelectValue placeholder="Any sub-category" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Any sub-category</SelectItem>
+                            {subCategories.map(s => (
+                              <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Footage date</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input type="date" value={footageDateFrom} onChange={(e) => setFootageDateFrom(e.target.value)} aria-label="Footage from" />
+                        <Input type="date" value={footageDateTo} onChange={(e) => setFootageDateTo(e.target.value)} aria-label="Footage to" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">Inspection date</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input type="date" value={inspectionDateFrom} onChange={(e) => setInspectionDateFrom(e.target.value)} aria-label="Inspection from" />
+                        <Input type="date" value={inspectionDateTo} onChange={(e) => setInspectionDateTo(e.target.value)} aria-label="Inspection to" />
+                      </div>
+                    </div>
                     <Button variant="secondary" className="w-full" onClick={() => {
-                      setSeverity("");
-                      setDepotId("");
-                      setStatus("");
-                      setOutcome("");
-                      setSearch("");
+                      setSeverity(""); setDepotId(""); setVenueId("");
+                      setInspectorId(""); setCategoryId(""); setSubCategoryId("");
+                      setFootageDateFrom(""); setFootageDateTo("");
+                      setInspectionDateFrom(""); setInspectionDateTo("");
+                      setStatus(""); setOutcome(""); setSearch("");
                     }}>Reset Filters</Button>
                   </PopoverContent>
                 </Popover>
