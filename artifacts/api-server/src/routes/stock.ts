@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, asc, desc, sql } from "drizzle-orm";
+import { and, eq, asc, desc, sql, inArray } from "drizzle-orm";
 import {
   db,
   stockSkusTable,
@@ -25,7 +25,27 @@ router.get("/stock/skus", requireAuth, async (req, res) => {
     .from(stockSkusTable)
     .where(conds.length ? and(...conds) : undefined)
     .orderBy(asc(stockSkusTable.kind), asc(stockSkusTable.name));
-  res.json(rows);
+  // Attach lastUnitCostCents from most recent collected purchase per SKU
+  const ids = rows.map((r) => r.id);
+  const lastCosts = ids.length
+    ? await db
+        .select({
+          skuId: stockPurchasesTable.skuId,
+          unitCost: stockPurchasesTable.unitCost,
+          collectedAt: stockPurchasesTable.collectedAt,
+        })
+        .from(stockPurchasesTable)
+        .where(and(
+          inArray(stockPurchasesTable.skuId, ids),
+          sql`${stockPurchasesTable.collectedAt} is not null`,
+        ))
+        .orderBy(desc(stockPurchasesTable.collectedAt))
+    : [];
+  const lastCostBySku = new Map<number, number>();
+  for (const lc of lastCosts) {
+    if (!lastCostBySku.has(lc.skuId)) lastCostBySku.set(lc.skuId, lc.unitCost);
+  }
+  res.json(rows.map((r) => ({ ...r, lastUnitCostCents: lastCostBySku.get(r.id) ?? null })));
 });
 
 router.get("/stock/skus/export.csv", requireAdmin, async (_req, res) => {

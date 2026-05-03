@@ -16,5 +16,7 @@ export interface StockSku {
   /** @nullable */
   description: string | null;
   onHand: number;
+  /** @nullable */
+  lastUnitCostCents: number | null;
   createdAt: Date;
 }

@@ -12,6 +12,7 @@ import {
   assetsTable,
   stockSkusTable,
   stockMovementsTable,
+  stockPurchasesTable,
 } from "@workspace/db";
 import { requireAuth, requireMaintenance, requireAdmin } from "../middlewares/auth";
 import { sendCsv } from "../lib/csv";
@@ -198,52 +199,75 @@ router.post("/maintenance/repairs", requireMaintenance, async (req, res) => {
     ? req.body.consumption
     : [];
 
-  const result = await db.transaction(async (tx) => {
-    let partsCost = Number(req.body.partsCostCents) || 0;
-    // Validate stock availability
-    for (const c of consumption) {
-      const [sku] = await tx.select().from(stockSkusTable).where(eq(stockSkusTable.id, c.skuId)).limit(1);
-      if (!sku) throw new Error(`SKU ${c.skuId} not found`);
-      if (sku.onHand < c.quantity) throw new Error(`Insufficient stock for ${sku.name}`);
-    }
-    const [repair] = await tx
-      .insert(repairEventsTable)
-      .values({
-        visitId: req.body.visitId ? Number(req.body.visitId) : null,
-        venueId,
-        assetId: req.body.assetId ? Number(req.body.assetId) : null,
-        action,
-        description: req.body.description ?? null,
-        partsCostCents: partsCost,
-        labourCostCents: Number(req.body.labourCostCents) || 0,
-        clientChargeCents: Number(req.body.clientChargeCents) || 0,
-        occurredAt: req.body.occurredAt ? new Date(req.body.occurredAt) : new Date(),
-        createdBy: req.user!.id,
-      })
-      .returning();
-    for (const c of consumption) {
-      await tx.insert(repairConsumptionTable).values({
-        repairId: repair.id,
-        skuId: c.skuId,
-        quantity: c.quantity,
-        unitCostCents: 0,
-      });
-      await tx
-        .update(stockSkusTable)
-        .set({ onHand: sql`${stockSkusTable.onHand} - ${c.quantity}` })
-        .where(eq(stockSkusTable.id, c.skuId));
-      await tx.insert(stockMovementsTable).values({
-        skuId: c.skuId,
-        changeQty: -c.quantity,
-        reason: "consumption",
-        refTable: "repair_events",
-        refId: repair.id,
-        createdBy: req.user!.id,
-      });
-    }
-    return repair;
-  });
-  res.status(201).json(result);
+  try {
+    const result = await db.transaction(async (tx) => {
+      // Validate stock availability and resolve unit cost from latest collected purchase
+      const unitCosts = new Map<number, number>();
+      for (const c of consumption) {
+        const [sku] = await tx.select().from(stockSkusTable).where(eq(stockSkusTable.id, c.skuId)).limit(1);
+        if (!sku) throw new Error(`SKU ${c.skuId} not found`);
+        if (sku.onHand < c.quantity) throw new Error(`Insufficient stock for ${sku.name}`);
+        const [latest] = await tx
+          .select({ unitCost: stockPurchasesTable.unitCost })
+          .from(stockPurchasesTable)
+          .where(and(
+            eq(stockPurchasesTable.skuId, c.skuId),
+            sql`${stockPurchasesTable.collectedAt} is not null`,
+          ))
+          .orderBy(desc(stockPurchasesTable.collectedAt))
+          .limit(1);
+        unitCosts.set(c.skuId, latest?.unitCost ?? 0);
+      }
+      // Auto-calc parts cost from consumption when consumption is provided.
+      const computedParts = consumption.reduce(
+        (sum, c) => sum + c.quantity * (unitCosts.get(c.skuId) ?? 0),
+        0,
+      );
+      const partsCost = consumption.length > 0
+        ? computedParts
+        : (Number(req.body.partsCostCents) || 0);
+      const [repair] = await tx
+        .insert(repairEventsTable)
+        .values({
+          visitId: req.body.visitId ? Number(req.body.visitId) : null,
+          venueId,
+          assetId: req.body.assetId ? Number(req.body.assetId) : null,
+          action,
+          description: req.body.description ?? null,
+          partsCostCents: partsCost,
+          labourCostCents: Number(req.body.labourCostCents) || 0,
+          clientChargeCents: Number(req.body.clientChargeCents) || 0,
+          occurredAt: req.body.occurredAt ? new Date(req.body.occurredAt) : new Date(),
+          createdBy: req.user!.id,
+        })
+        .returning();
+      for (const c of consumption) {
+        const unit = unitCosts.get(c.skuId) ?? 0;
+        await tx.insert(repairConsumptionTable).values({
+          repairId: repair.id,
+          skuId: c.skuId,
+          quantity: c.quantity,
+          unitCostCents: unit,
+        });
+        await tx
+          .update(stockSkusTable)
+          .set({ onHand: sql`${stockSkusTable.onHand} - ${c.quantity}` })
+          .where(eq(stockSkusTable.id, c.skuId));
+        await tx.insert(stockMovementsTable).values({
+          skuId: c.skuId,
+          changeQty: -c.quantity,
+          reason: "consumption",
+          refTable: "repair_events",
+          refId: repair.id,
+          createdBy: req.user!.id,
+        });
+      }
+      return repair;
+    });
+    res.status(201).json(result);
+  } catch (e: any) {
+    res.status(400).json({ error: e?.message || "Repair failed" });
+  }
 });
 
 export default router;

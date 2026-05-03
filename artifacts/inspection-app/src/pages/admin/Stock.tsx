@@ -7,6 +7,7 @@ import {
   useRejectStockRequest,
   useCreateStockPurchase,
   useListStockPurchases,
+  useAdjustStockSku,
   getListStockSkusQueryKey,
   getListStockRequestsQueryKey,
   getListStockPurchasesQueryKey,
@@ -47,6 +48,12 @@ export default function AdminStock() {
   const reject = useRejectStockRequest({
     mutation: { onSuccess: () => { refresh(); toast({ title: "Rejected" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
   });
+  const adjust = useAdjustStockSku({
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Stock adjusted" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+  });
+  const [checkOpenFor, setCheckOpenFor] = useState<number | null>(null);
+  const [checkCount, setCheckCount] = useState("");
+  const [checkReason, setCheckReason] = useState("stock check");
 
   const [purchaseOpenFor, setPurchaseOpenFor] = useState<number | null>(null);
   const [pQty, setPQty] = useState("1");
@@ -145,7 +152,7 @@ export default function AdminStock() {
               </CardHeader>
               <CardContent>
                 <Table>
-                  <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Kind</TableHead><TableHead>Category</TableHead><TableHead>On hand</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Kind</TableHead><TableHead>Category</TableHead><TableHead>On hand</TableHead><TableHead></TableHead></TableRow></TableHeader>
                   <TableBody>
                     {skus?.map(s => (
                       <TableRow key={s.id} data-testid={`sku-${s.id}`}>
@@ -153,6 +160,14 @@ export default function AdminStock() {
                         <TableCell>{s.kind}</TableCell>
                         <TableCell>{s.category ?? "—"}</TableCell>
                         <TableCell>{s.onHand}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => { setCheckOpenFor(s.id); setCheckCount(String(s.onHand)); setCheckReason("stock check"); }}
+                            data-testid={`btn-check-${s.id}`}
+                          >Stock check</Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -161,6 +176,21 @@ export default function AdminStock() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={checkOpenFor !== null} onOpenChange={v => !v && setCheckOpenFor(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Stock check</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <Input type="number" placeholder="Counted" value={checkCount} onChange={e => setCheckCount(e.target.value)} data-testid="input-counted" />
+              <Input placeholder="Reason" value={checkReason} onChange={e => setCheckReason(e.target.value)} data-testid="input-reason" />
+              <Button
+                disabled={!checkCount}
+                onClick={() => { if (checkOpenFor) { adjust.mutate({ id: checkOpenFor, data: { counted: Number(checkCount), reason: checkReason || "stock check" } }); setCheckOpenFor(null); } }}
+                data-testid="btn-confirm-check"
+              >Apply</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={purchaseOpenFor !== null} onOpenChange={v => !v && setPurchaseOpenFor(null)}>
           <DialogContent>

@@ -1345,8 +1345,10 @@ components:
         description:
           type: ["string", "null"]
         onHand: { type: integer }
+        lastUnitCostCents:
+          type: ["integer", "null"]
         createdAt: { type: string, format: date-time }
-      required: [id, name, kind, category, description, onHand, createdAt]
+      required: [id, name, kind, category, description, onHand, lastUnitCostCents, createdAt]
 
     CreateStockSkuInput:
       type: object

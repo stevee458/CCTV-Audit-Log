@@ -9,6 +9,7 @@ import {
   useListDrives,
   useListAssets,
   useListDepots,
+  useListStockSkus,
   getGetMaintenanceVisitQueryKey,
   getListDrivesQueryKey,
 } from "@workspace/api-client-react";
@@ -43,14 +44,17 @@ export default function VisitDetail() {
   const [repairAssetId, setRepairAssetId] = useState("");
   const [repairAction, setRepairAction] = useState<"repair" | "replace">("repair");
   const [repairDesc, setRepairDesc] = useState("");
-  const [partsCost, setPartsCost] = useState("0");
   const [labourCost, setLabourCost] = useState("0");
   const [chargeCost, setChargeCost] = useState("0");
+  const [consumption, setConsumption] = useState<Array<{ skuId: number; quantity: number }>>([]);
+  const [pickSkuId, setPickSkuId] = useState("");
+  const [pickQty, setPickQty] = useState("1");
 
   const venues = depots?.find(d => d.id === visit?.depotId)?.venues ?? [];
 
   const { data: venueDrives } = useListDrives({ venueId: venueId ? Number(venueId) : undefined, type: "venue" });
   const { data: assets } = useListAssets({ venueId: venueId ? Number(venueId) : undefined });
+  const { data: skus } = useListStockSkus();
 
   const addVenue = useAddVenueInspectionVisit({
     mutation: { onSuccess: () => { refresh(); toast({ title: "Venue added" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
@@ -59,8 +63,14 @@ export default function VisitDetail() {
     mutation: { onSuccess: () => { refresh(); toast({ title: "Swap recorded" }); setInstallDriveId(""); setExtractDriveId(""); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
   });
   const repair = useCreateRepair({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Repair logged" }); setRepairDesc(""); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Repair logged" }); setRepairDesc(""); setConsumption([]); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
   });
+
+  const computedPartsCents = consumption.reduce((sum, c) => {
+    const sku = skus?.find(s => s.id === c.skuId);
+    const unit = (sku as any)?.lastUnitCostCents ?? 0;
+    return sum + c.quantity * unit;
+  }, 0);
 
   if (!visit) return <MaintenanceLayout><div className="p-4">Loading...</div></MaintenanceLayout>;
 
@@ -149,8 +159,56 @@ export default function VisitDetail() {
                   </SelectContent>
                 </Select>
                 <Textarea placeholder="Description" value={repairDesc} onChange={e => setRepairDesc(e.target.value)} data-testid="input-repair-desc" />
-                <div className="grid grid-cols-3 gap-2">
-                  <Input type="number" placeholder="Parts ¢" value={partsCost} onChange={e => setPartsCost(e.target.value)} data-testid="input-parts" />
+
+                <div className="space-y-1 border rounded p-2">
+                  <div className="text-xs font-medium">Stock used</div>
+                  {consumption.length === 0 && <div className="text-xs text-muted-foreground">No items consumed yet.</div>}
+                  {consumption.map((c, idx) => {
+                    const sku = skus?.find(s => s.id === c.skuId);
+                    return (
+                      <div key={idx} className="flex items-center justify-between text-sm" data-testid={`consume-${c.skuId}`}>
+                        <span>{sku?.name ?? `SKU ${c.skuId}`} × {c.quantity}</span>
+                        <Button size="sm" variant="ghost" onClick={() => setConsumption(consumption.filter((_, i) => i !== idx))} data-testid={`btn-remove-consume-${c.skuId}`}>Remove</Button>
+                      </div>
+                    );
+                  })}
+                  <div className="flex gap-2">
+                    <Select value={pickSkuId} onValueChange={setPickSkuId}>
+                      <SelectTrigger data-testid="select-consume-sku"><SelectValue placeholder="Pick SKU" /></SelectTrigger>
+                      <SelectContent>
+                        {skus?.filter(s => !consumption.some(c => c.skuId === s.id)).map(s => (
+                          <SelectItem key={s.id} value={s.id.toString()} disabled={s.onHand <= 0}>
+                            {s.name} (on hand: {s.onHand})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input type="number" min="1" value={pickQty} onChange={e => setPickQty(e.target.value)} className="w-20" data-testid="input-consume-qty" />
+                    <Button
+                      size="sm"
+                      disabled={!pickSkuId || !pickQty || Number(pickQty) <= 0}
+                      onClick={() => {
+                        const skuId = Number(pickSkuId);
+                        const qty = Number(pickQty);
+                        const sku = skus?.find(s => s.id === skuId);
+                        if (sku && sku.onHand < qty) {
+                          toast({ title: "Insufficient stock", description: `Only ${sku.onHand} on hand.`, variant: "destructive" });
+                          return;
+                        }
+                        setConsumption([...consumption, { skuId, quantity: qty }]);
+                        setPickSkuId(""); setPickQty("1");
+                      }}
+                      data-testid="btn-add-consume"
+                    >Add</Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground pt-1">Parts cost is auto-calculated from consumed stock.</div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 items-center">
+                  <div className="text-xs">
+                    <div className="text-muted-foreground">Parts (auto)</div>
+                    <div className="font-medium" data-testid="text-parts-auto">${(computedPartsCents/100).toFixed(2)}</div>
+                  </div>
                   <Input type="number" placeholder="Labour ¢" value={labourCost} onChange={e => setLabourCost(e.target.value)} data-testid="input-labour" />
                   <Input type="number" placeholder="Charge ¢" value={chargeCost} onChange={e => setChargeCost(e.target.value)} data-testid="input-charge" />
                 </div>
@@ -161,9 +219,9 @@ export default function VisitDetail() {
                     assetId: repairAssetId && repairAssetId !== "0" ? Number(repairAssetId) : null,
                     action: repairAction,
                     description: repairDesc || null,
-                    partsCostCents: Number(partsCost) || 0,
                     labourCostCents: Number(labourCost) || 0,
                     clientChargeCents: Number(chargeCost) || 0,
+                    consumption,
                   } })}
                   data-testid="btn-log-repair"
                 >Log repair</Button>

@@ -123,7 +123,7 @@ export function requireMaintenance(req: Request, res: Response, next: NextFuncti
     res.status(401).json({ error: "Not signed in" });
     return;
   }
-  if (req.user.role !== "maintenance" && req.user.role !== "admin") {
+  if (req.user.role !== "maintenance") {
     res.status(403).json({ error: "Maintenance access required" });
     return;
   }
@@ -135,7 +135,7 @@ export function requireInspector(req: Request, res: Response, next: NextFunction
     res.status(401).json({ error: "Not signed in" });
     return;
   }
-  if (req.user.role !== "inspector" && req.user.role !== "admin") {
+  if (req.user.role !== "inspector") {
     res.status(403).json({ error: "Inspector access required" });
     return;
   }

@@ -676,6 +676,7 @@ export const ListStockSkusResponseItem = zod.object({
   category: zod.string().nullable(),
   description: zod.string().nullable(),
   onHand: zod.number(),
+  lastUnitCostCents: zod.number().nullable(),
   createdAt: zod.coerce.date(),
 });
 export const ListStockSkusResponse = zod.array(ListStockSkusResponseItem);
@@ -706,6 +707,7 @@ export const UpdateStockSkuResponse = zod.object({
   category: zod.string().nullable(),
   description: zod.string().nullable(),
   onHand: zod.number(),
+  lastUnitCostCents: zod.number().nullable(),
   createdAt: zod.coerce.date(),
 });
 

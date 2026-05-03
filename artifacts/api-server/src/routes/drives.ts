@@ -295,9 +295,30 @@ router.post("/drives/swap", requireMaintenance, async (req, res) => {
   const extractDriveId = req.body.extractDriveId ? Number(req.body.extractDriveId) : null;
   if (!Number.isInteger(venueId)) return res.status(400).json({ error: "venueId required" });
   if (!installDriveId && !extractDriveId) return res.status(400).json({ error: "Provide at least one of installDriveId / extractDriveId" });
+  try {
   await db.transaction(async (tx) => {
     const now = new Date();
     if (extractDriveId) {
+      // Guard: extracted drive must currently be In DVR with an open window at this venue
+      const [extDrive] = await tx.select().from(drivesTable).where(eq(drivesTable.id, extractDriveId)).limit(1);
+      if (!extDrive) throw new Error("Extract drive not found");
+      if (extDrive.status !== "In DVR") {
+        throw new Error(`Cannot extract drive in status: ${extDrive.status}`);
+      }
+      const openWindows = await tx
+        .select()
+        .from(driveFootageWindowsTable)
+        .where(
+          and(
+            eq(driveFootageWindowsTable.driveId, extractDriveId),
+            eq(driveFootageWindowsTable.venueId, venueId),
+            isNull(driveFootageWindowsTable.extractedAt),
+          ),
+        )
+        .limit(1);
+      if (openWindows.length === 0) {
+        throw new Error("Extract drive has no open window at this venue");
+      }
       // Close any open footage window for this drive at this venue
       await tx
         .update(driveFootageWindowsTable)
@@ -323,6 +344,12 @@ router.post("/drives/swap", requireMaintenance, async (req, res) => {
       });
     }
     if (installDriveId) {
+      // Guard: installed drive must currently be in maintenance possession (held by caller)
+      const [insDrive] = await tx.select().from(drivesTable).where(eq(drivesTable.id, installDriveId)).limit(1);
+      if (!insDrive) throw new Error("Install drive not found");
+      if (insDrive.status !== "In Maintenance possession" || insDrive.holderUserId !== req.user!.id) {
+        throw new Error("Install drive must be in your possession");
+      }
       // Close any prior open window first (in case it was open elsewhere)
       await tx
         .update(driveFootageWindowsTable)
@@ -353,6 +380,9 @@ router.post("/drives/swap", requireMaintenance, async (req, res) => {
       });
     }
   });
+  } catch (e: any) {
+    return res.status(400).json({ error: e?.message || "Swap failed" });
+  }
   res.json({ ok: true });
 });
 
@@ -409,7 +439,7 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
       .orderBy(desc(driveCustodyEventsTable.releasedAt))
       .limit(1);
     if (!pending) throw new Error("No pending custody event");
-    if (pending.toUserId !== req.user!.id && req.user!.role !== "admin") {
+    if (pending.toUserId !== req.user!.id) {
       throw new Error("This drive is not pending acceptance for you");
     }
     await tx
@@ -439,8 +469,8 @@ router.post("/drives/:id/return", requireAuth, async (req, res) => {
     await db.transaction(async (tx) => {
       const [d] = await tx.select().from(drivesTable).where(eq(drivesTable.id, driveId));
       if (!d) throw new Error("Drive not found");
-      // Only the current holder (or admin) may initiate a return
-      if (req.user!.role !== "admin" && d.holderUserId !== req.user!.id) {
+      // Only the current holder may initiate a return
+      if (d.holderUserId !== req.user!.id) {
         throw new Error("Only the current holder may return this drive");
       }
       if (d.status !== "With Inspector" && d.status !== "In transit to Inspector") {

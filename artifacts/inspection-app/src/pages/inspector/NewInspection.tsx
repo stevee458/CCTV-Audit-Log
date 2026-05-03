@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLocation } from "wouter";
-import { useCreateInspection, useListDepots, useListDrives, getListInspectionsQueryKey, getGetStatsOverviewQueryKey } from "@workspace/api-client-react";
+import { useCreateInspection, useListDepots, useListDrives, useGetDrive, getListInspectionsQueryKey, getGetStatsOverviewQueryKey, getGetDriveQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { InspectorLayout } from "@/components/layout/InspectorLayout";
@@ -62,8 +62,24 @@ export default function NewInspection() {
 
   const heldDrives = (myDrives ?? []).filter(d => d.status === "With Inspector");
   const selectedDriveId = Number(form.watch("driveId"));
-  const selectedDrive = heldDrives.find(d => d.id === selectedDriveId);
-  const driveWindows = selectedDrive ? [] : []; // detail loaded via list (windows on getDrive). For UI hint we list summary windows below.
+  const selectedVenueId = Number(form.watch("venueId"));
+  const { data: driveDetail } = useGetDrive(selectedDriveId, {
+    query: { enabled: !!selectedDriveId, queryKey: getGetDriveQueryKey(selectedDriveId) },
+  });
+  const driveWindows = (driveDetail?.footageWindows ?? []).filter(
+    (w) => !selectedVenueId || w.venueId === selectedVenueId,
+  );
+
+  function isDateInWindow(date: Date): boolean {
+    if (driveWindows.length === 0) return false;
+    return driveWindows.some((w) => {
+      const start = new Date(w.installedAt);
+      const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const end = w.extractedAt ? new Date(w.extractedAt) : new Date();
+      const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      return date >= startDay && date <= endDay;
+    });
+  }
 
   const createMutation = useCreateInspection({
     mutation: {
@@ -261,14 +277,18 @@ export default function NewInspection() {
                             selected={field.value}
                             onSelect={field.onChange}
                             disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
+                              date > new Date() || date < new Date("1900-01-01") || !isDateInWindow(date)
                             }
                             initialFocus
                           />
                         </PopoverContent>
                       </Popover>
                       <FormDescription>
-                        The date the CCTV footage was recorded
+                        {selectedDriveId
+                          ? driveWindows.length === 0
+                            ? "No footage windows available for this drive at the selected venue."
+                            : `Pick a date inside one of this drive's footage windows for the selected venue (${driveWindows.length} available).`
+                          : "Select a drive first."}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
