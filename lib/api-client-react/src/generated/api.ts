@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AcceptDriveInput,
   AddVenueVisitInput,
   AdjustStockInput,
   Asset,
@@ -2058,11 +2059,14 @@ export const getAcceptDriveUrl = (id: number) => {
 
 export const acceptDrive = async (
   id: number,
+  acceptDriveInput: AcceptDriveInput,
   options?: RequestInit,
 ): Promise<OkResponse> => {
   return customFetch<OkResponse>(getAcceptDriveUrl(id), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(acceptDriveInput),
   });
 };
 
@@ -2073,14 +2077,14 @@ export const getAcceptDriveMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof acceptDrive>>,
     TError,
-    { id: number },
+    { id: number; data: BodyType<AcceptDriveInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof acceptDrive>>,
   TError,
-  { id: number },
+  { id: number; data: BodyType<AcceptDriveInput> },
   TContext
 > => {
   const mutationKey = ["acceptDrive"];
@@ -2094,11 +2098,11 @@ export const getAcceptDriveMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof acceptDrive>>,
-    { id: number }
+    { id: number; data: BodyType<AcceptDriveInput> }
   > = (props) => {
-    const { id } = props ?? {};
+    const { id, data } = props ?? {};
 
-    return acceptDrive(id, requestOptions);
+    return acceptDrive(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -2107,7 +2111,7 @@ export const getAcceptDriveMutationOptions = <
 export type AcceptDriveMutationResult = NonNullable<
   Awaited<ReturnType<typeof acceptDrive>>
 >;
-
+export type AcceptDriveMutationBody = BodyType<AcceptDriveInput>;
 export type AcceptDriveMutationError = ErrorType<unknown>;
 
 /**
@@ -2120,14 +2124,14 @@ export const useAcceptDrive = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof acceptDrive>>,
     TError,
-    { id: number },
+    { id: number; data: BodyType<AcceptDriveInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof acceptDrive>>,
   TError,
-  { id: number },
+  { id: number; data: BodyType<AcceptDriveInput> },
   TContext
 > => {
   return useMutation(getAcceptDriveMutationOptions(options));

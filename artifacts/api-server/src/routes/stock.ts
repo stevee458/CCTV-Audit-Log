@@ -74,9 +74,11 @@ router.post("/stock/skus", requireAdmin, async (req, res) => {
 router.patch("/stock/skus/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const updates: Partial<typeof stockSkusTable.$inferInsert> = {};
-  for (const k of ["name", "kind", "category", "description"]) {
-    if (k in req.body) (updates as any)[k] = req.body[k];
-  }
+  const body = req.body as Record<string, unknown>;
+  if ("name" in body) updates.name = body.name as string;
+  if ("kind" in body) updates.kind = body.kind as string;
+  if ("category" in body) updates.category = body.category as string | null;
+  if ("description" in body) updates.description = body.description as string | null;
   const [updated] = await db.update(stockSkusTable).set(updates).where(eq(stockSkusTable.id, id)).returning();
   if (!updated) return res.status(404).json({ error: "SKU not found" });
   res.json(updated);

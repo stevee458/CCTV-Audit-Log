@@ -21,7 +21,7 @@ export default function MaintenanceStock() {
   const { toast } = useToast();
 
   const collect = useCollectStockPurchase({
-    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListStockPurchasesQueryKey() }); qc.invalidateQueries({ queryKey: getListStockSkusQueryKey() }); toast({ title: "Collected" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListStockPurchasesQueryKey() }); qc.invalidateQueries({ queryKey: getListStockSkusQueryKey() }); toast({ title: "Collected" }); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
 
   return (

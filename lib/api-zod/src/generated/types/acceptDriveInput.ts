@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ReturnDriveInput {
-  toUserId: number;
+export interface AcceptDriveInput {
   confirmDriveName: string;
 }

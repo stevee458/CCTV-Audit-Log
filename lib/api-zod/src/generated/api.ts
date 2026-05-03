@@ -542,6 +542,7 @@ export const ReleaseDriveParams = zod.object({
 
 export const ReleaseDriveBody = zod.object({
   toUserId: zod.number(),
+  confirmDriveName: zod.string(),
 });
 
 export const ReleaseDriveResponse = zod.object({
@@ -553,6 +554,10 @@ export const ReleaseDriveResponse = zod.object({
  */
 export const AcceptDriveParams = zod.object({
   id: zod.coerce.number(),
+});
+
+export const AcceptDriveBody = zod.object({
+  confirmDriveName: zod.string(),
 });
 
 export const AcceptDriveResponse = zod.object({
@@ -568,6 +573,7 @@ export const ReturnDriveParams = zod.object({
 
 export const ReturnDriveBody = zod.object({
   toUserId: zod.number(),
+  confirmDriveName: zod.string(),
 });
 
 export const ReturnDriveResponse = zod.object({

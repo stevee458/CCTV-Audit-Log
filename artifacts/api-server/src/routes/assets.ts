@@ -89,9 +89,13 @@ router.patch("/assets/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const updates: Partial<typeof assetsTable.$inferInsert> = {};
-  for (const k of ["label", "serial", "status", "notes", "type", "installedAt"]) {
-    if (k in req.body) (updates as any)[k] = req.body[k];
-  }
+  const body = req.body as Record<string, unknown>;
+  if ("label" in body) updates.label = body.label as string;
+  if ("serial" in body) updates.serial = body.serial as string | null;
+  if ("status" in body) updates.status = body.status as string;
+  if ("notes" in body) updates.notes = body.notes as string | null;
+  if ("type" in body) updates.type = body.type as string;
+  if ("installedAt" in body) updates.installedAt = body.installedAt as string | null;
   const [updated] = await db.update(assetsTable).set(updates).where(eq(assetsTable.id, id)).returning();
   if (!updated) return res.status(404).json({ error: "Asset not found" });
   res.json(updated);

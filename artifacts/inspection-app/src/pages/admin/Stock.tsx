@@ -24,6 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { format } from "date-fns";
+import { apiErrorMessage } from "@/lib/api-error";
 
 export default function AdminStock() {
   const { data: skus } = useListStockSkus();
@@ -43,13 +44,13 @@ export default function AdminStock() {
   const [skuCategory, setSkuCategory] = useState("");
 
   const createSku = useCreateStockSku({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "SKU created" }); setSkuOpen(false); setSkuName(""); setSkuCategory(""); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "SKU created" }); setSkuOpen(false); setSkuName(""); setSkuCategory(""); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
   const reject = useRejectStockRequest({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Rejected" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Rejected" }); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
   const adjust = useAdjustStockSku({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Stock adjusted" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Stock adjusted" }); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
   const [checkOpenFor, setCheckOpenFor] = useState<number | null>(null);
   const [checkCount, setCheckCount] = useState("");
@@ -69,7 +70,7 @@ export default function AdminStock() {
         setPurchaseOpenFor(null);
         setPQty("1"); setPCost("0"); setPSupplier(""); setPPo("");
       },
-      onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }),
+      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
   });
 

@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { apiErrorMessage } from "@/lib/api-error";
 
 export default function VisitDetail() {
   const { id } = useParams<{ id: string }>();
@@ -57,18 +58,18 @@ export default function VisitDetail() {
   const { data: skus } = useListStockSkus();
 
   const addVenue = useAddVenueInspectionVisit({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Venue added" }); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Venue added" }); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
   const swap = useSwapDrive({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Swap recorded" }); setInstallDriveId(""); setExtractDriveId(""); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Swap recorded" }); setInstallDriveId(""); setExtractDriveId(""); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
   const repair = useCreateRepair({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Repair logged" }); setRepairDesc(""); setConsumption([]); }, onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }) },
+    mutation: { onSuccess: () => { refresh(); toast({ title: "Repair logged" }); setRepairDesc(""); setConsumption([]); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
 
   const computedPartsCents = consumption.reduce((sum, c) => {
     const sku = skus?.find(s => s.id === c.skuId);
-    const unit = (sku as any)?.lastUnitCostCents ?? 0;
+    const unit = sku?.lastUnitCostCents ?? 0;
     return sum + c.quantity * unit;
   }, 0);
 

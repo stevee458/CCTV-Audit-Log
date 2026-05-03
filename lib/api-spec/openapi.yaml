@@ -464,6 +464,11 @@ paths:
       tags: [drives]
       summary: Accept a drive in transit
       parameters: [{ $ref: "#/components/parameters/IdParam" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AcceptDriveInput" }
       responses:
         "200":
           description: OK
@@ -1236,13 +1241,21 @@ components:
       type: object
       properties:
         toUserId: { type: integer }
-      required: [toUserId]
+        confirmDriveName: { type: string }
+      required: [toUserId, confirmDriveName]
 
     ReturnDriveInput:
       type: object
       properties:
         toUserId: { type: integer }
-      required: [toUserId]
+        confirmDriveName: { type: string }
+      required: [toUserId, confirmDriveName]
+
+    AcceptDriveInput:
+      type: object
+      properties:
+        confirmDriveName: { type: string }
+      required: [confirmDriveName]
 
     WhereaboutsMatch:
       type: object
