@@ -54,8 +54,18 @@ export function ConfirmDriveDialog({ trigger, driveName, title, description, ope
           if (cancelled || !videoRef.current) return;
           try {
             const codes = await detector.detect(videoRef.current);
-            if (codes[0]?.rawValue) {
-              setTyped(codes[0].rawValue);
+            const raw = codes[0]?.rawValue;
+            if (raw) {
+              let value = raw;
+              try {
+                const parsed = JSON.parse(raw) as { kind?: string; name?: string };
+                if (parsed && parsed.kind === "drive" && typeof parsed.name === "string") {
+                  value = parsed.name;
+                }
+              } catch {
+                // raw value is not JSON — use as-is
+              }
+              setTyped(value);
               setScanning(false);
               return;
             }

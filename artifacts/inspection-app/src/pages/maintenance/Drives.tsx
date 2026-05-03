@@ -10,6 +10,8 @@ import { useAuth } from "@/lib/auth";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { HardDrive } from "lucide-react";
+import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
+import { apiErrorMessage } from "@/lib/api-error";
 
 export default function MaintenanceDrives() {
   const { user } = useAuth();
@@ -18,13 +20,15 @@ export default function MaintenanceDrives() {
   const { data: all } = useListDrives({ search: search || undefined });
   const qc = useQueryClient();
   const { toast } = useToast();
+  const [acceptFor, setAcceptFor] = useState<number | null>(null);
   const accept = useAcceptDrive({
     mutation: {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListDrivesQueryKey() });
+        setAcceptFor(null);
         toast({ title: "Drive accepted" });
       },
-      onError: (e) => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }),
+      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
   });
 
@@ -46,7 +50,16 @@ export default function MaintenanceDrives() {
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{d.status}</Badge>
                   {d.status === "In transit to Maintenance" && (
-                    <Button size="sm" onClick={() => accept.mutate({ id: d.id })} data-testid={`accept-${d.id}`}>Accept</Button>
+                    <ConfirmDriveDialog
+                      open={acceptFor === d.id}
+                      onOpenChange={(v) => setAcceptFor(v ? d.id : null)}
+                      driveName={d.name}
+                      title={`Accept ${d.name}`}
+                      description="Confirm the drive identity before taking custody."
+                      trigger={<Button size="sm" data-testid={`accept-${d.id}`}>Accept</Button>}
+                      busy={accept.isPending}
+                      onConfirm={(confirmDriveName) => accept.mutate({ id: d.id, data: { confirmDriveName } })}
+                    />
                   )}
                 </div>
               </div>

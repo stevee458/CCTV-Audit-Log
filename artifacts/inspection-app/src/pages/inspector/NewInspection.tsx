@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { InspectorLayout } from "@/components/layout/InspectorLayout";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,7 @@ export default function NewInspection() {
       onError: (error) => {
         toast({
           title: "Failed to create inspection",
-          description: (error.data as any)?.error || "An unexpected error occurred",
+          description: apiErrorMessage(error) || "An unexpected error occurred",
           variant: "destructive",
         });
       },

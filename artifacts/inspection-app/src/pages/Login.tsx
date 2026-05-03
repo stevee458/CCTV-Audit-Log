@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -57,7 +58,7 @@ export default function Login() {
       onError: (error) => {
         toast({
           title: "Sign in failed",
-          description: (error.data as any)?.error || "Please check your credentials",
+          description: apiErrorMessage(error) || "Please check your credentials",
           variant: "destructive",
         });
       },

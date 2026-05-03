@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { ArrowLeft } from "lucide-react";
 
 export default function NewStockRequest() {
@@ -27,7 +28,7 @@ export default function NewStockRequest() {
         toast({ title: "Request submitted" });
         setLocation("/maintenance/requests");
       },
-      onError: (e) => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }),
+      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
   });
 

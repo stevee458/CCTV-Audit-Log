@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { Plus } from "lucide-react";
 
 const ASSET_TYPES = ["DVR", "Camera", "Power Supply", "Hard Drive", "Cable"];
@@ -36,7 +37,7 @@ export default function AdminAssets() {
         setOpen(false);
         setLabel(""); setSerial(""); setType(""); setVenueId("");
       },
-      onError: e => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }),
+      onError: e => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
   });
 

@@ -4,6 +4,7 @@ import { useGetInspection, useCompleteInspection, useAddFinding, useUpdateFindin
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,7 +74,7 @@ export default function InspectionWorkspace() {
         toast({ title: "Inspection marked complete" });
         setLocation("/inspector");
       },
-      onError: (err) => toast({ title: "Error", description: (err.data as any)?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: apiErrorMessage(err), variant: "destructive" })
     }
   });
 
@@ -87,7 +88,7 @@ export default function InspectionWorkspace() {
         toast({ title: "Finding added" });
         setFindingDialogOpen(false);
       },
-      onError: (err) => toast({ title: "Error", description: (err.data as any)?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: apiErrorMessage(err), variant: "destructive" })
     }
   });
 
@@ -100,7 +101,7 @@ export default function InspectionWorkspace() {
         toast({ title: "Finding updated" });
         setFindingDialogOpen(false);
       },
-      onError: (err) => toast({ title: "Error", description: (err.data as any)?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: apiErrorMessage(err), variant: "destructive" })
     }
   });
 

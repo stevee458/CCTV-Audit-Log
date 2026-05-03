@@ -269,7 +269,7 @@ router.get("/drives/:id/qr.png", requireAuth, async (req, res) => {
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const drive = await db.select().from(drivesTable).where(eq(drivesTable.id, id)).limit(1);
   if (drive.length === 0) return res.status(404).json({ error: "Drive not found" });
-  const payload = JSON.stringify({ kind: "drive", id });
+  const payload = JSON.stringify({ kind: "drive", id, name: drive[0].name });
   const buf = await QRCode.toBuffer(payload, { type: "png", margin: 1, width: 320 });
   res.setHeader("Content-Type", "image/png");
   res.send(buf);

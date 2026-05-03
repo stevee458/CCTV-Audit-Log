@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { ArrowLeft } from "lucide-react";
 
 export default function NewMaintenanceVisit() {
@@ -24,7 +25,7 @@ export default function NewMaintenanceVisit() {
         toast({ title: "Visit started" });
         setLocation(`/maintenance/visits/${v.id}`);
       },
-      onError: (e) => toast({ title: "Failed", description: (e.data as any)?.error, variant: "destructive" }),
+      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
   });
   return (

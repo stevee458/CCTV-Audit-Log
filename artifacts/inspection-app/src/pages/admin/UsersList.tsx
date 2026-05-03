@@ -2,6 +2,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useListUsers, useCreateUser, useUpdateUser, getListUsersQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiErrorMessage } from "@/lib/api-error";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -41,7 +42,7 @@ export default function UsersList() {
         setCreateOpen(false);
         form.reset();
       },
-      onError: (err) => toast({ title: "Failed to create user", description: (err.data as any)?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Failed to create user", description: apiErrorMessage(err), variant: "destructive" })
     }
   });
 
@@ -51,7 +52,7 @@ export default function UsersList() {
         queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
         toast({ title: "User updated" });
       },
-      onError: (err) => toast({ title: "Failed to update user", description: (err.data as any)?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Failed to update user", description: apiErrorMessage(err), variant: "destructive" })
     }
   });
 
