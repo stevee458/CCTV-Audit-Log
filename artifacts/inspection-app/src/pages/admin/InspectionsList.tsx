@@ -41,30 +41,25 @@ export default function InspectionsList() {
     depotId: Number.isFinite(depotIdNum) ? depotIdNum : undefined,
   });
 
-  const exportCsv = () => {
-    if (!inspections) return;
-    
-    const headers = ["DVR Number", "Depot", "Venue", "Status", "Footage Date", "Inspector", "Findings", "Violations"];
-    const rows = inspections.map(i => [
-      i.dvrNumber, i.depotName, i.venueCode, i.status, 
-      format(new Date(i.footageDate), 'yyyy-MM-dd'), i.inspectorName, 
-      i.findingsCount, i.violationsCount
-    ]);
-    
-    const csvContent = "\uFEFF" + [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    ].join("\n");
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
+  const exportCsv = async () => {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (isReal(status)) params.set("status", status);
+    if (isReal(outcome)) params.set("outcome", outcome);
+    if (isReal(severity)) params.set("severity", severity);
+    if (Number.isFinite(depotIdNum)) params.set("depotId", String(depotIdNum));
+    const res = await fetch(`/api/inspections/export.csv?${params.toString()}`, {
+      credentials: "include",
+    });
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `inspections_export_${format(new Date(), 'yyyyMMdd')}.csv`);
-    link.style.visibility = 'hidden';
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `inspections_export_${format(new Date(), "yyyyMMdd")}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (

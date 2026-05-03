@@ -84,7 +84,7 @@ async function loadSummaries(inspectionIds: number[]) {
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
-router.get("/inspections", requireAuth, async (req, res) => {
+async function listInspectionIds(req: any): Promise<number[] | null> {
   const q = req.query;
   const conds = [] as ReturnType<typeof eq>[];
   if (q.depotId) conds.push(eq(inspectionsTable.depotId, Number(q.depotId)));
@@ -127,7 +127,7 @@ router.get("/inspections", requireAuth, async (req, res) => {
       .from(findingsTable)
       .where(and(...fconds));
     candidateIds = matches.map((m) => m.id);
-    if (candidateIds.length === 0) return res.json([]);
+    if (candidateIds.length === 0) return [];
   } else if (q.categoryId || q.subCategoryId || q.severity) {
     const fconds = [];
     if (q.categoryId)
@@ -140,7 +140,7 @@ router.get("/inspections", requireAuth, async (req, res) => {
       .from(findingsTable)
       .where(and(...fconds));
     candidateIds = matches.map((m) => m.id);
-    if (candidateIds.length === 0) return res.json([]);
+    if (candidateIds.length === 0) return [];
   }
 
   if (candidateIds) conds.push(inArray(inspectionsTable.id, candidateIds));
@@ -153,14 +153,23 @@ router.get("/inspections", requireAuth, async (req, res) => {
 
   if (q.search) {
     const term = `%${String(q.search)}%`;
+    const noteMatches = await db
+      .selectDistinct({ id: findingsTable.inspectionId })
+      .from(findingsTable)
+      .where(ilike(findingsTable.notes, term));
+    const noteInspectionIds = noteMatches.map((m) => m.id);
     conds.push(
-      // Search across DVR, venue code/name, inspector name
+      // Search across DVR, venue code/name, inspector name, inspection notes, finding notes
       // @ts-expect-error mixing ilike or
       or(
         ilike(inspectionsTable.dvrNumber, term),
         ilike(venuesTable.code, term),
         ilike(venuesTable.name, term),
         ilike(usersTable.name, term),
+        ilike(inspectionsTable.notes, term),
+        noteInspectionIds.length > 0
+          ? inArray(inspectionsTable.id, noteInspectionIds)
+          : sql`false`,
       ),
     );
   }
@@ -169,8 +178,118 @@ router.get("/inspections", requireAuth, async (req, res) => {
     .where(conds.length > 0 ? and(...conds) : undefined)
     .orderBy(desc(inspectionsTable.createdAt));
 
-  const summaries = await loadSummaries(rows.map((r) => r.id));
-  res.json(summaries);
+  return rows.map((r) => r.id);
+}
+
+router.get("/inspections", requireAuth, async (req, res) => {
+  const ids = await listInspectionIds(req);
+  if (!ids) return res.json([]);
+  res.json(await loadSummaries(ids));
+});
+
+function csvCell(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+router.get("/inspections/export.csv", requireAuth, async (req, res) => {
+  if (req.user!.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const ids = (await listInspectionIds(req)) ?? [];
+  if (ids.length === 0) {
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="inspections_export.csv"`,
+    );
+    return res.send("\uFEFF");
+  }
+  const fulls = await Promise.all(ids.map((id) => loadFullInspection(id)));
+  const headers = [
+    "Inspection ID",
+    "DVR Number",
+    "Depot",
+    "Venue Name",
+    "Venue Code",
+    "Footage Date",
+    "Inspection Date",
+    "Inspector",
+    "Status",
+    "Completed At",
+    "Inspection Notes",
+    "Clip Name",
+    "Outcome",
+    "Category",
+    "Sub Category",
+    "Severity",
+    "Finding Notes",
+    "Finding Created At",
+  ];
+  const lines: string[] = [headers.map(csvCell).join(",")];
+  for (const f of fulls) {
+    if (!f) continue;
+    if (f.findings.length === 0) {
+      lines.push(
+        [
+          f.id,
+          f.dvrNumber,
+          f.depotName,
+          f.venueName,
+          f.venueCode,
+          f.footageDate,
+          f.inspectionDate,
+          f.inspectorName,
+          f.status,
+          f.completedAt ?? "",
+          f.notes ?? "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ]
+          .map(csvCell)
+          .join(","),
+      );
+      continue;
+    }
+    for (const fnd of f.findings) {
+      lines.push(
+        [
+          f.id,
+          f.dvrNumber,
+          f.depotName,
+          f.venueName,
+          f.venueCode,
+          f.footageDate,
+          f.inspectionDate,
+          f.inspectorName,
+          f.status,
+          f.completedAt ?? "",
+          f.notes ?? "",
+          fnd.clipName,
+          fnd.outcome,
+          fnd.categoryName ?? "",
+          fnd.subCategoryName ?? "",
+          fnd.severity ?? "",
+          fnd.notes ?? "",
+          fnd.createdAt,
+        ]
+          .map(csvCell)
+          .join(","),
+      );
+    }
+  }
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="inspections_export.csv"`,
+  );
+  res.send("\uFEFF" + lines.join("\n"));
 });
 
 async function loadFullInspection(id: number) {
