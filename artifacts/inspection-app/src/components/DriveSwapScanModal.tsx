@@ -82,8 +82,6 @@ export function DriveSwapScanModal({ open, onOpenChange, venueName, venueId, dri
                 label="Scan the drive being removed from the DVR"
                 candidateDrives={drivesInDvr(drivesAtVenue)}
                 onDetected={handleExtractDetected}
-                onSkip={() => { setExtractDrive(null); setStep("install"); }}
-                skipLabel="Nothing to extract — skip"
               />
             ) : (
               <div className="space-y-3">
@@ -109,8 +107,6 @@ export function DriveSwapScanModal({ open, onOpenChange, venueName, venueId, dri
                 label="Scan the drive being installed into the DVR"
                 candidateDrives={drivesInPossession(drivesAtVenue)}
                 onDetected={handleInstallDetected}
-                onSkip={() => { setInstallDrive(null); setStep("confirm"); }}
-                skipLabel="Nothing to install — skip"
               />
             ) : (
               <div className="space-y-3">
@@ -158,12 +154,23 @@ export function DriveSwapScanModal({ open, onOpenChange, venueName, venueId, dri
             {!extractDrive && !installDrive && (
               <p className="text-xs text-destructive">No drives scanned — nothing to record.</p>
             )}
+            {canExtract && !extractDrive && (
+              <p className="text-xs text-destructive">Extract drive must be scanned before confirming.</p>
+            )}
+            {canInstall && !installDrive && (
+              <p className="text-xs text-destructive">Install drive must be scanned before confirming.</p>
+            )}
 
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" onClick={() => handleClose(false)} disabled={busy}>Cancel</Button>
               <Button
                 onClick={handleConfirm}
-                disabled={busy || (!extractDrive && !installDrive)}
+                disabled={
+                  busy ||
+                  (!extractDrive && !installDrive) ||
+                  (canExtract && !extractDrive) ||
+                  (canInstall && !installDrive)
+                }
                 data-testid="btn-confirm-swap"
               >
                 {busy ? "Recording..." : "Confirm swap"}
