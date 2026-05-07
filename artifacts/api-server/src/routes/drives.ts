@@ -467,10 +467,10 @@ router.post("/drives/:id/accept", requireAuth, async (req, res) => {
     if (pending.toUserId !== req.user!.id) {
       throw new Error("This drive is not pending acceptance for you");
     }
-    if (pending.direction === "maintenance_to_inspector" && req.user!.role !== "inspector") {
+    if (pending.direction === "maintenance_to_inspector" && req.user!.role !== "inspector" && req.user!.role !== "super_admin") {
       throw new Error("Only an inspector may accept this drive");
     }
-    if (pending.direction === "inspector_to_maintenance" && req.user!.role !== "maintenance") {
+    if (pending.direction === "inspector_to_maintenance" && req.user!.role !== "maintenance" && req.user!.role !== "super_admin") {
       throw new Error("Only a maintenance user may accept this drive");
     }
     await tx

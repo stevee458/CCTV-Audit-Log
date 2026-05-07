@@ -70,7 +70,9 @@ export default function Login() {
 
   // Redirect if already logged in
   if (user) {
-    if (user.role === "admin") setLocation("/admin");
+    if (user.role === "super_admin") setLocation("/role-picker");
+    else if (user.role === "admin") setLocation("/admin");
+    else if (user.role === "maintenance") setLocation("/maintenance");
     else setLocation("/inspector");
     return null;
   }

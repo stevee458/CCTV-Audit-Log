@@ -20,6 +20,8 @@ import { requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
+const isAdminRole = (r: string) => r === "admin" || r === "super_admin";
+
 const SEVERITY_RANK: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 };
 
 async function loadSummaries(inspectionIds: number[]) {
@@ -116,7 +118,7 @@ async function listInspectionIds(req: any): Promise<number[] | null> {
     conds.push(eq(inspectionsTable.inspectorId, req.user.id));
   }
   // Inspectors are restricted to their own inspections regardless of `mine`
-  if (req.user && req.user.role !== "admin") {
+  if (req.user && !isAdminRole(req.user.role)) {
     conds.push(eq(inspectionsTable.inspectorId, req.user.id));
   }
 
@@ -201,7 +203,7 @@ function csvCell(v: unknown): string {
 }
 
 router.get("/inspections/export.csv", requireAuth, async (req, res) => {
-  if (req.user!.role !== "admin") {
+  if (!isAdminRole(req.user!.role)) {
     return res.status(403).json({ error: "Forbidden" });
   }
   const ids = (await listInspectionIds(req)) ?? [];
@@ -418,7 +420,7 @@ router.post("/inspections", requireAuth, async (req, res) => {
     if (!drive) {
       return res.status(400).json({ error: "Drive not found" });
     }
-    if (req.user!.role !== "admin") {
+    if (!isAdminRole(req.user!.role)) {
       if (drive.holderUserId !== req.user!.id || drive.status !== "With Inspector") {
         return res.status(400).json({ error: "Drive must be in your possession to start an inspection" });
       }
@@ -467,7 +469,7 @@ router.get("/inspections/:id", requireAuth, async (req, res) => {
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const full = await loadFullInspection(id);
   if (!full) return res.status(404).json({ error: "Inspection not found" });
-  if (req.user!.role !== "admin" && full.inspectorId !== req.user!.id) {
+  if (!isAdminRole(req.user!.role) && full.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
   res.json(full);
@@ -486,7 +488,7 @@ router.patch("/inspections/:id", requireAuth, async (req, res) => {
   if (existing.length === 0)
     return res.status(404).json({ error: "Inspection not found" });
   const e = existing[0];
-  if (req.user!.role !== "admin" && e.inspectorId !== req.user!.id) {
+  if (!isAdminRole(req.user!.role) && e.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
   const updates: Partial<typeof inspectionsTable.$inferInsert> = {};
@@ -532,7 +534,7 @@ router.post("/inspections/:id/complete", requireAuth, async (req, res) => {
   if (existing.length === 0)
     return res.status(404).json({ error: "Inspection not found" });
   const e = existing[0];
-  if (req.user!.role !== "admin" && e.inspectorId !== req.user!.id) {
+  if (!isAdminRole(req.user!.role) && e.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
   await db

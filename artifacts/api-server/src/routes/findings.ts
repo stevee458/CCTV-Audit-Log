@@ -14,6 +14,8 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/auth";
 
+const isAdminRole = (r: string) => r === "admin" || r === "super_admin";
+
 const router: IRouter = Router();
 
 async function serializeFinding(id: number) {
@@ -76,7 +78,7 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
   if (insp.length === 0)
     return res.status(404).json({ error: "Inspection not found" });
   const i = insp[0];
-  if (req.user!.role !== "admin" && i.inspectorId !== req.user!.id) {
+  if (!isAdminRole(req.user!.role) && i.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
   if (i.status === "completed") {
@@ -143,10 +145,10 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   if (rows.length === 0)
     return res.status(404).json({ error: "Finding not found" });
   const { inspection } = rows[0];
-  if (req.user!.role !== "admin" && inspection.inspectorId !== req.user!.id) {
+  if (!isAdminRole(req.user!.role) && inspection.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
-  if (inspection.status === "completed" && req.user!.role !== "admin") {
+  if (inspection.status === "completed" && !isAdminRole(req.user!.role)) {
     return res
       .status(400)
       .json({ error: "Cannot edit findings on a completed inspection" });
@@ -208,10 +210,10 @@ router.delete("/findings/:id", requireAuth, async (req, res) => {
     .limit(1);
   if (rows.length === 0) return res.status(204).end();
   const { inspection } = rows[0];
-  if (req.user!.role !== "admin" && inspection.inspectorId !== req.user!.id) {
+  if (!isAdminRole(req.user!.role) && inspection.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
-  if (inspection.status === "completed" && req.user!.role !== "admin") {
+  if (inspection.status === "completed" && !isAdminRole(req.user!.role)) {
     return res
       .status(400)
       .json({ error: "Cannot delete findings on a completed inspection" });

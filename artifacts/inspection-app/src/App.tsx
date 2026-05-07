@@ -13,6 +13,7 @@ import { createReactQueryPersister } from "@/lib/offline/persister";
 
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
+import RolePicker from "@/pages/RolePicker";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminInspections from "@/pages/admin/InspectionsList";
 import AdminInspectionDetail from "@/pages/admin/InspectionDetail";
@@ -61,11 +62,12 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/"><ProtectedRoute><Home /></ProtectedRoute></Route>
+      <Route path="/role-picker"><ProtectedRoute allowedRoles={["super_admin"]}><RolePicker /></ProtectedRoute></Route>
 
-      <Route path="/admin"><ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute></Route>
-      <Route path="/admin/inspections"><ProtectedRoute allowedRoles={["admin"]}><AdminInspections /></ProtectedRoute></Route>
-      <Route path="/admin/inspections/:id"><ProtectedRoute allowedRoles={["admin"]}><AdminInspectionDetail /></ProtectedRoute></Route>
-      <Route path="/admin/users"><ProtectedRoute allowedRoles={["admin"]}><AdminUsers /></ProtectedRoute></Route>
+      <Route path="/admin"><ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminDashboard /></ProtectedRoute></Route>
+      <Route path="/admin/inspections"><ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminInspections /></ProtectedRoute></Route>
+      <Route path="/admin/inspections/:id"><ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminInspectionDetail /></ProtectedRoute></Route>
+      <Route path="/admin/users"><ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminUsers /></ProtectedRoute></Route>
       <Route path="/admin/drives"><ProtectedRoute><AdminDrives /></ProtectedRoute></Route>
       <Route path="/admin/drives/labels"><ProtectedRoute><DriveLabels /></ProtectedRoute></Route>
       <Route path="/admin/drives/:id"><ProtectedRoute><AdminDriveDetail /></ProtectedRoute></Route>
@@ -74,20 +76,20 @@ function Router() {
       <Route path="/admin/visits"><ProtectedRoute><AdminVisits /></ProtectedRoute></Route>
       <Route path="/admin/whereabouts"><ProtectedRoute><AdminWhereabouts /></ProtectedRoute></Route>
 
-      <Route path="/inspector"><ProtectedRoute allowedRoles={["inspector"]}><InspectorDashboard /></ProtectedRoute></Route>
-      <Route path="/inspector/new"><ProtectedRoute allowedRoles={["inspector"]}><NewInspection /></ProtectedRoute></Route>
-      <Route path="/inspector/inspection/:id"><ProtectedRoute allowedRoles={["inspector"]}><InspectionWorkspace /></ProtectedRoute></Route>
-      <Route path="/inspector/drives"><ProtectedRoute allowedRoles={["inspector"]}><MyDrives /></ProtectedRoute></Route>
+      <Route path="/inspector"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><InspectorDashboard /></ProtectedRoute></Route>
+      <Route path="/inspector/new"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><NewInspection /></ProtectedRoute></Route>
+      <Route path="/inspector/inspection/:id"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><InspectionWorkspace /></ProtectedRoute></Route>
+      <Route path="/inspector/drives"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><MyDrives /></ProtectedRoute></Route>
 
-      <Route path="/maintenance"><ProtectedRoute allowedRoles={["maintenance"]}><MaintenanceDashboard /></ProtectedRoute></Route>
+      <Route path="/maintenance"><ProtectedRoute allowedRoles={["maintenance", "super_admin"]}><MaintenanceDashboard /></ProtectedRoute></Route>
       <Route path="/maintenance/drives"><ProtectedRoute><MaintenanceDrives /></ProtectedRoute></Route>
       <Route path="/maintenance/drives/:id"><ProtectedRoute><MaintenanceDriveDetail /></ProtectedRoute></Route>
       <Route path="/maintenance/visits"><ProtectedRoute><MaintenanceVisits /></ProtectedRoute></Route>
-      <Route path="/maintenance/visits/new"><ProtectedRoute allowedRoles={["maintenance"]}><NewMaintenanceVisit /></ProtectedRoute></Route>
+      <Route path="/maintenance/visits/new"><ProtectedRoute allowedRoles={["maintenance", "super_admin"]}><NewMaintenanceVisit /></ProtectedRoute></Route>
       <Route path="/maintenance/visits/:id"><ProtectedRoute><VisitDetail /></ProtectedRoute></Route>
       <Route path="/maintenance/stock"><ProtectedRoute><MaintenanceStock /></ProtectedRoute></Route>
       <Route path="/maintenance/requests"><ProtectedRoute><MaintenanceRequests /></ProtectedRoute></Route>
-      <Route path="/maintenance/requests/new"><ProtectedRoute allowedRoles={["maintenance"]}><NewStockRequest /></ProtectedRoute></Route>
+      <Route path="/maintenance/requests/new"><ProtectedRoute allowedRoles={["maintenance", "super_admin"]}><NewStockRequest /></ProtectedRoute></Route>
 
       <Route component={NotFound} />
     </Switch>

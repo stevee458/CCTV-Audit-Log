@@ -26,7 +26,7 @@ export const LoginResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector", "maintenance"]),
+  role: zod.enum(["admin", "inspector", "maintenance", "super_admin"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -38,7 +38,7 @@ export const GetCurrentUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector", "maintenance"]),
+  role: zod.enum(["admin", "inspector", "maintenance", "super_admin"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -50,7 +50,7 @@ export const ListUsersResponseItem = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector", "maintenance"]),
+  role: zod.enum(["admin", "inspector", "maintenance", "super_admin"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -63,7 +63,7 @@ export const CreateUserBody = zod.object({
   email: zod.string(),
   name: zod.string(),
   password: zod.string(),
-  role: zod.enum(["admin", "inspector", "maintenance"]),
+  role: zod.enum(["admin", "inspector", "maintenance", "super_admin"]),
 });
 
 /**
@@ -75,7 +75,7 @@ export const UpdateUserParams = zod.object({
 
 export const UpdateUserBody = zod.object({
   name: zod.string().optional(),
-  role: zod.enum(["admin", "inspector", "maintenance"]).optional(),
+  role: zod.enum(["admin", "inspector", "maintenance", "super_admin"]).optional(),
   active: zod.boolean().optional(),
   password: zod.string().optional(),
 });
@@ -84,7 +84,7 @@ export const UpdateUserResponse = zod.object({
   id: zod.number(),
   email: zod.string(),
   name: zod.string(),
-  role: zod.enum(["admin", "inspector", "maintenance"]),
+  role: zod.enum(["admin", "inspector", "maintenance", "super_admin"]),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });

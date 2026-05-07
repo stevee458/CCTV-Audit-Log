@@ -81,13 +81,13 @@ export function ProtectedRoute({
     if (!isLoading) {
       if (!user) {
         setLocation("/login");
-      } else if (allowedRoles && !allowedRoles.includes(user.role)) {
+      } else if (allowedRoles && user.role !== "super_admin" && !allowedRoles.includes(user.role)) {
         setLocation("/");
       }
     }
   }, [user, isLoading, setLocation, allowedRoles]);
 
-  if (isLoading || !user || (allowedRoles && !allowedRoles.includes(user.role))) {
+  if (isLoading || !user || (allowedRoles && user.role !== "super_admin" && !allowedRoles.includes(user.role))) {
     return null;
   }
 

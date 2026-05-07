@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, Home, PlusCircle } from "lucide-react";
+import { LogOut, Home, PlusCircle, ArrowLeftRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,6 +23,14 @@ export function InspectorLayout({ children }: { children: ReactNode }) {
         </Link>
 
         <SyncStatus />
+        {user?.role === "super_admin" && (
+          <Button variant="ghost" size="sm" asChild className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
+            <Link href="/role-picker">
+              <ArrowLeftRight className="h-4 w-4 mr-1.5" />
+              Switch view
+            </Link>
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">

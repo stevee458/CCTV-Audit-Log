@@ -7,7 +7,9 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (user?.role === "admin") {
+    if (user?.role === "super_admin") {
+      setLocation("/role-picker");
+    } else if (user?.role === "admin") {
       setLocation("/admin");
     } else if (user?.role === "inspector") {
       setLocation("/inspector");

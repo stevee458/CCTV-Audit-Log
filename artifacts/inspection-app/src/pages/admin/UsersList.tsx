@@ -18,14 +18,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreHorizontal, Plus, ShieldCheck, ShieldAlert, Loader2, UserX, UserCheck } from "lucide-react";
+import { MoreHorizontal, Plus, ShieldCheck, ShieldAlert, ShieldPlus, Wrench, Loader2, UserX, UserCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["admin", "inspector"]),
+  role: z.enum(["admin", "inspector", "maintenance", "super_admin"]),
 });
 
 export default function UsersList() {
@@ -74,9 +74,8 @@ export default function UsersList() {
     updateMutation.mutate({ id, data: { active: !currentActive } });
   };
 
-  const toggleRole = (id: number, currentRole: string) => {
-    const newRole = currentRole === "admin" ? "inspector" : "admin";
-    updateMutation.mutate({ id, data: { role: newRole as "admin"|"inspector" } });
+  const changeRole = (id: number, newRole: string) => {
+    updateMutation.mutate({ id, data: { role: newRole as "admin" | "inspector" | "maintenance" | "super_admin" } });
   };
 
   return (
@@ -145,6 +144,8 @@ export default function UsersList() {
                           <SelectContent>
                             <SelectItem value="inspector">Inspector</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="super_admin">Super Admin</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -202,9 +203,17 @@ export default function UsersList() {
                           <div className="text-xs text-muted-foreground">{u.email}</div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={u.role === 'admin' ? "bg-primary/10 text-primary border-primary/20" : ""}>
-                            {u.role === 'admin' ? <ShieldAlert className="mr-1 h-3 w-3" /> : <ShieldCheck className="mr-1 h-3 w-3" />}
-                            {u.role}
+                          <Badge variant="outline" className={
+                            u.role === 'admin' ? "bg-primary/10 text-primary border-primary/20" :
+                            u.role === 'super_admin' ? "bg-purple-500/10 text-purple-700 border-purple-300" :
+                            u.role === 'maintenance' ? "bg-amber-500/10 text-amber-700 border-amber-300" :
+                            ""
+                          }>
+                            {u.role === 'admin' ? <ShieldAlert className="mr-1 h-3 w-3" /> :
+                             u.role === 'super_admin' ? <ShieldPlus className="mr-1 h-3 w-3" /> :
+                             u.role === 'maintenance' ? <Wrench className="mr-1 h-3 w-3" /> :
+                             <ShieldCheck className="mr-1 h-3 w-3" />}
+                            {u.role === 'super_admin' ? 'Super Admin' : u.role}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -225,9 +234,14 @@ export default function UsersList() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => toggleRole(u.id, u.role)}>
-                                Change to {u.role === 'admin' ? 'Inspector' : 'Admin'}
-                              </DropdownMenuItem>
+                              {(["admin", "inspector", "maintenance", "super_admin"] as const)
+                                .filter(r => r !== u.role)
+                                .map(r => (
+                                  <DropdownMenuItem key={r} onClick={() => changeRole(u.id, r)}>
+                                    Change to {r === 'super_admin' ? 'Super Admin' : r.charAt(0).toUpperCase() + r.slice(1)}
+                                  </DropdownMenuItem>
+                                ))
+                              }
                               <DropdownMenuItem onClick={() => toggleActive(u.id, u.active)}>
                                 {u.active ? <><UserX className="mr-2 h-4 w-4" /> Deactivate</> : <><UserCheck className="mr-2 h-4 w-4" /> Activate</>}
                               </DropdownMenuItem>
