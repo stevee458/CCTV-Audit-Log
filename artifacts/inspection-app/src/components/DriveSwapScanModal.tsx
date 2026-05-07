@@ -161,20 +161,48 @@ export function DriveSwapScanModal({ open, onOpenChange, venueName, venueId, dri
               <p className="text-xs text-destructive">Install drive must be scanned before confirming.</p>
             )}
 
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={() => handleClose(false)} disabled={busy}>Cancel</Button>
-              <Button
-                onClick={handleConfirm}
-                disabled={
-                  busy ||
-                  (!extractDrive && !installDrive) ||
-                  (canExtract && !extractDrive) ||
-                  (canInstall && !installDrive)
-                }
-                data-testid="btn-confirm-swap"
-              >
-                {busy ? "Recording..." : "Confirm swap"}
-              </Button>
+            <div className="flex flex-wrap gap-2 justify-between items-center">
+              <div className="flex gap-1">
+                {canExtract && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => { setExtractDrive(null); setStep("extract"); }}
+                    data-testid="btn-rescan-extract"
+                  >
+                    Re-scan extract
+                  </Button>
+                )}
+                {canInstall && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => { setInstallDrive(null); setStep("install"); }}
+                    data-testid="btn-rescan-install"
+                  >
+                    Re-scan install
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => handleClose(false)} disabled={busy}>Cancel</Button>
+                <Button
+                  onClick={handleConfirm}
+                  disabled={
+                    busy ||
+                    (!extractDrive && !installDrive) ||
+                    (canExtract && !extractDrive) ||
+                    (canInstall && !installDrive)
+                  }
+                  data-testid="btn-confirm-swap"
+                >
+                  {busy ? "Recording..." : "Confirm swap"}
+                </Button>
+              </div>
             </div>
           </div>
         )}

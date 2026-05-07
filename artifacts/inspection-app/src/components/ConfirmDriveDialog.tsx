@@ -76,16 +76,29 @@ export function ConfirmDriveDialog({
                   <span className="font-mono font-medium">{scanned.name}</span>
                   <span className="text-emerald-600 text-xs">verified</span>
                 </div>
-                {direction && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-                    {direction.split("→").map((part, i, arr) => (
-                      <span key={i} className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-xs font-normal">{part.trim()}</Badge>
-                        {i < arr.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {direction && (() => {
+                  const parts = direction.split("→").map(p => p.trim());
+                  const from = parts[0];
+                  const to = parts[parts.length - 1];
+                  return (
+                    <div className="space-y-1">
+                      <div className="text-xs text-muted-foreground">
+                        Current status: <span className="font-medium text-foreground">{from}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+                        {parts.map((part, i, arr) => (
+                          <span key={i} className="flex items-center gap-1">
+                            <Badge variant="outline" className="text-xs font-normal">{part}</Badge>
+                            {i < arr.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        New status: <span className="font-medium text-foreground">{to}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               <Button
                 type="button"
