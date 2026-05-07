@@ -19,6 +19,7 @@ import AdminInspectionDetail from "@/pages/admin/InspectionDetail";
 import AdminUsers from "@/pages/admin/UsersList";
 import AdminDrives from "@/pages/admin/Drives";
 import AdminDriveDetail from "@/pages/admin/DriveDetail";
+import DriveLabels from "@/pages/admin/DriveLabels";
 import AdminAssets from "@/pages/admin/Assets";
 import AdminStock from "@/pages/admin/Stock";
 import AdminVisits from "@/pages/admin/Visits";
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/admin/inspections/:id"><ProtectedRoute allowedRoles={["admin"]}><AdminInspectionDetail /></ProtectedRoute></Route>
       <Route path="/admin/users"><ProtectedRoute allowedRoles={["admin"]}><AdminUsers /></ProtectedRoute></Route>
       <Route path="/admin/drives"><ProtectedRoute><AdminDrives /></ProtectedRoute></Route>
+      <Route path="/admin/drives/labels"><ProtectedRoute><DriveLabels /></ProtectedRoute></Route>
       <Route path="/admin/drives/:id"><ProtectedRoute><AdminDriveDetail /></ProtectedRoute></Route>
       <Route path="/admin/assets"><ProtectedRoute><AdminAssets /></ProtectedRoute></Route>
       <Route path="/admin/stock"><ProtectedRoute><AdminStock /></ProtectedRoute></Route>
