@@ -121,7 +121,8 @@ export default function MaintenanceDriveDetail() {
                 driveId={drive.id}
                 driveName={drive.name}
                 title={`Accept ${drive.name}`}
-                description="Confirm the physical drive in your hand matches by scanning its QR or typing its name."
+                description="Scan the drive QR code to confirm receipt."
+                direction="In transit to Maintenance → Maintenance possession"
                 trigger={<Button data-testid="btn-accept">Accept drive</Button>}
                 busy={accept.isPending}
                 onConfirm={(payload) => accept.mutate({ id: drive.id, data: payload })}
@@ -144,7 +145,8 @@ export default function MaintenanceDriveDetail() {
                 driveId={drive.id}
                 driveName={drive.name}
                 title={`Release ${drive.name}`}
-                description="Confirm the drive identity before handing over."
+                description="Scan the drive QR code before handing to the inspector."
+                direction="Maintenance possession → In transit to Inspector"
                 trigger={<Button disabled={!releaseTo} data-testid="btn-release">Release</Button>}
                 busy={release.isPending}
                 confirmDisabled={!releaseTo}
@@ -168,7 +170,8 @@ export default function MaintenanceDriveDetail() {
                 driveId={drive.id}
                 driveName={drive.name}
                 title={`Return ${drive.name}`}
-                description="Confirm the drive identity before handing back."
+                description="Scan the drive QR code before handing back to maintenance."
+                direction="With Inspector → In transit to Maintenance"
                 trigger={<Button disabled={!returnTo} data-testid="btn-return">Return</Button>}
                 busy={ret.isPending}
                 confirmDisabled={!returnTo}

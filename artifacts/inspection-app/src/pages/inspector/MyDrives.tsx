@@ -70,7 +70,8 @@ export default function MyDrives() {
                       driveId={d.id}
                       driveName={d.name}
                       title={`Accept ${d.name}`}
-                      description="Confirm the drive identity before taking custody."
+                      description="Scan the drive QR code to confirm it is the correct drive."
+                      direction="In transit to Inspector → With Inspector"
                       trigger={<Button size="sm" data-testid={`btn-accept-${d.id}`}>Accept</Button>}
                       busy={accept.isPending}
                       onConfirm={(payload) => accept.mutate({ id: d.id, data: payload })}
@@ -83,7 +84,8 @@ export default function MyDrives() {
                       driveId={d.id}
                       driveName={d.name}
                       title={`Return ${d.name}`}
-                      description="Confirm the drive identity before handing back to maintenance."
+                      description="Scan the drive QR code before handing back to maintenance."
+                      direction="With Inspector → In transit to Maintenance"
                       trigger={<Button size="sm" variant="outline" data-testid={`btn-return-${d.id}`}>Return to maintenance</Button>}
                       busy={ret.isPending}
                       confirmDisabled={!returnTo}

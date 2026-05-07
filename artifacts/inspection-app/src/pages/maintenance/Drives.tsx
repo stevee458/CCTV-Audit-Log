@@ -56,7 +56,8 @@ export default function MaintenanceDrives() {
                       driveId={d.id}
                       driveName={d.name}
                       title={`Accept ${d.name}`}
-                      description="Confirm the drive identity before taking custody."
+                      description="Scan the drive QR code to confirm receipt."
+                      direction="In transit to Maintenance → Maintenance possession"
                       trigger={<Button size="sm" data-testid={`accept-${d.id}`}>Accept</Button>}
                       busy={accept.isPending}
                       onConfirm={(payload) => accept.mutate({ id: d.id, data: payload })}

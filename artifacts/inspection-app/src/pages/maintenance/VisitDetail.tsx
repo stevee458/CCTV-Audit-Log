@@ -21,9 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, ScanLine } from "lucide-react";
 import { format } from "date-fns";
 import { apiErrorMessage } from "@/lib/api-error";
+import { DriveSwapScanModal } from "@/components/DriveSwapScanModal";
 
 export default function VisitDetail() {
   const { id } = useParams<{ id: string }>();
@@ -40,8 +41,7 @@ export default function VisitDetail() {
   };
 
   const [venueId, setVenueId] = useState("");
-  const [installDriveId, setInstallDriveId] = useState("");
-  const [extractDriveId, setExtractDriveId] = useState("");
+  const [swapModalOpen, setSwapModalOpen] = useState(false);
   const [repairAssetId, setRepairAssetId] = useState("");
   const [repairAction, setRepairAction] = useState<"repair" | "replace">("repair");
   const [repairDesc, setRepairDesc] = useState("");
@@ -52,6 +52,7 @@ export default function VisitDetail() {
   const [pickQty, setPickQty] = useState("1");
 
   const venues = depots?.find(d => d.id === visit?.depotId)?.venues ?? [];
+  const selectedVenue = venues.find(v => v.id.toString() === venueId);
 
   const { data: venueDrives } = useListDrives({ venueId: venueId ? Number(venueId) : undefined, type: "venue" });
   const { data: assets } = useListAssets({ venueId: venueId ? Number(venueId) : undefined });
@@ -61,7 +62,14 @@ export default function VisitDetail() {
     mutation: { onSuccess: () => { refresh(); toast({ title: "Venue added" }); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
   });
   const swap = useSwapDrive({
-    mutation: { onSuccess: () => { refresh(); toast({ title: "Swap recorded" }); setInstallDriveId(""); setExtractDriveId(""); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
+    mutation: {
+      onSuccess: () => {
+        refresh();
+        toast({ title: "Swap recorded" });
+        setSwapModalOpen(false);
+      },
+      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+    },
   });
   const repair = useCreateRepair({
     mutation: { onSuccess: () => { refresh(); toast({ title: "Repair logged" }); setRepairDesc(""); setConsumption([]); }, onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }) },
@@ -112,33 +120,37 @@ export default function VisitDetail() {
         {venueId && (
           <>
             <Card>
-              <CardHeader><CardTitle className="text-base">Swap drive</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-xs text-muted-foreground">Drives at this venue:</p>
-                {venueDrives?.map(d => <Badge key={d.id} variant="outline" className="mr-1">{d.name} · {d.status}</Badge>)}
-                <Select value={extractDriveId} onValueChange={setExtractDriveId}>
-                  <SelectTrigger data-testid="select-extract"><SelectValue placeholder="Extract (in DVR)" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">— none —</SelectItem>
-                    {venueDrives?.filter(d => d.status === "In DVR").map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={installDriveId} onValueChange={setInstallDriveId}>
-                  <SelectTrigger data-testid="select-install"><SelectValue placeholder="Install (in your hands)" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">— none —</SelectItem>
-                    {venueDrives?.filter(d => d.status === "In Maintenance possession").map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <CardHeader>
+                <CardTitle className="text-base">Swap drive</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex flex-wrap gap-1">
+                  {venueDrives?.map(d => (
+                    <Badge key={d.id} variant="outline">{d.name} · {d.status}</Badge>
+                  ))}
+                  {(!venueDrives || venueDrives.length === 0) && (
+                    <p className="text-xs text-muted-foreground">No drives associated with this venue.</p>
+                  )}
+                </div>
                 <Button
-                  disabled={!installDriveId && !extractDriveId}
-                  onClick={() => swap.mutate({ data: {
-                    venueId: Number(venueId),
-                    installDriveId: installDriveId && installDriveId !== "0" ? Number(installDriveId) : null,
-                    extractDriveId: extractDriveId && extractDriveId !== "0" ? Number(extractDriveId) : null,
-                  } })}
+                  onClick={() => setSwapModalOpen(true)}
                   data-testid="btn-swap"
-                >Record swap</Button>
+                  disabled={!venueDrives || venueDrives.length === 0}
+                >
+                  <ScanLine className="h-4 w-4 mr-2" />Scan &amp; Swap
+                </Button>
+
+                <DriveSwapScanModal
+                  open={swapModalOpen}
+                  onOpenChange={setSwapModalOpen}
+                  venueName={selectedVenue?.name ?? ""}
+                  venueId={Number(venueId)}
+                  drivesAtVenue={venueDrives ?? []}
+                  busy={swap.isPending}
+                  onConfirm={({ venueId: vid, extractDriveId, installDriveId }) =>
+                    swap.mutate({ data: { venueId: vid, extractDriveId, installDriveId } })
+                  }
+                />
               </CardContent>
             </Card>
 
