@@ -1,0 +1,17 @@
+# One row per stock item / accessory held by the maintenance team.
+# kind: item | accessory
+# category: DVR | Camera | Power Supply | Hard Drive | Cable | Connector | Other
+# quantity_on_hand: current stock count held by maintenance.
+name,kind,category,description,quantity_on_hand
+DVR (spare unit A),item,DVR,,2
+DVR (spare unit B),item,DVR,,1
+Camera (spare unit A),item,Camera,,2
+Camera (spare unit B),item,Camera,,1
+Power Supply (spare unit A),item,Power Supply,,2
+Power Supply (spare unit B),item,Power Supply,,1
+Hard Drive (spare unit A),item,Hard Drive,,2
+Hard Drive (spare unit B),item,Hard Drive,,1
+Cable (spare unit A),item,Cable,,2
+Cable (spare unit B),item,Cable,,1
+BNC Connector,accessory,Connector,"BNC connector, pack of 20",50
+RJ45 Connector,accessory,Connector,"RJ45 crimp connector, pack of 100",200

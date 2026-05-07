@@ -1,0 +1,45 @@
+# Each row is one venue. depot_name groups venues together.
+# venue_code must be unique across all venues.
+# You may add rows, rename venues, or change codes.
+depot_name,venue_name,venue_code
+Soweto (Putcoton),Main Gate,P_PU01
+Soweto (Putcoton),Body Shop,P_PU02
+Soweto (Putcoton),Stores,P_PU03
+Soweto (Putcoton),Tyre Bay,P_PU04
+Soweto (Putcoton),Fuel Bay,P_PU05
+Soweto (Putcoton),Cash Office,P_PU06
+Dobsonville (Putcoville),Main Gate,P_DO01
+Dobsonville (Putcoville),Stores and Tyre Bay,P_DO02
+Dobsonville (Putcoville),Cash Office,P_DO03
+Dobsonville (Putcoville),Fuel Bay,P_DO04
+Dobsonville (Putcoville),External Ticket Sales Office,P_DO05
+Nancefield,Entrance Gate,P_NA01
+Nancefield,Cash Office and Workshop,P_NA02
+Nancefield,Fuel Bay,P_NA03
+Wynberg,Main Gate,P_WY01
+Wynberg,Stores,P_WY02
+Wynberg,Tyre Bay & Workshop Area,P_WY03
+Roseville (TAM),Main Gate,P_TAM01
+Roseville (TAM),Management Offices Downstairs,P_TAM02
+Roseville (TAM),Management Offices Upstairs,P_TAM03
+Roseville (TAM),SetRight Offices,P_TAM04
+Roseville (TAM),Cash Office,P_TAM05
+Roseville (TAM),Cash Office Cubicles,P_TAM06
+Roseville (TAM),Secure Mobile Garage,P_TAM07
+Roseville (TAM),Tool Room 1,P_TAM08
+Roseville (TAM),Tool Room 2,P_TAM09
+Roseville (TAM),Workshop Stores,P_TAM10
+Roseville (TAM),Tyre Bay and Tool Store,P_TAM11
+Sandfontein,Main Gate,P_SA01
+Sandfontein,Cash Office,P_SA02
+Sandfontein,Workshop Offices,P_SA03
+Sandfontein,Main Stores,P_SA04
+Sandfontein,Tyre Bay,P_SA05
+Soshanguve,Entrance Gate,P_SO01
+Soshanguve,Revenue Office,P_SO02
+Soshanguve,Fuel Bay,P_SO03
+Soshanguve,Depot Stores,P_SO04
+Ekandustria,Main Gate,P_EK01
+Ekandustria,Cashier Cubicles,P_EK02
+Ekandustria,Fuel Bay,P_EK03
+Ekandustria,Stores,P_EK04

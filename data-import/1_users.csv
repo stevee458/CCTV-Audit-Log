@@ -1,0 +1,7 @@
+# Fill in one row per user. role must be: admin | inspector | maintenance
+# password will be set to the value you enter. Admin can change via the app after first login.
+# Leave the three demo rows or delete them — they will be replaced.
+name,email,role,password
+,admin@demo.local,admin,Jarvie
+,inspector@demo.local,inspector,Jarvie
+,maintenance@demo.local,maintenance,Jarvie

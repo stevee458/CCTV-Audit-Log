@@ -1,0 +1,32 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "e2jkE9W4oSAqhE_RtzFri"
+uri = "file://data-import/1_users.csv"
+type = "table"
+title = "1 — Users (Admins, Inspectors, Maintenance)"
+
+[[outputs]]
+id = "EodFKIWAyvSXX47f9bGew"
+uri = "file://data-import/2_depots_venues.csv"
+type = "table"
+title = "2 — Depots & Venues (pre-filled, editable)"
+
+[[outputs]]
+id = "EyxyDH7rb8GY732mxML5x"
+uri = "file://data-import/3_drives.csv"
+type = "table"
+title = "3 — Drives (venue & inspector drives)"
+
+[[outputs]]
+id = "2YxR17c9vcuFe-uTrHz6G"
+uri = "file://data-import/4_assets.csv"
+type = "table"
+title = "4 — Assets (CCTV equipment per venue)"
+
+[[outputs]]
+id = "D2Obu-wmiQlgvOlADPnyH"
+uri = "file://data-import/5_stock.csv"
+type = "table"
+title = "5 — Stock (maintenance stock on hand)"
