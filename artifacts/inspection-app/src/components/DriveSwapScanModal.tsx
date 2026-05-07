@@ -84,7 +84,6 @@ export function DriveSwapScanModal({ open, onOpenChange, venueName, venueId, dri
                 onDetected={handleExtractDetected}
                 onSkip={() => { setExtractDrive(null); setStep("install"); }}
                 skipLabel="Nothing to extract — skip"
-                data-testid="scanner-extract"
               />
             ) : (
               <div className="space-y-3">
@@ -112,7 +111,6 @@ export function DriveSwapScanModal({ open, onOpenChange, venueName, venueId, dri
                 onDetected={handleInstallDetected}
                 onSkip={() => { setInstallDrive(null); setStep("confirm"); }}
                 skipLabel="Nothing to install — skip"
-                data-testid="scanner-install"
               />
             ) : (
               <div className="space-y-3">

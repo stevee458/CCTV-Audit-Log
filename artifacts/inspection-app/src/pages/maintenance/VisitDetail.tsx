@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, ScanLine } from "lucide-react";
 import { format } from "date-fns";
-import { apiErrorMessage } from "@/lib/api-error";
+import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
 import { DriveSwapScanModal } from "@/components/DriveSwapScanModal";
 
 export default function VisitDetail() {
@@ -68,7 +68,14 @@ export default function VisitDetail() {
         toast({ title: "Swap recorded" });
         setSwapModalOpen(false);
       },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) {
+          toast({ title: "Saved offline", description: "Swap will sync when you're back online." });
+          setSwapModalOpen(false);
+          return;
+        }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
   const repair = useCreateRepair({

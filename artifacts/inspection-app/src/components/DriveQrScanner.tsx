@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle, Camera, QrCode } from "lucide-react";
+
 
 type BarcodeDetectorCtor = new (opts: { formats: string[] }) => {
   detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue: string }>>;
@@ -224,4 +224,3 @@ export function DriveQrScanner({ label, expectedDriveId, expectedDriveName, cand
   );
 }
 
-export { Label };
