@@ -10,23 +10,24 @@ import { SyncStatus } from "@/components/offline/SyncStatus";
 
 export function InspectorLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
-  const [location] = useLocation();
+  const [_location] = useLocation();
+  void _location;
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-[100dvh] bg-muted/10 flex flex-col">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 shadow-sm">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-primary/20 bg-primary px-4 shadow-md">
         <Link href="/inspector" className="flex items-center gap-2 flex-1">
-          <Logo className="h-8 w-auto" />
+          <Logo className="h-8 w-auto brightness-0 invert" />
         </Link>
 
         <SyncStatus />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">{user ? getInitials(user.name) : 'I'}</AvatarFallback>
+                <AvatarFallback className="bg-primary-foreground/15 text-primary-foreground font-medium text-xs">{user ? getInitials(user.name) : 'I'}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
@@ -58,7 +59,7 @@ export function InspectorLayout({ children }: { children: ReactNode }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
-      
+
       <main className="flex-1 flex flex-col w-full max-w-3xl mx-auto">
         {children}
       </main>

@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer } from "lucide-react";
+import { driveStatusClass } from "@/lib/drive-status";
 
 export default function AdminDrives() {
   const [search, setSearch] = useState("");
@@ -104,7 +105,7 @@ export default function AdminDrives() {
                     <TableCell><Link href={`/admin/drives/${d.id}`} className="font-medium hover:underline">{d.name}</Link></TableCell>
                     <TableCell><Badge variant="outline">{d.type}</Badge></TableCell>
                     <TableCell>{d.homeVenueName ?? "—"}</TableCell>
-                    <TableCell><Badge>{d.status}</Badge></TableCell>
+                    <TableCell><Badge className={driveStatusClass(d.status)}>{d.status}</Badge></TableCell>
                     <TableCell>{d.holderName ?? "—"}</TableCell>
                   </TableRow>
                 ))}

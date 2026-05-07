@@ -22,18 +22,18 @@ export function MaintenanceLayout({ children }: { children: ReactNode }) {
   const initials = (n: string) => n.split(" ").map(p => p[0]).join("").substring(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-[100dvh] bg-muted/10 flex flex-col">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 shadow-sm">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-primary/20 bg-primary px-4 shadow-md">
         <Link href="/maintenance" className="flex items-center gap-2 flex-1">
-          <Logo className="h-8 w-auto" />
-          <span className="font-semibold text-sm hidden sm:inline">Maintenance</span>
+          <Logo className="h-8 w-auto brightness-0 invert" />
+          <span className="font-semibold text-sm hidden sm:inline text-primary-foreground">Maintenance</span>
         </Link>
         <SyncStatus />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                <AvatarFallback className="bg-primary-foreground/15 text-primary-foreground text-xs font-medium">
                   {user ? initials(user.name) : "M"}
                 </AvatarFallback>
               </Avatar>
@@ -64,15 +64,15 @@ export function MaintenanceLayout({ children }: { children: ReactNode }) {
 
       <main className="flex-1 flex flex-col w-full max-w-3xl mx-auto pb-16">{children}</main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background grid grid-cols-4">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-primary/20 bg-primary grid grid-cols-4">
         {tabs.map((t) => {
           const active = location === t.href || (t.href !== "/maintenance" && location.startsWith(t.href));
           return (
             <Link
               key={t.href}
               href={t.href}
-              className={`flex flex-col items-center justify-center py-2 text-xs gap-0.5 ${
-                active ? "text-primary font-semibold" : "text-muted-foreground"
+              className={`flex flex-col items-center justify-center py-2 text-xs gap-0.5 transition-colors ${
+                active ? "text-primary-foreground font-semibold" : "text-primary-foreground/50 hover:text-primary-foreground/80"
               }`}
               data-testid={`tab-${t.label.toLowerCase()}`}
             >

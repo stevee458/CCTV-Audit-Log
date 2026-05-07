@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { format } from "date-fns";
+import { driveStatusClass } from "@/lib/drive-status";
 
 export default function Whereabouts() {
   const { data: depots } = useListDepots();
@@ -54,7 +55,7 @@ export default function Whereabouts() {
                 <div key={m.windowId} className={`p-3 border rounded ${m.likelyOverwritten ? "opacity-60" : ""}`} data-testid={`match-${m.windowId}`}>
                   <div className="flex items-center justify-between">
                     <Link href={`/admin/drives/${m.driveId}`} className="font-medium hover:underline">{m.driveName}</Link>
-                    <Badge>{m.driveStatus}</Badge>
+                    <Badge className={driveStatusClass(m.driveStatus)}>{m.driveStatus}</Badge>
                   </div>
                   <div className="text-xs text-muted-foreground">Holder: {m.holderName ?? "—"}</div>
                   <div className="text-xs text-muted-foreground">{format(new Date(m.installedAt), "PPp")} → {m.extractedAt ? format(new Date(m.extractedAt), "PPp") : "current"}</div>

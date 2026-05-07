@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, HardDrive } from "lucide-react";
 import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
 import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
+import { driveStatusClass } from "@/lib/drive-status";
 
 export default function MyDrives() {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ export default function MyDrives() {
                     <div className="font-medium flex items-center gap-2"><HardDrive className="h-4 w-4" />{d.name}</div>
                     <div className="text-xs text-muted-foreground">{d.homeVenueName ?? "Inspector drive"}</div>
                   </div>
-                  <Badge>{d.status}</Badge>
+                  <Badge className={driveStatusClass(d.status)}>{d.status}</Badge>
                 </div>
                 <div className="flex gap-2">
                   {d.status === "In transit to Inspector" && (

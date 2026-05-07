@@ -12,6 +12,7 @@ import { useState } from "react";
 import { HardDrive } from "lucide-react";
 import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
 import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
+import { driveStatusClass } from "@/lib/drive-status";
 
 export default function MaintenanceDrives() {
   const { user } = useAuth();
@@ -51,7 +52,7 @@ export default function MaintenanceDrives() {
                   <div className="text-xs text-muted-foreground">{d.homeVenueName ?? "—"}</div>
                 </Link>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{d.status}</Badge>
+                  <Badge className={driveStatusClass(d.status)}>{d.status}</Badge>
                   {d.status === "In transit to Maintenance" && (
                     <ConfirmDriveDialog
                       open={acceptFor === d.id}
@@ -86,7 +87,7 @@ export default function MaintenanceDrives() {
                     {d.homeVenueName ?? "Inspector"} · holder: {d.holderName ?? "—"}
                   </div>
                 </div>
-                <Badge variant="outline">{d.status}</Badge>
+                <Badge className={driveStatusClass(d.status)}>{d.status}</Badge>
               </Link>
             ))}
           </CardContent>

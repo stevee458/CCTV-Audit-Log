@@ -4,6 +4,7 @@ import { useGetDrive } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { driveStatusClass } from "@/lib/drive-status";
 
 export default function AdminDriveDetail() {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +18,7 @@ export default function AdminDriveDetail() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">{drive.name}</CardTitle>
-            <div className="flex gap-2"><Badge>{drive.status}</Badge><Badge variant="outline">{drive.type}</Badge></div>
+            <div className="flex gap-2"><Badge className={driveStatusClass(drive.status)}>{drive.status}</Badge><Badge variant="outline">{drive.type}</Badge></div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div><span className="text-muted-foreground">Home venue:</span> {drive.homeVenueName ?? "—"}</div>

@@ -27,19 +27,19 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-muted/20 flex flex-col">
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-primary/20 bg-primary px-4 md:px-6 shadow-md">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+            <Button variant="ghost" size="icon" className="shrink-0 md:hidden text-primary-foreground hover:bg-primary-foreground/10">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+          <SheetContent side="left" className="w-[240px] sm:w-[300px] bg-primary border-primary/20">
             <nav className="grid gap-6 text-lg font-medium mt-6">
               <Link href="/admin" className="flex items-center gap-2">
-                <Logo className="h-9 w-auto" />
+                <Logo className="h-9 w-auto brightness-0 invert" />
               </Link>
               {navItems.map((item) => {
                 const isActive = location === item.href;
@@ -47,8 +47,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-4 px-2.5 ${
-                      isActive ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
+                    className={`flex items-center gap-4 px-2.5 transition-colors ${
+                      isActive ? "text-primary-foreground font-bold" : "text-primary-foreground/60 hover:text-primary-foreground"
                     }`}
                   >
                     <item.icon className="h-5 w-5" />
@@ -59,9 +59,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             </nav>
           </SheetContent>
         </Sheet>
-        
+
         <Link href="/admin" className="hidden md:flex items-center gap-2 mr-6">
-          <Logo className="h-9 w-auto" />
+          <Logo className="h-9 w-auto brightness-0 invert" />
         </Link>
 
         <nav className="hidden md:flex flex-1 items-center gap-6 text-sm font-medium">
@@ -72,7 +72,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`transition-colors flex items-center gap-2 ${
-                  isActive ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                  isActive
+                    ? "text-primary-foreground font-semibold"
+                    : "text-primary-foreground/60 hover:text-primary-foreground"
                 }`}
               >
                 <item.icon className="h-4 w-4" />
@@ -86,9 +88,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <SyncStatus />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10 text-primary">{user ? getInitials(user.name) : 'A'}</AvatarFallback>
+                  <AvatarFallback className="bg-primary-foreground/15 text-primary-foreground font-medium">{user ? getInitials(user.name) : 'A'}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>

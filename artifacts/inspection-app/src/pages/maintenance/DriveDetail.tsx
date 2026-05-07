@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
 import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
+import { driveStatusClass } from "@/lib/drive-status";
 
 export default function MaintenanceDriveDetail() {
   const { id } = useParams<{ id: string }>();
@@ -88,7 +89,7 @@ export default function MaintenanceDriveDetail() {
           <CardHeader>
             <CardTitle className="text-xl">{drive.name}</CardTitle>
             <div className="flex items-center gap-2 mt-1">
-              <Badge>{drive.status}</Badge>
+              <Badge className={driveStatusClass(drive.status)}>{drive.status}</Badge>
               <Badge variant="outline">{drive.type}</Badge>
             </div>
           </CardHeader>
