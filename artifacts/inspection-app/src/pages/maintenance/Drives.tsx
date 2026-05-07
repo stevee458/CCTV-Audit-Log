@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { HardDrive } from "lucide-react";
 import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
-import { apiErrorMessage } from "@/lib/api-error";
+import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
 
 export default function MaintenanceDrives() {
   const { user } = useAuth();
@@ -28,7 +28,10 @@ export default function MaintenanceDrives() {
         setAcceptFor(null);
         toast({ title: "Drive accepted" });
       },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) { setAcceptFor(null); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
 

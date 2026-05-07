@@ -20,7 +20,7 @@ import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
-import { apiErrorMessage } from "@/lib/api-error";
+import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
 
 export default function MaintenanceDriveDetail() {
   const { id } = useParams<{ id: string }>();
@@ -49,19 +49,28 @@ export default function MaintenanceDriveDetail() {
   const release = useReleaseDrive({
     mutation: {
       onSuccess: () => { refresh(); setReleaseOpen(false); toast({ title: "Released" }); },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) { setReleaseOpen(false); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
   const accept = useAcceptDrive({
     mutation: {
       onSuccess: () => { refresh(); setAcceptOpen(false); toast({ title: "Accepted" }); },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) { setAcceptOpen(false); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
   const ret = useReturnDrive({
     mutation: {
       onSuccess: () => { refresh(); setReturnOpen(false); toast({ title: "Returned" }); },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) { setReturnOpen(false); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
 

@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, HardDrive } from "lucide-react";
 import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
-import { apiErrorMessage } from "@/lib/api-error";
+import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
 
 export default function MyDrives() {
   const { user } = useAuth();
@@ -34,13 +34,19 @@ export default function MyDrives() {
   const accept = useAcceptDrive({
     mutation: {
       onSuccess: () => { qc.invalidateQueries({ queryKey: getListDrivesQueryKey() }); setAcceptFor(null); toast({ title: "Accepted" }); },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) { setAcceptFor(null); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
   const ret = useReturnDrive({
     mutation: {
       onSuccess: () => { qc.invalidateQueries({ queryKey: getListDrivesQueryKey() }); setReturnFor(null); setReturnTo(""); toast({ title: "Returned" }); },
-      onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
+      onError: (e) => {
+        if (isOfflineQueued(e)) { setReturnFor(null); setReturnTo(""); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+      },
     },
   });
 
