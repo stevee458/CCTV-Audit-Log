@@ -137,7 +137,7 @@ export default function Login() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 border-t bg-muted/50 p-6">
             <div className="text-sm font-medium text-muted-foreground w-full text-center">Demo Accounts</div>
-            <div className="grid grid-cols-3 gap-3 w-full">
+            <div className="grid grid-cols-2 gap-3 w-full">
               <Button 
                 variant="outline" 
                 className="w-full text-xs flex flex-col h-auto py-2 items-start"
@@ -170,6 +170,17 @@ export default function Login() {
               >
                 <span className="font-semibold">Maintenance</span>
                 <span className="text-muted-foreground font-normal">maintenance@demo.local</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full text-xs flex flex-col h-auto py-2 items-start"
+                onClick={() => {
+                  form.setValue("email", "superadmin@jarvie.com");
+                  form.setValue("password", "password");
+                }}
+              >
+                <span className="font-semibold">Super Admin</span>
+                <span className="text-muted-foreground font-normal">superadmin@jarvie.com</span>
               </Button>
             </div>
           </CardFooter>
