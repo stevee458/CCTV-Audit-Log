@@ -1,9 +1,9 @@
 -- ============================================================
-  -- PROD DB REPLACEMENT SCRIPT (no transaction wrapper)
-  -- Generated: 2026-05-10 11:52 UTC
+  -- PROD DB REPLACEMENT SCRIPT (corrected FK order)
+  -- Generated: 2026-05-10 11:55 UTC
   -- HOW TO RUN IN REPLIT SQL EDITOR:
-  --   1. Open the database panel, paste this entire script
-  --   2. Press Ctrl+A (select all) then click Run
+  --   1. Paste this entire script into the Query tab
+  --   2. Press Ctrl+A to select all, then click Run
   -- ============================================================
 
   -- Step 1: Wipe everything
@@ -17,7 +17,7 @@
     depots, venues, users
     RESTART IDENTITY CASCADE;
 
-  -- Step 2: Insert data
+  -- Step 2: Insert data (parents before children)
 
   -- users (8 real Jarvie accounts)
   INSERT INTO users (id, email, password_hash, name, role, active, created_at) VALUES
@@ -31,7 +31,19 @@
   (16, 'max@jarvie.co.za', '$2b$10$TXYaRMc6xivoT8/dNbcYb.G.0AcCYQ..V1KOmmV84BsS5O/8EpC8a', 'Max Tadiwa', 'admin', 't', '2026-05-10 10:22:32.598328+00')
 ON CONFLICT (id) DO NOTHING;
 
-  -- venues
+  -- depots
+INSERT INTO depots (id, name) VALUES
+  (1, 'Soweto (Putcoton)'),
+  (2, 'Dobsonville (Putcoville)'),
+  (3, 'Nancefield'),
+  (4, 'Wynberg'),
+  (5, 'Roseville (TAM)'),
+  (6, 'Sandfontein'),
+  (7, 'Soshanguve'),
+  (8, 'Ekandustria')
+ON CONFLICT (id) DO NOTHING;
+
+-- venues
 INSERT INTO venues (id, depot_id, name, code, next_clip_number) VALUES
   (1, 1, 'Main Gate', 'P_PU01', 3),
   (2, 1, 'Body Shop', 'P_PU02', 1),
@@ -74,18 +86,6 @@ INSERT INTO venues (id, depot_id, name, code, next_clip_number) VALUES
   (39, 8, 'Cashier Cubicles', 'P_EK02', 1),
   (40, 8, 'Fuel Bay', 'P_EK03', 1),
   (41, 8, 'Stores', 'P_EK04', 1)
-ON CONFLICT (id) DO NOTHING;
-
--- depots
-INSERT INTO depots (id, name) VALUES
-  (1, 'Soweto (Putcoton)'),
-  (2, 'Dobsonville (Putcoville)'),
-  (3, 'Nancefield'),
-  (4, 'Wynberg'),
-  (5, 'Roseville (TAM)'),
-  (6, 'Sandfontein'),
-  (7, 'Soshanguve'),
-  (8, 'Ekandustria')
 ON CONFLICT (id) DO NOTHING;
 
 -- violation_categories
@@ -709,8 +709,8 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Step 3: Reset sequences
 SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE(MAX(id), 1)) FROM users;
-SELECT setval(pg_get_serial_sequence('venues', 'id'), COALESCE(MAX(id), 1)) FROM venues;
 SELECT setval(pg_get_serial_sequence('depots', 'id'), COALESCE(MAX(id), 1)) FROM depots;
+SELECT setval(pg_get_serial_sequence('venues', 'id'), COALESCE(MAX(id), 1)) FROM venues;
 SELECT setval(pg_get_serial_sequence('violation_categories', 'id'), COALESCE(MAX(id), 1)) FROM violation_categories;
 SELECT setval(pg_get_serial_sequence('violation_sub_categories', 'id'), COALESCE(MAX(id), 1)) FROM violation_sub_categories;
 SELECT setval(pg_get_serial_sequence('stock_skus', 'id'), COALESCE(MAX(id), 1)) FROM stock_skus;
