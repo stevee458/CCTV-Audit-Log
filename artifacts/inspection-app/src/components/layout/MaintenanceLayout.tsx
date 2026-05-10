@@ -1,16 +1,18 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, Home, HardDrive, Wrench, Package, ClipboardList, ArrowLeftRight } from "lucide-react";
+import { LogOut, Home, HardDrive, Wrench, Package, ClipboardList, ArrowLeftRight, Download } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SyncStatus } from "@/components/offline/SyncStatus";
+import { useInstallPrompt } from "@/hooks/use-install-prompt";
 
 export function MaintenanceLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { canInstall, install } = useInstallPrompt();
 
   const tabs = [
     { href: "/maintenance", label: "Home", icon: Home },
@@ -29,6 +31,12 @@ export function MaintenanceLayout({ children }: { children: ReactNode }) {
           <span className="font-semibold text-sm hidden sm:inline text-primary-foreground">Maintenance</span>
         </Link>
         <SyncStatus />
+        {canInstall && (
+          <Button variant="ghost" size="sm" onClick={install} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
+            <Download className="h-4 w-4 mr-1.5" />
+            Install
+          </Button>
+        )}
         {user?.role === "super_admin" && (
           <Button variant="ghost" size="sm" asChild className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
             <Link href="/role-picker">

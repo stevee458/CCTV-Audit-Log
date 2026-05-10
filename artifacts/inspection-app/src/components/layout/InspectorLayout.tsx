@@ -1,17 +1,19 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, Home, PlusCircle, ArrowLeftRight } from "lucide-react";
+import { LogOut, Home, PlusCircle, ArrowLeftRight, Download } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SyncStatus } from "@/components/offline/SyncStatus";
+import { useInstallPrompt } from "@/hooks/use-install-prompt";
 
 export function InspectorLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [_location] = useLocation();
   void _location;
+  const { canInstall, install } = useInstallPrompt();
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -23,6 +25,12 @@ export function InspectorLayout({ children }: { children: ReactNode }) {
         </Link>
 
         <SyncStatus />
+        {canInstall && (
+          <Button variant="ghost" size="sm" onClick={install} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
+            <Download className="h-4 w-4 mr-1.5" />
+            Install
+          </Button>
+        )}
         {user?.role === "super_admin" && (
           <Button variant="ghost" size="sm" asChild className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10">
             <Link href="/role-picker">

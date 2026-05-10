@@ -1,7 +1,8 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { LayoutDashboard, Search, Wrench, LogOut } from "lucide-react";
+import { LayoutDashboard, Search, Wrench, LogOut, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useInstallPrompt } from "@/hooks/use-install-prompt";
 
 const ROLES = [
   {
@@ -36,6 +37,7 @@ const ROLES = [
 export default function RolePicker() {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const { canInstall, install } = useInstallPrompt();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -43,15 +45,28 @@ export default function RolePicker() {
         <div className="flex items-center gap-3">
           <img src="/jarvie-logo.png" alt="Jarvie" className="h-9 w-auto brightness-0 invert" />
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={logout}
-          className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Log out
-        </Button>
+        <div className="flex items-center gap-2">
+          {canInstall && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={install}
+              className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Install
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Log out
+          </Button>
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-8">

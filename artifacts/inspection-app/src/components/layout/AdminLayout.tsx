@@ -1,17 +1,19 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, LayoutDashboard, Search, Users, Menu, HardDrive, Wrench, Package, MapPin, Boxes, ArrowLeftRight } from "lucide-react";
+import { LogOut, LayoutDashboard, Search, Users, Menu, HardDrive, Wrench, Package, MapPin, Boxes, ArrowLeftRight, Download } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SyncStatus } from "@/components/offline/SyncStatus";
+import { useInstallPrompt } from "@/hooks/use-install-prompt";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { canInstall, install } = useInstallPrompt();
 
   const navItems = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -86,6 +88,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4 justify-end">
           <SyncStatus />
+          {canInstall && (
+            <Button variant="ghost" size="sm" onClick={install} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 hidden sm:flex">
+              <Download className="h-4 w-4 mr-1.5" />
+              Install
+            </Button>
+          )}
           {user?.role === "super_admin" && (
             <Button variant="ghost" size="sm" asChild className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 hidden sm:flex">
               <Link href="/role-picker">
