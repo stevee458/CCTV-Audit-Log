@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { LayoutDashboard, Search, Wrench, LogOut, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
+import { Logo } from "@/components/Logo";
 
 const ROLES = [
   {
@@ -43,7 +44,7 @@ export default function RolePicker() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="bg-primary flex items-center justify-between px-6 h-16 shadow-md flex-shrink-0">
         <div className="flex items-center gap-3">
-          <img src="/jarvie-logo.png" alt="Jarvie" className="h-9 w-auto brightness-0 invert" />
+          <Logo className="h-9 w-auto brightness-0 invert" />
         </div>
         <div className="flex items-center gap-2">
           {canInstall && (
