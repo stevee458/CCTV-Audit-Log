@@ -1,4 +1,4 @@
-import logoUrl from "@assets/Jarvie_Digital_Inspection_Logo_(002)_1777803539050.png";
+import logoUrl from "@assets/Picture1_1778412186304.png";
 
 export function Logo({ className = "h-8 w-auto" }: { className?: string }) {
   return (
