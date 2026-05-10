@@ -30,3 +30,9 @@ id = "D2Obu-wmiQlgvOlADPnyH"
 uri = "file://data-import/5_stock.csv"
 type = "table"
 title = "5 — Stock (maintenance stock on hand)"
+
+[[outputs]]
+id = "QORnXTVn8z1tnY6A6Ntlk"
+uri = "file://prod-migration.txt"
+type = "text"
+title = "Prod DB Migration SQL"
