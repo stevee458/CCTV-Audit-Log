@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { InspectorLayout } from "@/components/layout/InspectorLayout";
 import {
   useListDrives,
@@ -31,6 +31,16 @@ export default function MyDrives() {
   const [acceptFor, setAcceptFor] = useState<number | null>(null);
   const [returnFor, setReturnFor] = useState<number | null>(null);
   const [returnTo, setReturnTo] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await qc.invalidateQueries({ queryKey: getListDrivesQueryKey() });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [qc]);
 
   const accept = useAcceptDrive({
     mutation: {
@@ -52,7 +62,7 @@ export default function MyDrives() {
   });
 
   return (
-    <InspectorLayout>
+    <InspectorLayout onRefresh={handleRefresh} isRefreshing={isRefreshing}>
       <div className="p-4 space-y-4">
         <Button variant="ghost" asChild className="-ml-3"><Link href="/inspector"><ArrowLeft className="h-4 w-4 mr-2" />Back</Link></Button>
         <h1 className="text-2xl font-bold tracking-tight">My Drives</h1>

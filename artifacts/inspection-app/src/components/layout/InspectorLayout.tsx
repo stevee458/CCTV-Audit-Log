@@ -1,19 +1,36 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, Home, PlusCircle, ArrowLeftRight, Download } from "lucide-react";
+import { LogOut, Home, PlusCircle, ArrowLeftRight, Download, RefreshCw } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SyncStatus } from "@/components/offline/SyncStatus";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 
-export function InspectorLayout({ children }: { children: ReactNode }) {
+interface InspectorLayoutProps {
+  children: ReactNode;
+  onRefresh?: () => Promise<void> | void;
+  isRefreshing?: boolean;
+}
+
+export function InspectorLayout({ children, onRefresh, isRefreshing = false }: InspectorLayoutProps) {
   const { user, logout } = useAuth();
   const [_location] = useLocation();
   void _location;
   const { canInstall, install } = useInstallPrompt();
+
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const indicatorRef = useRef<HTMLDivElement | null>(null);
+
+  usePullToRefresh({
+    onRefresh,
+    isRefreshing,
+    scrollContainerRef,
+    indicatorRef,
+  });
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -76,7 +93,26 @@ export function InspectorLayout({ children }: { children: ReactNode }) {
         </DropdownMenu>
       </header>
 
-      <main className="flex-1 flex flex-col w-full max-w-3xl mx-auto">
+      <main
+        ref={scrollContainerRef as React.RefObject<HTMLElement>}
+        className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto relative"
+        style={{ overscrollBehaviorY: "contain" }}
+      >
+        {onRefresh && (
+          <div
+            ref={indicatorRef}
+            className="absolute top-0 left-0 right-0 flex items-center justify-center py-3 z-20 pointer-events-none"
+            style={{ transform: "translateY(-100%)", opacity: 0 }}
+            aria-live="polite"
+            aria-label="Refreshing"
+          >
+            <div className="bg-background rounded-full shadow-md p-2 border">
+              <RefreshCw
+                className={`h-5 w-5 text-primary ${isRefreshing ? "animate-spin" : ""}`}
+              />
+            </div>
+          </div>
+        )}
         {children}
       </main>
     </div>

@@ -1,21 +1,34 @@
 import { InspectorLayout } from "@/components/layout/InspectorLayout";
-import { useListInspections } from "@workspace/api-client-react";
+import { useListInspections, getListInspectionsQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Video, Clock, MapPin, CheckCircle2, HardDrive } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
 
 export default function InspectorDashboard() {
   const { data: inspections, isLoading } = useListInspections({ mine: true, status: "all" });
+  const qc = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await qc.invalidateQueries({ queryKey: getListInspectionsQueryKey() });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [qc]);
 
   const inProgress = inspections?.filter(i => i.status === "in_progress") || [];
   const completed = inspections?.filter(i => i.status === "completed") || [];
 
   return (
-    <InspectorLayout>
+    <InspectorLayout onRefresh={handleRefresh} isRefreshing={isRefreshing}>
       <div className="p-4 space-y-6">
         
         <div className="flex flex-col space-y-3 pt-2 pb-4">
