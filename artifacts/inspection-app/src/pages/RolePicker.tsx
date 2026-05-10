@@ -54,7 +54,7 @@ export default function RolePicker() {
               className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
             >
               <Download className="h-4 w-4 mr-2" />
-              Install
+              Install App
             </Button>
           )}
           <Button

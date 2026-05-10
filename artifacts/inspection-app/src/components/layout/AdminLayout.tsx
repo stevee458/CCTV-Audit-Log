@@ -91,7 +91,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           {canInstall && (
             <Button variant="ghost" size="sm" onClick={install} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 hidden sm:flex">
               <Download className="h-4 w-4 mr-1.5" />
-              Install
+              Install App
             </Button>
           )}
           {user?.role === "super_admin" && (
