@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiErrorMessage } from "@/lib/api-error";
 
@@ -135,55 +135,6 @@ export default function Login() {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 border-t bg-muted/50 p-6">
-            <div className="text-sm font-medium text-muted-foreground w-full text-center">Demo Accounts</div>
-            <div className="grid grid-cols-2 gap-3 w-full">
-              <Button 
-                variant="outline" 
-                className="w-full text-xs flex flex-col h-auto py-2 items-start"
-                onClick={() => {
-                  form.setValue("email", "admin@demo.local");
-                  form.setValue("password", "admin123");
-                }}
-              >
-                <span className="font-semibold">Admin</span>
-                <span className="text-muted-foreground font-normal">admin@demo.local</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full text-xs flex flex-col h-auto py-2 items-start"
-                onClick={() => {
-                  form.setValue("email", "inspector@demo.local");
-                  form.setValue("password", "inspector123");
-                }}
-              >
-                <span className="font-semibold">Inspector</span>
-                <span className="text-muted-foreground font-normal">inspector@demo.local</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full text-xs flex flex-col h-auto py-2 items-start"
-                onClick={() => {
-                  form.setValue("email", "maintenance@demo.local");
-                  form.setValue("password", "maintenance123");
-                }}
-              >
-                <span className="font-semibold">Maintenance</span>
-                <span className="text-muted-foreground font-normal">maintenance@demo.local</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full text-xs flex flex-col h-auto py-2 items-start"
-                onClick={() => {
-                  form.setValue("email", "superadmin@jarvie.com");
-                  form.setValue("password", "password");
-                }}
-              >
-                <span className="font-semibold">Super Admin</span>
-                <span className="text-muted-foreground font-normal">superadmin@jarvie.com</span>
-              </Button>
-            </div>
-          </CardFooter>
         </Card>
       </div>
     </div>
