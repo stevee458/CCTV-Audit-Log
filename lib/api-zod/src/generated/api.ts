@@ -216,6 +216,7 @@ export const GetInspectionResponse = zod.object({
       subCategoryId: zod.number().nullable(),
       subCategoryName: zod.string().nullable(),
       severity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
+      incidentTime: zod.string().nullable(),
       notes: zod.string().nullable(),
       createdAt: zod.coerce.date(),
     }),
@@ -268,6 +269,7 @@ export const UpdateInspectionResponse = zod.object({
       subCategoryId: zod.number().nullable(),
       subCategoryName: zod.string().nullable(),
       severity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
+      incidentTime: zod.string().nullable(),
       notes: zod.string().nullable(),
       createdAt: zod.coerce.date(),
     }),
@@ -311,6 +313,7 @@ export const CompleteInspectionResponse = zod.object({
       subCategoryId: zod.number().nullable(),
       subCategoryName: zod.string().nullable(),
       severity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
+      incidentTime: zod.string().nullable(),
       notes: zod.string().nullable(),
       createdAt: zod.coerce.date(),
     }),
@@ -333,6 +336,7 @@ export const AddFindingBody = zod.object({
   severity: zod
     .union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()])
     .optional(),
+  incidentTime: zod.string().nullish(),
   notes: zod.string().nullish(),
 });
 
@@ -350,6 +354,7 @@ export const UpdateFindingBody = zod.object({
   severity: zod
     .union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()])
     .optional(),
+  incidentTime: zod.string().nullish(),
   notes: zod.string().nullish(),
 });
 
@@ -364,6 +369,7 @@ export const UpdateFindingResponse = zod.object({
   subCategoryId: zod.number().nullable(),
   subCategoryName: zod.string().nullable(),
   severity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
+  incidentTime: zod.string().nullable(),
   notes: zod.string().nullable(),
   createdAt: zod.coerce.date(),
 });

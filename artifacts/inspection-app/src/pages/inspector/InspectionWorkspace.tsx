@@ -14,11 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, Clock, MapPin, Plus, FileText, AlertTriangle, ShieldCheck, Loader2, Video, MoreVertical, Edit, Trash2, HardDrive, Building2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, MapPin, Plus, FileText, AlertTriangle, ShieldCheck, Loader2, Video, MoreVertical, Edit, Trash2, HardDrive, Building2, Timer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CopyButton } from "@/components/CopyButton";
 
@@ -42,6 +43,7 @@ const findingSchema = z.object({
   outcome: z.enum(["no_violation", "violation"]),
   categoryId: z.coerce.number().optional().nullable(),
   severity: z.enum(["A", "B", "C", "D", "E"]).optional().nullable(),
+  incidentTime: z.string().optional().nullable(),
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.outcome === "violation") {
@@ -50,6 +52,9 @@ const findingSchema = z.object({
     }
     if (!data.severity) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Severity is required for a violation", path: ["severity"] });
+    }
+    if (!data.incidentTime) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Time of incident is required for a violation", path: ["incidentTime"] });
     }
   }
 });
@@ -127,6 +132,7 @@ export default function InspectionWorkspace() {
       outcome: "no_violation",
       categoryId: null,
       severity: null,
+      incidentTime: null,
       notes: "",
     }
   });
@@ -149,6 +155,7 @@ export default function InspectionWorkspace() {
       outcome: "no_violation",
       categoryId: null,
       severity: null,
+      incidentTime: null,
       notes: "",
     });
     setFindingDialogOpen(true);
@@ -161,6 +168,7 @@ export default function InspectionWorkspace() {
       outcome: finding.outcome,
       categoryId: finding.categoryId,
       severity: finding.severity,
+      incidentTime: finding.incidentTime || null,
       notes: finding.notes || "",
     });
     setFindingDialogOpen(true);
@@ -281,6 +289,13 @@ export default function InspectionWorkspace() {
                     {finding.outcome === "violation" && (
                       <div className="mt-1.5 font-medium text-sm">
                         {finding.categoryName}
+                      </div>
+                    )}
+
+                    {finding.outcome === "violation" && finding.incidentTime && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1.5">
+                        <Timer className="h-3 w-3" />
+                        <span>{finding.incidentTime}</span>
                       </div>
                     )}
 
@@ -475,6 +490,29 @@ export default function InspectionWorkspace() {
                                 ))}
                               </SelectContent>
                             </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="incidentTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1.5">
+                              <Timer className="h-3.5 w-3.5" />
+                              Time of Incident
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="time"
+                                {...field}
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value || null)}
+                                className="w-full"
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}

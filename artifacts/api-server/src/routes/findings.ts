@@ -31,6 +31,7 @@ async function serializeFinding(id: number) {
       subCategoryId: findingsTable.subCategoryId,
       subCategoryName: violationSubCategoriesTable.name,
       severity: findingsTable.severity,
+      incidentTime: findingsTable.incidentTime,
       notes: findingsTable.notes,
       createdAt: findingsTable.createdAt,
     })
@@ -58,6 +59,7 @@ async function serializeFinding(id: number) {
     subCategoryId: f.subCategoryId,
     subCategoryName: f.subCategoryName,
     severity: f.severity,
+    incidentTime: f.incidentTime,
     notes: f.notes,
     createdAt: f.createdAt.toISOString(),
   };
@@ -87,7 +89,7 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
       .json({ error: "Inspection is completed and cannot accept new findings" });
   }
 
-  const { outcome, categoryId, subCategoryId, severity, notes } = parsed.data;
+  const { outcome, categoryId, subCategoryId, severity, incidentTime, notes } = parsed.data;
   if (outcome === "violation" && (!categoryId || !subCategoryId)) {
     return res
       .status(400)
@@ -113,6 +115,7 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
         categoryId: outcome === "violation" ? categoryId ?? null : null,
         subCategoryId: outcome === "violation" ? subCategoryId ?? null : null,
         severity: outcome === "violation" ? severity ?? null : null,
+        incidentTime: outcome === "violation" ? incidentTime ?? null : null,
         notes: notes ?? null,
         clientId: typeof req.body?.clientId === "string" ? req.body.clientId : null,
       })
@@ -183,6 +186,7 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
       });
     }
   }
+  if (parsed.data.incidentTime !== undefined) updates.incidentTime = parsed.data.incidentTime ?? null;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
 
   if (Object.keys(updates).length > 0) {

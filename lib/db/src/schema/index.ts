@@ -371,6 +371,7 @@ export const findingsTable = pgTable(
     ),
     severity: varchar("severity", { length: 1 }),
     notes: text("notes"),
+    incidentTime: text("incident_time"),
     clientId: text("client_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

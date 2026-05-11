@@ -347,6 +347,7 @@ async function loadFullInspection(id: number) {
       subCategoryId: findingsTable.subCategoryId,
       subCategoryName: violationSubCategoriesTable.name,
       severity: findingsTable.severity,
+      incidentTime: findingsTable.incidentTime,
       notes: findingsTable.notes,
       createdAt: findingsTable.createdAt,
     })
@@ -389,6 +390,7 @@ async function loadFullInspection(id: number) {
       subCategoryId: f.subCategoryId,
       subCategoryName: f.subCategoryName,
       severity: f.severity,
+      incidentTime: f.incidentTime,
       notes: f.notes,
       createdAt: f.createdAt.toISOString(),
     })),

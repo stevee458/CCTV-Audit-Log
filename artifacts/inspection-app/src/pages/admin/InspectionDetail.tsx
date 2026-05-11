@@ -104,6 +104,12 @@ export default function AdminInspectionDetail() {
                                     {finding.categoryName}
                                   </span>
                                 </div>
+                                {finding.incidentTime && (
+                                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+                                    <span className="font-medium">Time of incident:</span>
+                                    <span>{finding.incidentTime}</span>
+                                  </div>
+                                )}
                                 {finding.notes && (
                                   <p className="text-sm text-muted-foreground bg-muted/30 p-2 rounded mt-2">
                                     {finding.notes}
