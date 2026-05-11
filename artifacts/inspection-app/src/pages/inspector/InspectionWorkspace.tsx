@@ -444,7 +444,7 @@ export default function InspectionWorkspace() {
                             <Select
                               onValueChange={(val) => {
                                 field.onChange(parseInt(val, 10));
-                                form.setValue("severity", null as any);
+                                form.setValue("severity", undefined);
                               }}
                               value={field.value?.toString() || ""}
                             >
