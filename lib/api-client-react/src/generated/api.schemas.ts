@@ -247,6 +247,11 @@ export interface DepotCount {
   count: number;
 }
 
+export type GetStatsOverviewParams = {
+  dateFrom?: string;
+  dateTo?: string;
+};
+
 export interface StatsOverview {
   totalInspections: number;
   completedInspections: number;

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, gte, desc } from "drizzle-orm";
+import { and, eq, sql, gte, lte, desc } from "drizzle-orm";
 import {
   db,
   inspectionsTable,
@@ -11,21 +11,35 @@ import { loadSummaries } from "./inspections";
 
 const router: IRouter = Router();
 
-router.get("/stats/overview", requireAdmin, async (_req, res) => {
+router.get("/stats/overview", requireAdmin, async (req, res) => {
+  const { dateFrom, dateTo } = req.query as { dateFrom?: string; dateTo?: string };
+
+  const inspWhere = and(
+    dateFrom ? gte(inspectionsTable.createdAt, new Date(dateFrom)) : undefined,
+    dateTo ? lte(inspectionsTable.createdAt, new Date(dateTo)) : undefined,
+  );
+
+  const findWhere = and(
+    dateFrom ? gte(findingsTable.createdAt, new Date(dateFrom)) : undefined,
+    dateTo ? lte(findingsTable.createdAt, new Date(dateTo)) : undefined,
+  );
+
   const [counts] = await db
     .select({
       total: sql<number>`count(*)::int`,
       completed: sql<number>`count(*) filter (where ${inspectionsTable.status} = 'completed')::int`,
       inProgress: sql<number>`count(*) filter (where ${inspectionsTable.status} = 'in_progress')::int`,
     })
-    .from(inspectionsTable);
+    .from(inspectionsTable)
+    .where(inspWhere);
 
   const [findCounts] = await db
     .select({
       total: sql<number>`count(*)::int`,
       violations: sql<number>`count(*) filter (where ${findingsTable.outcome} = 'violation')::int`,
     })
-    .from(findingsTable);
+    .from(findingsTable)
+    .where(findWhere);
 
   const bySeverityRows = await db
     .select({
@@ -33,7 +47,7 @@ router.get("/stats/overview", requireAdmin, async (_req, res) => {
       count: sql<number>`count(*)::int`,
     })
     .from(findingsTable)
-    .where(eq(findingsTable.outcome, "violation"))
+    .where(and(eq(findingsTable.outcome, "violation"), findWhere))
     .groupBy(findingsTable.severity);
 
   const byDepotRows = await db
@@ -44,6 +58,7 @@ router.get("/stats/overview", requireAdmin, async (_req, res) => {
     })
     .from(inspectionsTable)
     .innerJoin(depotsTable, eq(depotsTable.id, inspectionsTable.depotId))
+    .where(inspWhere)
     .groupBy(inspectionsTable.depotId, depotsTable.name)
     .orderBy(desc(sql`count(*)`));
 

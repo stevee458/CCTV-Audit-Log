@@ -3,20 +3,67 @@ import { useGetStatsOverview, useGetRecentInspections } from "@workspace/api-cli
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Activity, AlertTriangle, CheckCircle2, Clock, MapPin, Video } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Video } from "lucide-react";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, startOfDay, startOfMonth, subDays } from "date-fns";
+import { useState, useMemo } from "react";
+
+type Preset = "today" | "7d" | "30d" | "month" | "all";
+
+const PRESETS: { key: Preset; label: string }[] = [
+  { key: "today", label: "Today" },
+  { key: "7d", label: "Last 7 days" },
+  { key: "30d", label: "Last 30 days" },
+  { key: "month", label: "This month" },
+  { key: "all", label: "All time" },
+];
+
+function getDateRange(preset: Preset): { dateFrom?: string; dateTo?: string } {
+  const now = new Date();
+  switch (preset) {
+    case "today":
+      return { dateFrom: startOfDay(now).toISOString(), dateTo: now.toISOString() };
+    case "7d":
+      return { dateFrom: subDays(now, 7).toISOString(), dateTo: now.toISOString() };
+    case "30d":
+      return { dateFrom: subDays(now, 30).toISOString(), dateTo: now.toISOString() };
+    case "month":
+      return { dateFrom: startOfMonth(now).toISOString(), dateTo: now.toISOString() };
+    case "all":
+      return {};
+  }
+}
 
 export default function AdminDashboard() {
-  const { data: stats, isLoading: statsLoading } = useGetStatsOverview();
+  const [preset, setPreset] = useState<Preset>("all");
+  const params = useMemo(() => getDateRange(preset), [preset]);
+
+  const { data: stats, isLoading: statsLoading } = useGetStatsOverview(params);
   const { data: recentInspections, isLoading: recentLoading } = useGetRecentInspections();
-  
+
+  const activePresetLabel = PRESETS.find((p) => p.key === preset)?.label ?? "All time";
+
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-          <p className="text-muted-foreground mt-2">Monitor depot operations and inspection status.</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+            <p className="text-muted-foreground mt-2">Monitor depot operations and inspection status.</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESETS.map((p) => (
+              <Button
+                key={p.key}
+                variant={preset === p.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPreset(p.key)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {statsLoading ? (
@@ -33,11 +80,13 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalInspections}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.last7DaysInspections} in last 7 days
+                  {preset === "all"
+                    ? `${stats.last7DaysInspections} in last 7 days`
+                    : activePresetLabel}
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">In Progress</CardTitle>
@@ -123,11 +172,13 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
-          
+
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>By Severity</CardTitle>
-              <CardDescription>Breakdown of violations.</CardDescription>
+              <CardDescription>
+                Breakdown of violations{preset !== "all" ? ` — ${activePresetLabel.toLowerCase()}` : ""}.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {statsLoading ? (
@@ -138,8 +189,8 @@ export default function AdminDashboard() {
                     <div key={sev.severity} className="flex items-center">
                       <div className="w-12 text-sm font-semibold">{sev.severity}</div>
                       <div className="flex-1 h-2 mx-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary" 
+                        <div
+                          className="h-full bg-primary"
                           style={{ width: `${stats.totalViolations ? (sev.count / stats.totalViolations) * 100 : 0}%` }}
                         />
                       </div>

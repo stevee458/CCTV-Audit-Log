@@ -341,6 +341,13 @@ paths:
       operationId: getStatsOverview
       tags: [stats]
       summary: Top-level admin dashboard stats
+      parameters:
+        - in: query
+          name: dateFrom
+          schema: { type: string, format: date-time }
+        - in: query
+          name: dateTo
+          schema: { type: string, format: date-time }
       responses:
         "200":
           description: Stats
