@@ -14,14 +14,24 @@ const router: IRouter = Router();
 router.get("/stats/overview", requireAdmin, async (req, res) => {
   const { dateFrom, dateTo } = req.query as { dateFrom?: string; dateTo?: string };
 
+  const parsedFrom = dateFrom ? new Date(dateFrom) : undefined;
+  const parsedTo = dateTo ? new Date(dateTo) : undefined;
+
+  if (parsedFrom && isNaN(parsedFrom.getTime())) {
+    return res.status(400).json({ error: "Invalid dateFrom" });
+  }
+  if (parsedTo && isNaN(parsedTo.getTime())) {
+    return res.status(400).json({ error: "Invalid dateTo" });
+  }
+
   const inspWhere = and(
-    dateFrom ? gte(inspectionsTable.createdAt, new Date(dateFrom)) : undefined,
-    dateTo ? lte(inspectionsTable.createdAt, new Date(dateTo)) : undefined,
+    parsedFrom ? gte(inspectionsTable.createdAt, parsedFrom) : undefined,
+    parsedTo ? lte(inspectionsTable.createdAt, parsedTo) : undefined,
   );
 
   const findWhere = and(
-    dateFrom ? gte(findingsTable.createdAt, new Date(dateFrom)) : undefined,
-    dateTo ? lte(findingsTable.createdAt, new Date(dateTo)) : undefined,
+    parsedFrom ? gte(findingsTable.createdAt, parsedFrom) : undefined,
+    parsedTo ? lte(findingsTable.createdAt, parsedTo) : undefined,
   );
 
   const [counts] = await db
