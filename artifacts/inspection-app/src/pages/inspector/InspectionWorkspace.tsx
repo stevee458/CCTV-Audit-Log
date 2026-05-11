@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, Clock, MapPin, Plus, FileText, AlertTriangle, ShieldCheck, Loader2, Video, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, MapPin, Plus, FileText, AlertTriangle, ShieldCheck, Loader2, Video, MoreVertical, Edit, Trash2, HardDrive, Building2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -33,16 +33,12 @@ const severityColors: Record<string, string> = {
 const findingSchema = z.object({
   outcome: z.enum(["no_violation", "violation"]),
   categoryId: z.coerce.number().optional().nullable(),
-  subCategoryId: z.coerce.number().optional().nullable(),
   severity: z.enum(["A", "B", "C", "D", "E"]).optional().nullable(),
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.outcome === "violation") {
     if (!data.categoryId) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category is required for a violation", path: ["categoryId"] });
-    }
-    if (!data.subCategoryId) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Sub-category is required for a violation", path: ["subCategoryId"] });
     }
     if (!data.severity) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Severity is required for a violation", path: ["severity"] });
@@ -59,7 +55,7 @@ export default function InspectionWorkspace() {
 
   const { data: inspection, isLoading } = useGetInspection(inspectionId, { query: { enabled: !!inspectionId, queryKey: getGetInspectionQueryKey(inspectionId) }});
   const { data: categories } = useListViolationCategories();
-  
+
   const [findingDialogOpen, setFindingDialogOpen] = useState(false);
   const [outcomeSelection, setOutcomeSelection] = useState<"no_violation"|"violation"|null>(null);
   const [editingFindingId, setEditingFindingId] = useState<number | null>(null);
@@ -122,35 +118,18 @@ export default function InspectionWorkspace() {
     defaultValues: {
       outcome: "no_violation",
       categoryId: null,
-      subCategoryId: null,
       severity: null,
       notes: "",
     }
   });
 
   const selectedCategoryId = form.watch("categoryId");
-  const selectedSubCategoryId = form.watch("subCategoryId");
-  const activeCategory = categories?.find(c => c.id === selectedCategoryId);
-  const activeSubCategory = activeCategory?.subCategories.find(s => s.id === selectedSubCategoryId);
-
-  const handleSubCategoryChange = (val: string) => {
-    const subId = parseInt(val, 10);
-    form.setValue("subCategoryId", subId);
-    
-    if (activeCategory) {
-      const sub = activeCategory.subCategories.find(s => s.id === subId);
-      if (sub && sub.defaultSeverity) {
-        form.setValue("severity", sub.defaultSeverity);
-      }
-    }
-  };
 
   const handleOutcomeSelect = (outcome: "no_violation"|"violation") => {
     setOutcomeSelection(outcome);
     form.setValue("outcome", outcome);
     if (outcome === "no_violation") {
       form.setValue("categoryId", null);
-      form.setValue("subCategoryId", null);
       form.setValue("severity", null);
     }
   };
@@ -161,7 +140,6 @@ export default function InspectionWorkspace() {
     form.reset({
       outcome: "no_violation",
       categoryId: null,
-      subCategoryId: null,
       severity: null,
       notes: "",
     });
@@ -174,7 +152,6 @@ export default function InspectionWorkspace() {
     form.reset({
       outcome: finding.outcome,
       categoryId: finding.categoryId,
-      subCategoryId: finding.subCategoryId,
       severity: finding.severity,
       notes: finding.notes || "",
     });
@@ -214,9 +191,9 @@ export default function InspectionWorkspace() {
     <InspectorLayout>
       <div className="flex flex-col h-full bg-muted/10">
         <div className="bg-background border-b p-4 sticky top-14 z-20 shadow-sm space-y-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setLocation("/inspector")}
             className="text-muted-foreground -ml-2 h-8"
           >
@@ -225,17 +202,31 @@ export default function InspectionWorkspace() {
           </Button>
 
           <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight flex items-center">
-                {inspection.dvrNumber}
-                {isCompleted && <CheckCircle2 className="ml-2 h-5 w-5 text-green-500" />}
+            <div className="space-y-1.5">
+              {/* Depot → Venue breadcrumb */}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span>{inspection.depotName}</span>
+                <span className="text-muted-foreground/50">›</span>
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span>{inspection.venueName}</span>
+                <span className="text-muted-foreground/40 mx-0.5">({inspection.venueCode})</span>
+              </div>
+
+              {/* Drive name as primary heading */}
+              <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                <HardDrive className="h-5 w-5 text-muted-foreground shrink-0" />
+                {inspection.driveName || inspection.venueCode}
+                {isCompleted && <CheckCircle2 className="h-5 w-5 text-green-500" />}
               </h1>
-              <div className="flex items-center text-sm text-muted-foreground mt-1 space-x-3">
-                <span className="flex items-center"><MapPin className="mr-1 h-3.5 w-3.5" /> {inspection.venueCode}</span>
-                <span className="flex items-center"><Clock className="mr-1 h-3.5 w-3.5" /> {format(new Date(inspection.footageDate), 'MMM d')}</span>
+
+              {/* Date */}
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Clock className="mr-1 h-3.5 w-3.5" />
+                {format(new Date(inspection.footageDate), "d MMM yyyy")}
               </div>
             </div>
-            
+
             <Badge variant="outline" className={isCompleted ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"}>
               {isCompleted ? "Completed" : "In Progress"}
             </Badge>
@@ -269,7 +260,7 @@ export default function InspectionWorkspace() {
                         {finding.clipName}
                         <CopyButton value={finding.clipName} />
                       </span>
-                      
+
                       {finding.outcome === "violation" ? (
                         <Badge variant="outline" className={finding.severity ? severityColors[finding.severity] : ""}>
                           Class {finding.severity}
@@ -278,13 +269,13 @@ export default function InspectionWorkspace() {
                         <Badge variant="secondary" className="bg-green-500/10 text-green-700 hover:bg-green-500/10">No Violation</Badge>
                       )}
                     </div>
-                    
+
                     {finding.outcome === "violation" && (
                       <div className="mt-1.5 font-medium text-sm">
-                        {finding.categoryName} <span className="text-muted-foreground mx-1">›</span> {finding.subCategoryName}
+                        {finding.categoryName}
                       </div>
                     )}
-                    
+
                     {finding.notes && (
                       <p className="text-sm text-muted-foreground mt-2 bg-muted/50 p-2 rounded">
                         {finding.notes}
@@ -317,8 +308,8 @@ export default function InspectionWorkspace() {
 
         {!isCompleted && (
           <div className="sticky bottom-0 p-4 bg-background border-t shadow-lg flex gap-3 z-20">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex-1"
               onClick={() => completeMutation.mutate({ id: inspectionId })}
               disabled={completeMutation.isPending}
@@ -326,7 +317,7 @@ export default function InspectionWorkspace() {
               {completeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
               Complete
             </Button>
-            <Button 
+            <Button
               className="flex-[2] text-md shadow-md"
               size="lg"
               onClick={openNewFinding}
@@ -346,17 +337,38 @@ export default function InspectionWorkspace() {
                 <DialogTitle>Review Clip</DialogTitle>
                 <DialogDescription>What is the outcome of the current clip?</DialogDescription>
               </DialogHeader>
-              <div className="p-6 grid gap-4 pt-4">
-                <Button 
-                  variant="outline" 
+
+              {/* Context: depot / venue / drive */}
+              <div className="px-6 pb-2">
+                <div className="bg-muted/60 rounded-lg px-3 py-2 text-xs text-muted-foreground space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>{inspection.depotName}</span>
+                    <span className="text-muted-foreground/40">›</span>
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span>{inspection.venueName}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <HardDrive className="h-3.5 w-3.5 shrink-0" />
+                    <span className="font-medium text-foreground/80">{inspection.driveName || inspection.venueCode}</span>
+                    <span className="text-muted-foreground/40">·</span>
+                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                    <span>{format(new Date(inspection.footageDate), "d MMM yyyy")}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 grid gap-4 pt-2">
+                <Button
+                  variant="outline"
                   className="h-24 text-lg border-2 border-green-500/20 hover:border-green-500 hover:bg-green-500/5 text-green-700"
                   onClick={() => handleOutcomeSelect("no_violation")}
                 >
                   <ShieldCheck className="mr-2 h-6 w-6 text-green-600" />
                   No Violation
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="h-24 text-lg border-2 border-red-500/20 hover:border-red-500 hover:bg-red-500/5 text-red-700"
                   onClick={() => handleOutcomeSelect("violation")}
                 >
@@ -375,7 +387,27 @@ export default function InspectionWorkspace() {
                   {outcomeSelection === "violation" ? "Record Violation" : "Confirm No Violation"}
                 </DialogTitle>
               </DialogHeader>
-              
+
+              {/* Context: depot / venue / drive */}
+              <div className="px-6 pt-3">
+                <div className="bg-muted/60 rounded-lg px-3 py-2 text-xs text-muted-foreground space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>{inspection.depotName}</span>
+                    <span className="text-muted-foreground/40">›</span>
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span>{inspection.venueName}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <HardDrive className="h-3.5 w-3.5 shrink-0" />
+                    <span className="font-medium text-foreground/80">{inspection.driveName || inspection.venueCode}</span>
+                    <span className="text-muted-foreground/40">·</span>
+                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                    <span>{format(new Date(inspection.footageDate), "d MMM yyyy")}</span>
+                  </div>
+                </div>
+              </div>
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 pt-4 space-y-4">
                   {outcomeSelection === "violation" && (
@@ -386,12 +418,11 @@ export default function InspectionWorkspace() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Category</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={(val) => {
                                 field.onChange(parseInt(val, 10));
-                                form.setValue("subCategoryId", null as any);
                                 form.setValue("severity", null as any);
-                              }} 
+                              }}
                               value={field.value?.toString() || ""}
                             >
                               <FormControl>
@@ -399,7 +430,7 @@ export default function InspectionWorkspace() {
                                   <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
+                              <SelectContent className="max-h-64 overflow-y-auto">
                                 {categories?.map((cat) => (
                                   <SelectItem key={cat.id} value={cat.id.toString()}>
                                     {cat.name}
@@ -414,46 +445,14 @@ export default function InspectionWorkspace() {
 
                       <FormField
                         control={form.control}
-                        name="subCategoryId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Sub-category</FormLabel>
-                            <Select 
-                              onValueChange={handleSubCategoryChange} 
-                              value={field.value?.toString() || ""}
-                              disabled={!selectedCategoryId}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select specific violation" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {activeCategory?.subCategories.map((sub) => (
-                                  <SelectItem key={sub.id} value={sub.id.toString()}>
-                                    {sub.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {activeSubCategory?.description && (
-                              <p className="text-xs text-muted-foreground mt-1.5">{activeSubCategory.description}</p>
-                            )}
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
                         name="severity"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Severity (Class)</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
+                            <Select
+                              onValueChange={field.onChange}
                               value={field.value || ""}
-                              disabled={!selectedSubCategoryId}
+                              disabled={!selectedCategoryId}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -480,7 +479,7 @@ export default function InspectionWorkspace() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes (Optional)</FormLabel>
+                        <FormLabel>Notes {outcomeSelection === "violation" ? "(Optional)" : "(Optional)"}</FormLabel>
                         <FormControl>
                           <Textarea placeholder="Additional details about the clip..." className="resize-none" {...field} />
                         </FormControl>
@@ -490,9 +489,9 @@ export default function InspectionWorkspace() {
                   />
 
                   <div className="pt-2">
-                    <Button 
-                      type="submit" 
-                      className={outcomeSelection === "violation" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full bg-green-600 hover:bg-green-700 text-white"} 
+                    <Button
+                      type="submit"
+                      className={outcomeSelection === "violation" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full bg-green-600 hover:bg-green-700 text-white"}
                       size="lg"
                       disabled={addFindingMutation.isPending || updateFindingMutation.isPending}
                     >
