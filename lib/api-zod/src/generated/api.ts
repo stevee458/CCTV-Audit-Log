@@ -172,7 +172,7 @@ export const ListInspectionsResponse = zod.array(ListInspectionsResponseItem);
  * @summary Create an inspection
  */
 export const CreateInspectionBody = zod.object({
-  dvrNumber: zod.string(),
+  dvrNumber: zod.string().optional(),
   depotId: zod.number(),
   venueId: zod.number(),
   driveId: zod.number().nullish(),

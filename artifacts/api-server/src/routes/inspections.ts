@@ -425,25 +425,6 @@ router.post("/inspections", requireAuth, async (req, res) => {
         return res.status(400).json({ error: "Drive must be in your possession to start an inspection" });
       }
     }
-    // Validate footage date falls within one of this drive's footage windows for the same venue
-    const fDate = new Date(footageDate);
-    const windows = await db
-      .select()
-      .from(driveFootageWindowsTable)
-      .where(
-        and(
-          eq(driveFootageWindowsTable.driveId, driveId),
-          eq(driveFootageWindowsTable.venueId, venueId),
-        ),
-      );
-    const inWindow = windows.some((w) => {
-      const start = new Date(w.installedAt);
-      const end = w.extractedAt ? new Date(w.extractedAt) : new Date();
-      return fDate >= new Date(start.toISOString().slice(0, 10)) && fDate <= end;
-    });
-    if (!inWindow) {
-      return res.status(400).json({ error: "Footage date is not within any window for this drive at this venue" });
-    }
   }
   const clientId = typeof req.body?.clientId === "string" ? req.body.clientId : null;
   const [created] = await db
@@ -451,7 +432,7 @@ router.post("/inspections", requireAuth, async (req, res) => {
     .values({
       inspectorId: req.user!.id,
       clientId,
-      dvrNumber: dvrNumber.trim(),
+      dvrNumber: dvrNumber ? dvrNumber.trim() : "",
       depotId,
       venueId,
       driveId,

@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLocation } from "wouter";
-import { useCreateInspection, useListDepots, useListDrives, useGetDrive, getListInspectionsQueryKey, getGetStatsOverviewQueryKey, getGetDriveQueryKey } from "@workspace/api-client-react";
+import { useCreateInspection, useListDepots, useListDrives, getListInspectionsQueryKey, getGetStatsOverviewQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { InspectorLayout } from "@/components/layout/InspectorLayout";
@@ -20,7 +20,6 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +32,6 @@ const newInspectionSchema = z.object({
   depotId: z.coerce.number().min(1, "Depot is required"),
   venueId: z.coerce.number().min(1, "Venue is required"),
   driveId: z.coerce.number().min(1, "Drive is required"),
-  dvrNumber: z.string().min(1, "DVR number is required"),
   footageDate: z.date({ required_error: "Footage date is required" }),
   notes: z.string().optional(),
 });
@@ -49,7 +47,7 @@ export default function NewInspection() {
 
   const form = useForm<z.infer<typeof newInspectionSchema>>({
     resolver: zodResolver(newInspectionSchema),
-    defaultValues: { dvrNumber: "", notes: "" },
+    defaultValues: { notes: "" },
   });
 
   // Cascade: depot → venues
@@ -64,26 +62,6 @@ export default function NewInspection() {
   const venueDrives = selectedVenueId
     ? heldDrives.filter(d => d.homeVenueCode === selectedVenue?.code)
     : heldDrives;
-
-  // Footage date window logic
-  const selectedDriveId = Number(form.watch("driveId"));
-  const { data: driveDetail } = useGetDrive(selectedDriveId, {
-    query: { enabled: !!selectedDriveId, queryKey: getGetDriveQueryKey(selectedDriveId) },
-  });
-  const driveWindows = (driveDetail?.footageWindows ?? []).filter(
-    w => !selectedVenueId || w.venueId === selectedVenueId,
-  );
-
-  function isDateInWindow(date: Date): boolean {
-    if (driveWindows.length === 0) return false;
-    return driveWindows.some(w => {
-      const start = new Date(w.installedAt);
-      const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-      const end = w.extractedAt ? new Date(w.extractedAt) : new Date();
-      const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-      return date >= startDay && date <= endDay;
-    });
-  }
 
   const createMutation = useCreateInspection({
     mutation: {
@@ -106,7 +84,6 @@ export default function NewInspection() {
   function onSubmit(values: z.infer<typeof newInspectionSchema>) {
     createMutation.mutate({
       data: {
-        dvrNumber: values.dvrNumber,
         depotId: values.depotId,
         venueId: values.venueId,
         driveId: values.driveId,
@@ -244,22 +221,7 @@ export default function NewInspection() {
                   )}
                 />
 
-                {/* Step 4: DVR Number */}
-                <FormField
-                  control={form.control}
-                  name="dvrNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>DVR Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. DVR-001" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Step 5: Footage Date */}
+                {/* Step 4: Footage Date */}
                 <FormField
                   control={form.control}
                   name="footageDate"
@@ -286,26 +248,18 @@ export default function NewInspection() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={date =>
-                              date > new Date() || date < new Date("1900-01-01") || !isDateInWindow(date)
-                            }
+                            disabled={date => date > new Date()}
                             initialFocus
                           />
                         </PopoverContent>
                       </Popover>
-                      <FormDescription>
-                        {selectedDriveId
-                          ? driveWindows.length === 0
-                            ? "No footage windows available for this drive at the selected venue."
-                            : `${driveWindows.length} footage window${driveWindows.length !== 1 ? "s" : ""} available — only valid dates are selectable.`
-                          : "Select a drive first."}
-                      </FormDescription>
+                      <FormDescription>Select the date of the footage you are reviewing.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Step 6: Notes */}
+                {/* Step 5: Notes */}
                 <FormField
                   control={form.control}
                   name="notes"
