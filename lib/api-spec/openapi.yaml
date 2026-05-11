@@ -177,9 +177,6 @@ paths:
           name: categoryId
           schema: { type: integer }
         - in: query
-          name: subCategoryId
-          schema: { type: integer }
-        - in: query
           name: severity
           schema: { type: string, enum: [A, B, C, D, E] }
         - in: query
@@ -901,11 +898,7 @@ components:
       properties:
         id: { type: integer }
         name: { type: string }
-        subCategories:
-          type: array
-          items:
-            $ref: "#/components/schemas/ViolationSubCategory"
-      required: [id, name, subCategories]
+      required: [id, name]
 
     InspectionStatus:
       type: string
@@ -946,8 +939,6 @@ components:
         outcome: { type: string, enum: [no_violation, violation] }
         categoryId:
           type: ["integer", "null"]
-        subCategoryId:
-          type: ["integer", "null"]
         severity:
           oneOf:
             - $ref: "#/components/schemas/Severity"
@@ -961,8 +952,6 @@ components:
       properties:
         outcome: { type: string, enum: [no_violation, violation] }
         categoryId:
-          type: ["integer", "null"]
-        subCategoryId:
           type: ["integer", "null"]
         severity:
           oneOf:
@@ -983,10 +972,6 @@ components:
           type: ["integer", "null"]
         categoryName:
           type: ["string", "null"]
-        subCategoryId:
-          type: ["integer", "null"]
-        subCategoryName:
-          type: ["string", "null"]
         severity:
           oneOf:
             - $ref: "#/components/schemas/Severity"
@@ -1002,8 +987,6 @@ components:
         - outcome
         - categoryId
         - categoryName
-        - subCategoryId
-        - subCategoryName
         - severity
         - notes
         - createdAt

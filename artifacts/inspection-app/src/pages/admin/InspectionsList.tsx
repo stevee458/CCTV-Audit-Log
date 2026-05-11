@@ -39,7 +39,6 @@ export default function InspectionsList() {
   const [venueId, setVenueId] = useState<string>("");
   const [inspectorId, setInspectorId] = useState<string>("");
   const [categoryId, setCategoryId] = useState<string>("");
-  const [subCategoryId, setSubCategoryId] = useState<string>("");
   const [footageDateFrom, setFootageDateFrom] = useState<string>("");
   const [footageDateTo, setFootageDateTo] = useState<string>("");
   const [inspectionDateFrom, setInspectionDateFrom] = useState<string>("");
@@ -55,7 +54,6 @@ export default function InspectionsList() {
   const venueIdNum = num(venueId);
   const inspectorIdNum = num(inspectorId);
   const categoryIdNum = num(categoryId);
-  const subCategoryIdNum = num(subCategoryId);
 
   const venues = useMemo(() => {
     if (depotIdNum) {
@@ -63,10 +61,6 @@ export default function InspectionsList() {
     }
     return depots?.flatMap((d) => d.venues) ?? [];
   }, [depots, depotIdNum]);
-  const subCategories = useMemo(
-    () => categories?.find((c) => c.id === categoryIdNum)?.subCategories ?? [],
-    [categories, categoryIdNum],
-  );
   const inspectors = useMemo(
     () => (users ?? []).filter((u) => u.role === "inspector"),
     [users],
@@ -81,7 +75,6 @@ export default function InspectionsList() {
     venueId: venueIdNum,
     inspectorId: inspectorIdNum,
     categoryId: categoryIdNum,
-    subCategoryId: subCategoryIdNum,
     footageDateFrom: footageDateFrom || undefined,
     footageDateTo: footageDateTo || undefined,
     inspectionDateFrom: inspectionDateFrom || undefined,
@@ -217,24 +210,12 @@ export default function InspectionsList() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-2">
                         <h4 className="font-medium leading-none">Category</h4>
-                        <Select value={categoryId} onValueChange={(v) => { setCategoryId(v); setSubCategoryId(""); }}>
+                        <Select value={categoryId} onValueChange={setCategoryId}>
                           <SelectTrigger><SelectValue placeholder="Any category" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">Any category</SelectItem>
                             {categories?.map(c => (
                               <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Sub-category</h4>
-                        <Select value={subCategoryId} onValueChange={setSubCategoryId} disabled={subCategories.length === 0}>
-                          <SelectTrigger><SelectValue placeholder="Any sub-category" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Any sub-category</SelectItem>
-                            {subCategories.map(s => (
-                              <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -256,7 +237,7 @@ export default function InspectionsList() {
                     </div>
                     <Button variant="secondary" className="w-full" onClick={() => {
                       setSeverity(""); setDepotId(""); setVenueId("");
-                      setInspectorId(""); setCategoryId(""); setSubCategoryId("");
+                      setInspectorId(""); setCategoryId("");
                       setFootageDateFrom(""); setFootageDateTo("");
                       setInspectionDateFrom(""); setInspectionDateTo("");
                       setStatus(""); setOutcome(""); setSearch("");

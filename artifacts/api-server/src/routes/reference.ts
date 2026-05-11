@@ -5,7 +5,6 @@ import {
   depotsTable,
   venuesTable,
   violationCategoriesTable,
-  violationSubCategoriesTable,
 } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 
@@ -40,27 +39,7 @@ router.get("/reference/violations", requireAuth, async (_req, res) => {
     .select()
     .from(violationCategoriesTable)
     .orderBy(asc(violationCategoriesTable.sortOrder), asc(violationCategoriesTable.id));
-  const subs = await db
-    .select()
-    .from(violationSubCategoriesTable)
-    .orderBy(
-      asc(violationSubCategoriesTable.categoryId),
-      asc(violationSubCategoriesTable.sortOrder),
-      asc(violationSubCategoriesTable.id),
-    );
-  const grouped = cats.map((c) => ({
-    id: c.id,
-    name: c.name,
-    subCategories: subs
-      .filter((s) => s.categoryId === c.id)
-      .map((s) => ({
-        id: s.id,
-        name: s.name,
-        description: s.description,
-        defaultSeverity: s.defaultSeverity,
-      })),
-  }));
-  res.json(grouped);
+  res.json(cats.map((c) => ({ id: c.id, name: c.name })));
 });
 
 export default router;

@@ -8,7 +8,6 @@ import {
   venuesTable,
   usersTable,
   violationCategoriesTable,
-  violationSubCategoriesTable,
   drivesTable,
   driveFootageWindowsTable,
 } from "@workspace/db";
@@ -128,8 +127,6 @@ async function listInspectionIds(req: any): Promise<number[] | null> {
     const fconds = [eq(findingsTable.outcome, String(q.outcome))];
     if (q.categoryId)
       fconds.push(eq(findingsTable.categoryId, Number(q.categoryId)));
-    if (q.subCategoryId)
-      fconds.push(eq(findingsTable.subCategoryId, Number(q.subCategoryId)));
     if (q.severity) fconds.push(eq(findingsTable.severity, String(q.severity)));
     const matches = await db
       .selectDistinct({ id: findingsTable.inspectionId })
@@ -137,12 +134,10 @@ async function listInspectionIds(req: any): Promise<number[] | null> {
       .where(and(...fconds));
     candidateIds = matches.map((m) => m.id);
     if (candidateIds.length === 0) return [];
-  } else if (q.categoryId || q.subCategoryId || q.severity) {
+  } else if (q.categoryId || q.severity) {
     const fconds = [];
     if (q.categoryId)
       fconds.push(eq(findingsTable.categoryId, Number(q.categoryId)));
-    if (q.subCategoryId)
-      fconds.push(eq(findingsTable.subCategoryId, Number(q.subCategoryId)));
     if (q.severity) fconds.push(eq(findingsTable.severity, String(q.severity)));
     const matches = await db
       .selectDistinct({ id: findingsTable.inspectionId })
@@ -286,7 +281,6 @@ router.get("/inspections/export.csv", requireAuth, async (req, res) => {
           fnd.clipName,
           fnd.outcome,
           fnd.categoryName ?? "",
-          fnd.subCategoryName ?? "",
           fnd.severity ?? "",
           fnd.notes ?? "",
           fnd.createdAt,
@@ -344,8 +338,6 @@ async function loadFullInspection(id: number) {
       outcome: findingsTable.outcome,
       categoryId: findingsTable.categoryId,
       categoryName: violationCategoriesTable.name,
-      subCategoryId: findingsTable.subCategoryId,
-      subCategoryName: violationSubCategoriesTable.name,
       severity: findingsTable.severity,
       incidentTime: findingsTable.incidentTime,
       notes: findingsTable.notes,
@@ -355,10 +347,6 @@ async function loadFullInspection(id: number) {
     .leftJoin(
       violationCategoriesTable,
       eq(violationCategoriesTable.id, findingsTable.categoryId),
-    )
-    .leftJoin(
-      violationSubCategoriesTable,
-      eq(violationSubCategoriesTable.id, findingsTable.subCategoryId),
     )
     .where(eq(findingsTable.inspectionId, id))
     .orderBy(findingsTable.id);
@@ -387,8 +375,6 @@ async function loadFullInspection(id: number) {
       outcome: f.outcome,
       categoryId: f.categoryId,
       categoryName: f.categoryName,
-      subCategoryId: f.subCategoryId,
-      subCategoryName: f.subCategoryName,
       severity: f.severity,
       incidentTime: f.incidentTime,
       notes: f.notes,

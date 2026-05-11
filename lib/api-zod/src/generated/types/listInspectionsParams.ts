@@ -12,7 +12,6 @@ import type { ListInspectionsStatus } from "./listInspectionsStatus";
 export type ListInspectionsParams = {
   outcome?: ListInspectionsOutcome;
   categoryId?: number;
-  subCategoryId?: number;
   severity?: ListInspectionsSeverity;
   depotId?: number;
   venueId?: number;

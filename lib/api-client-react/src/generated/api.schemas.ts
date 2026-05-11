@@ -140,8 +140,6 @@ export interface CreateFindingInput {
   outcome: CreateFindingInputOutcome;
   /** @nullable */
   categoryId?: number | null;
-  /** @nullable */
-  subCategoryId?: number | null;
   severity?: Severity | null;
   /** @nullable */
   notes?: string | null;
@@ -159,8 +157,6 @@ export interface UpdateFindingInput {
   outcome?: UpdateFindingInputOutcome;
   /** @nullable */
   categoryId?: number | null;
-  /** @nullable */
-  subCategoryId?: number | null;
   severity?: Severity | null;
   /** @nullable */
   notes?: string | null;
@@ -184,10 +180,6 @@ export interface Finding {
   categoryId: number | null;
   /** @nullable */
   categoryName: string | null;
-  /** @nullable */
-  subCategoryId: number | null;
-  /** @nullable */
-  subCategoryName: string | null;
   severity: Severity | null;
   /** @nullable */
   notes: string | null;
@@ -684,7 +676,6 @@ export interface MaintenanceVisitDetail {
 export type ListInspectionsParams = {
   outcome?: ListInspectionsOutcome;
   categoryId?: number;
-  subCategoryId?: number;
   severity?: ListInspectionsSeverity;
   depotId?: number;
   venueId?: number;

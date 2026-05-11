@@ -5,10 +5,7 @@
  * Digital Inspection App API
  * OpenAPI spec version: 0.1.0
  */
-import type { ViolationSubCategory } from "./violationSubCategory";
-
 export interface ViolationCategory {
   id: number;
   name: string;
-  subCategories: ViolationSubCategory[];
 }

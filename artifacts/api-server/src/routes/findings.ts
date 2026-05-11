@@ -6,7 +6,6 @@ import {
   findingsTable,
   venuesTable,
   violationCategoriesTable,
-  violationSubCategoriesTable,
 } from "@workspace/db";
 import {
   AddFindingBody,
@@ -28,8 +27,6 @@ async function serializeFinding(id: number) {
       outcome: findingsTable.outcome,
       categoryId: findingsTable.categoryId,
       categoryName: violationCategoriesTable.name,
-      subCategoryId: findingsTable.subCategoryId,
-      subCategoryName: violationSubCategoriesTable.name,
       severity: findingsTable.severity,
       incidentTime: findingsTable.incidentTime,
       notes: findingsTable.notes,
@@ -39,10 +36,6 @@ async function serializeFinding(id: number) {
     .leftJoin(
       violationCategoriesTable,
       eq(violationCategoriesTable.id, findingsTable.categoryId),
-    )
-    .leftJoin(
-      violationSubCategoriesTable,
-      eq(violationSubCategoriesTable.id, findingsTable.subCategoryId),
     )
     .where(eq(findingsTable.id, id))
     .limit(1);
@@ -56,8 +49,6 @@ async function serializeFinding(id: number) {
     outcome: f.outcome,
     categoryId: f.categoryId,
     categoryName: f.categoryName,
-    subCategoryId: f.subCategoryId,
-    subCategoryName: f.subCategoryName,
     severity: f.severity,
     incidentTime: f.incidentTime,
     notes: f.notes,
@@ -89,11 +80,11 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
       .json({ error: "Inspection is completed and cannot accept new findings" });
   }
 
-  const { outcome, categoryId, subCategoryId, severity, incidentTime, notes } = parsed.data;
-  if (outcome === "violation" && (!categoryId || !subCategoryId)) {
+  const { outcome, categoryId, severity, incidentTime, notes } = parsed.data;
+  if (outcome === "violation" && !categoryId) {
     return res
       .status(400)
-      .json({ error: "Violations require category and sub-category" });
+      .json({ error: "Violations require a category" });
   }
 
   const finding = await db.transaction(async (tx) => {
@@ -113,7 +104,6 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
         clipName,
         outcome,
         categoryId: outcome === "violation" ? categoryId ?? null : null,
-        subCategoryId: outcome === "violation" ? subCategoryId ?? null : null,
         severity: outcome === "violation" ? severity ?? null : null,
         incidentTime: outcome === "violation" ? incidentTime ?? null : null,
         notes: notes ?? null,
@@ -163,26 +153,19 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   if (parsed.data.outcome !== undefined) updates.outcome = parsed.data.outcome;
   if (outcome === "no_violation") {
     updates.categoryId = null;
-    updates.subCategoryId = null;
     updates.severity = null;
   } else {
     if (parsed.data.categoryId !== undefined)
       updates.categoryId = parsed.data.categoryId;
-    if (parsed.data.subCategoryId !== undefined)
-      updates.subCategoryId = parsed.data.subCategoryId;
     if (parsed.data.severity !== undefined)
       updates.severity = parsed.data.severity ?? null;
     const finalCategoryId =
       updates.categoryId !== undefined ? updates.categoryId : existing.categoryId;
-    const finalSubCategoryId =
-      updates.subCategoryId !== undefined
-        ? updates.subCategoryId
-        : existing.subCategoryId;
     const finalSeverity =
       updates.severity !== undefined ? updates.severity : existing.severity;
-    if (!finalCategoryId || !finalSubCategoryId || !finalSeverity) {
+    if (!finalCategoryId || !finalSeverity) {
       return res.status(400).json({
-        error: "Violation findings require category, sub-category and severity",
+        error: "Violation findings require category and severity",
       });
     }
   }

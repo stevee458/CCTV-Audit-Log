@@ -18,10 +18,6 @@ export interface Finding {
   categoryId: number | null;
   /** @nullable */
   categoryName: string | null;
-  /** @nullable */
-  subCategoryId: number | null;
-  /** @nullable */
-  subCategoryName: string | null;
   severity: Severity | null;
   /** @nullable */
   notes: string | null;

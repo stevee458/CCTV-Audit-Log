@@ -69,20 +69,6 @@ export const violationCategoriesTable = pgTable("violation_categories", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
-export const violationSubCategoriesTable = pgTable(
-  "violation_sub_categories",
-  {
-    id: serial("id").primaryKey(),
-    categoryId: integer("category_id")
-      .notNull()
-      .references(() => violationCategoriesTable.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    description: text("description"),
-    defaultSeverity: varchar("default_severity", { length: 1 }).notNull(),
-    sortOrder: integer("sort_order").notNull().default(0),
-  },
-);
-
 // ─── Drives ───────────────────────────────────────────────────────────────
 export const drivesTable = pgTable(
   "drives",
@@ -366,9 +352,6 @@ export const findingsTable = pgTable(
     categoryId: integer("category_id").references(
       () => violationCategoriesTable.id,
     ),
-    subCategoryId: integer("sub_category_id").references(
-      () => violationSubCategoriesTable.id,
-    ),
     severity: varchar("severity", { length: 1 }),
     notes: text("notes"),
     incidentTime: text("incident_time"),
@@ -384,7 +367,6 @@ export const findingsTable = pgTable(
     inspectionIdx: index("findings_inspection_idx").on(t.inspectionId),
     severityIdx: index("findings_severity_idx").on(t.severity),
     categoryIdx: index("findings_category_idx").on(t.categoryId),
-    subCategoryIdx: index("findings_sub_category_idx").on(t.subCategoryId),
   }),
 );
 

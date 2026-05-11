@@ -12,8 +12,6 @@ export interface CreateFindingInput {
   outcome: CreateFindingInputOutcome;
   /** @nullable */
   categoryId?: number | null;
-  /** @nullable */
-  subCategoryId?: number | null;
   severity?: Severity | null;
   /** @nullable */
   notes?: string | null;

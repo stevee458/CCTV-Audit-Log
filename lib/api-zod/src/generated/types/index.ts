@@ -77,8 +77,7 @@ export * from "./userRole";
 export * from "./venue";
 export * from "./venueInspectionVisit";
 export * from "./violationCategory";
-export * from "./violationSubCategory";
-export * from "./violationSubCategoryDefaultSeverity";
+
 export * from "./whereaboutsInspection";
 export * from "./whereaboutsMatch";
 export * from "./whereaboutsResult";
