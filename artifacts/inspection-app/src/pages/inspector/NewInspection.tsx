@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,13 +30,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
 const newInspectionSchema = z.object({
-  dvrNumber: z.string().min(1, "DVR number is required"),
   depotId: z.coerce.number().min(1, "Depot is required"),
   venueId: z.coerce.number().min(1, "Venue is required"),
   driveId: z.coerce.number().min(1, "Drive is required"),
-  footageDate: z.date({
-    required_error: "Footage date is required",
-  }),
+  dvrNumber: z.string().min(1, "DVR number is required"),
+  footageDate: z.date({ required_error: "Footage date is required" }),
   notes: z.string().optional(),
 });
 
@@ -44,36 +42,41 @@ export default function NewInspection() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
   const { user } = useAuth();
+
   const { data: depots, isLoading: depotsLoading } = useListDepots();
   const { data: myDrives } = useListDrives({ holderUserId: user?.id });
 
   const form = useForm<z.infer<typeof newInspectionSchema>>({
     resolver: zodResolver(newInspectionSchema),
-    defaultValues: {
-      dvrNumber: "",
-      notes: "",
-    },
+    defaultValues: { dvrNumber: "", notes: "" },
   });
 
+  // Cascade: depot → venues
   const selectedDepotId = Number(form.watch("depotId"));
   const selectedDepot = depots?.find(d => d.id === selectedDepotId);
-  const venues = selectedDepot?.venues || [];
+  const venues = selectedDepot?.venues ?? [];
 
-  const heldDrives = (myDrives ?? []).filter(d => d.status === "With Inspector");
-  const selectedDriveId = Number(form.watch("driveId"));
+  // Cascade: venue → drives (only held drives belonging to that venue)
   const selectedVenueId = Number(form.watch("venueId"));
+  const selectedVenue = venues.find(v => v.id === selectedVenueId);
+  const heldDrives = (myDrives ?? []).filter(d => d.status === "With Inspector");
+  const venueDrives = selectedVenueId
+    ? heldDrives.filter(d => d.homeVenueCode === selectedVenue?.code)
+    : heldDrives;
+
+  // Footage date window logic
+  const selectedDriveId = Number(form.watch("driveId"));
   const { data: driveDetail } = useGetDrive(selectedDriveId, {
     query: { enabled: !!selectedDriveId, queryKey: getGetDriveQueryKey(selectedDriveId) },
   });
   const driveWindows = (driveDetail?.footageWindows ?? []).filter(
-    (w) => !selectedVenueId || w.venueId === selectedVenueId,
+    w => !selectedVenueId || w.venueId === selectedVenueId,
   );
 
   function isDateInWindow(date: Date): boolean {
     if (driveWindows.length === 0) return false;
-    return driveWindows.some((w) => {
+    return driveWindows.some(w => {
       const start = new Date(w.installedAt);
       const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
       const end = w.extractedAt ? new Date(w.extractedAt) : new Date();
@@ -97,7 +100,7 @@ export default function NewInspection() {
           variant: "destructive",
         });
       },
-    }
+    },
   });
 
   function onSubmit(values: z.infer<typeof newInspectionSchema>) {
@@ -109,15 +112,15 @@ export default function NewInspection() {
         driveId: values.driveId,
         footageDate: format(values.footageDate, "yyyy-MM-dd"),
         notes: values.notes || null,
-      }
+      },
     });
   }
 
   return (
     <InspectorLayout>
       <div className="p-4 space-y-6 pb-20">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => setLocation("/inspector")}
           className="text-muted-foreground -ml-4"
         >
@@ -134,7 +137,114 @@ export default function NewInspection() {
           <CardContent className="pt-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                
+
+                {/* Step 1: Depot */}
+                <FormField
+                  control={form.control}
+                  name="depotId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Depot</FormLabel>
+                      <Select
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          form.setValue("venueId", 0 as any);
+                          form.setValue("driveId", 0 as any);
+                        }}
+                        value={field.value?.toString() || ""}
+                        disabled={depotsLoading}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={depotsLoading ? "Loading…" : "Select depot"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {depots?.map(depot => (
+                            <SelectItem key={depot.id} value={depot.id.toString()}>
+                              {depot.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Step 2: Venue (filtered by depot) */}
+                <FormField
+                  control={form.control}
+                  name="venueId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Venue</FormLabel>
+                      <Select
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          form.setValue("driveId", 0 as any);
+                        }}
+                        value={field.value?.toString() || ""}
+                        disabled={!selectedDepotId || venues.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={
+                              !selectedDepotId ? "Select depot first" :
+                              venues.length === 0 ? "No venues found" :
+                              "Select venue"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {venues.map(venue => (
+                            <SelectItem key={venue.id} value={venue.id.toString()}>
+                              {venue.name} ({venue.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Step 3: Drive (filtered by venue) */}
+                <FormField
+                  control={form.control}
+                  name="driveId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Drive</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value?.toString() || ""}
+                        disabled={!selectedVenueId || venueDrives.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-drive">
+                            <SelectValue placeholder={
+                              !selectedVenueId ? "Select venue first" :
+                              venueDrives.length === 0 ? "No drives held for this venue" :
+                              "Select drive"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {venueDrives.map(d => (
+                            <SelectItem key={d.id} value={d.id.toString()}>
+                              {d.name} {d.homeVenueCode ? `(${d.homeVenueCode})` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Only drives you currently hold for this venue are shown.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Step 4: DVR Number */}
                 <FormField
                   control={form.control}
                   name="dvrNumber"
@@ -149,104 +259,7 @@ export default function NewInspection() {
                   )}
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="depotId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Depot</FormLabel>
-                        <Select 
-                          onValueChange={(val) => {
-                            field.onChange(val);
-                            form.setValue("venueId", 0 as any); // Reset venue
-                          }} 
-                          value={field.value?.toString() || ""}
-                          disabled={depotsLoading}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={depotsLoading ? "Loading..." : "Select depot"} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {depots?.map((depot) => (
-                              <SelectItem key={depot.id} value={depot.id.toString()}>
-                                {depot.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="venueId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Venue</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          value={field.value?.toString() || ""}
-                          disabled={!selectedDepotId || venues.length === 0}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={
-                                !selectedDepotId ? "Select depot first" : 
-                                venues.length === 0 ? "No venues found" : "Select venue"
-                              } />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {venues.map((venue) => (
-                              <SelectItem key={venue.id} value={venue.id.toString()}>
-                                {venue.name} ({venue.code})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="driveId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Drive</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value?.toString() || ""}
-                        disabled={heldDrives.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-drive">
-                            <SelectValue placeholder={
-                              heldDrives.length === 0 ? "No drives in your possession" : "Select drive you collected"
-                            } />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {heldDrives.map((d) => (
-                            <SelectItem key={d.id} value={d.id.toString()}>
-                              {d.name} {d.homeVenueCode ? `(${d.homeVenueCode})` : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>You can only inspect footage from drives you currently hold.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+                {/* Step 5: Footage Date */}
                 <FormField
                   control={form.control}
                   name="footageDate"
@@ -257,17 +270,13 @@ export default function NewInspection() {
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
-                              variant={"outline"}
+                              variant="outline"
                               className={cn(
                                 "w-full pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
+                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
@@ -277,7 +286,7 @@ export default function NewInspection() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
+                            disabled={date =>
                               date > new Date() || date < new Date("1900-01-01") || !isDateInWindow(date)
                             }
                             initialFocus
@@ -288,7 +297,7 @@ export default function NewInspection() {
                         {selectedDriveId
                           ? driveWindows.length === 0
                             ? "No footage windows available for this drive at the selected venue."
-                            : `Pick a date inside one of this drive's footage windows for the selected venue (${driveWindows.length} available).`
+                            : `${driveWindows.length} footage window${driveWindows.length !== 1 ? "s" : ""} available — only valid dates are selectable.`
                           : "Select a drive first."}
                       </FormDescription>
                       <FormMessage />
@@ -296,6 +305,7 @@ export default function NewInspection() {
                   )}
                 />
 
+                {/* Step 6: Notes */}
                 <FormField
                   control={form.control}
                   name="notes"
@@ -303,8 +313,8 @@ export default function NewInspection() {
                     <FormItem>
                       <FormLabel>General Notes (Optional)</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Any preliminary context..."
+                        <Textarea
+                          placeholder="Any preliminary context…"
                           className="resize-none"
                           {...field}
                         />
@@ -314,9 +324,9 @@ export default function NewInspection() {
                   )}
                 />
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Button
+                  type="submit"
+                  className="w-full"
                   size="lg"
                   disabled={createMutation.isPending}
                 >
