@@ -22,6 +22,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CopyButton } from "@/components/CopyButton";
 
+const severityLabels: Record<string, string> = {
+  A: "A — Death, Significant Asset Loss",
+  B: "B — Injury, Asset Loss, Incident requiring scrutiny, Risk of A",
+  C: "C — Significant Failure to follow procedure, Risk of B",
+  D: "D — Inactivity, Failure to follow procedure, Risk of C",
+  E: "E — Minor Infractions, Risk of D",
+};
+
 const severityColors: Record<string, string> = {
   A: "bg-red-500/15 text-red-700 border-red-500/20",
   B: "bg-orange-500/15 text-orange-700 border-orange-500/20",
@@ -263,7 +271,7 @@ export default function InspectionWorkspace() {
 
                       {finding.outcome === "violation" ? (
                         <Badge variant="outline" className={finding.severity ? severityColors[finding.severity] : ""}>
-                          Class {finding.severity}
+                          {finding.severity}
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-green-500/10 text-green-700 hover:bg-green-500/10">No Violation</Badge>
@@ -448,7 +456,7 @@ export default function InspectionWorkspace() {
                         name="severity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Severity (Class)</FormLabel>
+                            <FormLabel>Severity</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               value={field.value || ""}
@@ -460,9 +468,9 @@ export default function InspectionWorkspace() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {["A", "B", "C", "D", "E"].map((sev) => (
+                                {(Object.entries(severityLabels) as [string, string][]).map(([sev, label]) => (
                                   <SelectItem key={sev} value={sev}>
-                                    Class {sev}
+                                    {label}
                                   </SelectItem>
                                 ))}
                               </SelectContent>

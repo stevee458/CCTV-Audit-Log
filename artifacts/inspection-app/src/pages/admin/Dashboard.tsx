@@ -136,7 +136,7 @@ export default function AdminDashboard() {
                 <div className="space-y-4 mt-2">
                   {stats?.bySeverity.map((sev) => (
                     <div key={sev.severity} className="flex items-center">
-                      <div className="w-12 text-sm font-semibold">Class {sev.severity}</div>
+                      <div className="w-12 text-sm font-semibold">{sev.severity}</div>
                       <div className="flex-1 h-2 mx-2 bg-muted rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-primary" 

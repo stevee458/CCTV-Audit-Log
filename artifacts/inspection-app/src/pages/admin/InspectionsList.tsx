@@ -22,6 +22,14 @@ const severityColors: Record<string, string> = {
   E: "bg-emerald-500/15 text-emerald-700 border-emerald-500/20",
 };
 
+const severityShortLabels: Record<string, string> = {
+  A: "Death, Significant Asset Loss",
+  B: "Injury, Asset Loss, Incident requiring scrutiny, Risk of A",
+  C: "Significant Failure to follow procedure, Risk of B",
+  D: "Inactivity, Failure to follow procedure, Risk of C",
+  E: "Minor Infractions, Risk of D",
+};
+
 export default function InspectionsList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("");
@@ -162,8 +170,8 @@ export default function InspectionsList() {
                         <SelectTrigger><SelectValue placeholder="Any severity" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Any severity</SelectItem>
-                          {["A", "B", "C", "D", "E"].map(s => (
-                            <SelectItem key={s} value={s}>Class {s}</SelectItem>
+                          {(["A", "B", "C", "D", "E"] as const).map(s => (
+                            <SelectItem key={s} value={s}>{s} — {severityShortLabels[s]}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -319,7 +327,7 @@ export default function InspectionsList() {
                                 <AlertTriangle className="mr-1 h-3 w-3" /> {i.violationsCount} Violations
                               </Badge>
                               {i.highestSeverity && (
-                                <Badge variant="outline" className={`text-[10px] h-4 ${severityColors[i.highestSeverity]}`}>Max Class {i.highestSeverity}</Badge>
+                                <Badge variant="outline" className={`text-[10px] h-4 ${severityColors[i.highestSeverity]}`}>Max {i.highestSeverity}</Badge>
                               )}
                             </div>
                           ) : i.status === 'completed' ? (

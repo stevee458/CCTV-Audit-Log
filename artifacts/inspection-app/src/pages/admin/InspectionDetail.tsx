@@ -98,10 +98,10 @@ export default function AdminInspectionDetail() {
                               <div>
                                 <div className="flex items-center gap-2 mb-2">
                                   <Badge variant="outline" className={finding.severity ? severityColors[finding.severity] : ""}>
-                                    Class {finding.severity}
+                                    {finding.severity}
                                   </Badge>
                                   <span className="font-medium text-sm">
-                                    {finding.categoryName} <span className="text-muted-foreground mx-1">›</span> {finding.subCategoryName}
+                                    {finding.categoryName}
                                   </span>
                                 </div>
                                 {finding.notes && (
