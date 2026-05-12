@@ -67,6 +67,7 @@ export interface CameraAsset {
   id: number;
   label: string;
   status: string;
+  notes: string | null;
 }
 
 export interface VenueAdmin {

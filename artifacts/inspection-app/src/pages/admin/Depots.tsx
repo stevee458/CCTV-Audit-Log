@@ -41,6 +41,7 @@ import {
   useDeleteVenue,
   useCreateAsset,
   useDeleteAsset,
+  useUpdateAsset,
   getListAdminDepotsQueryKey,
   getListDepotsQueryKey,
   getListAssetsQueryKey,
@@ -67,6 +68,9 @@ export default function AdminDepots() {
 
   const [addingCameraToVenue, setAddingCameraToVenue] = useState<number | null>(null);
   const [newCameraLabel, setNewCameraLabel] = useState("");
+
+  const [editingCamId, setEditingCamId] = useState<number | null>(null);
+  const [editingCamNotes, setEditingCamNotes] = useState("");
 
   const [newDepotName, setNewDepotName] = useState("");
   const [addingDepot, setAddingDepot] = useState(false);
@@ -146,6 +150,18 @@ export default function AdminDepots() {
       onError: (e) => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
   });
+
+  const updateCamera = useUpdateAsset({
+    mutation: {
+      onSuccess: () => { invalidateAll(); setEditingCamId(null); },
+      onError: (e) => toast({ title: "Failed to save description", description: apiErrorMessage(e), variant: "destructive" }),
+    },
+  });
+
+  function saveCamNotes(id: number, override?: string) {
+    const notes = override !== undefined ? override : editingCamNotes.trim();
+    updateCamera.mutate({ id, data: { notes: notes || null } });
+  }
 
   function toggleDepot(id: number) {
     setOpenDepots(prev => {
@@ -377,33 +393,71 @@ export default function AdminDepots() {
                                   ) : (
                                     <div className="space-y-1.5 mb-3">
                                       {venue.cameras.map(cam => (
-                                        <div key={cam.id} className="flex items-center gap-2 text-sm bg-background rounded px-2 py-1.5 border">
-                                          <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                          <span className="flex-1">{cam.label}</span>
-                                          <Badge variant="outline" className={`text-xs shrink-0 ${cam.status === "Operational" ? "text-green-700 border-green-300" : "text-amber-700 border-amber-300"}`}>
-                                            {cam.status}
-                                          </Badge>
-                                          <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                              <Button size="sm" variant="ghost" className="h-6 px-1.5 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10">
-                                                <Trash2 className="h-3 w-3" />
+                                        <div key={cam.id} className="text-sm bg-background rounded px-2 py-1.5 border">
+                                          <div className="flex items-center gap-2">
+                                            <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                            <span className="flex-1 font-medium">{cam.label}</span>
+                                            <Badge variant="outline" className={`text-xs shrink-0 ${cam.status === "Operational" ? "text-green-700 border-green-300" : "text-amber-700 border-amber-300"}`}>
+                                              {cam.status}
+                                            </Badge>
+                                            <Button
+                                              size="sm" variant="ghost"
+                                              className="h-6 px-1.5 shrink-0"
+                                              title="Edit coverage description"
+                                              onClick={() => { setEditingCamId(cam.id); setEditingCamNotes(cam.notes ?? ""); }}
+                                            >
+                                              <Pencil className="h-3 w-3" />
+                                            </Button>
+                                            <AlertDialog>
+                                              <AlertDialogTrigger asChild>
+                                                <Button size="sm" variant="ghost" className="h-6 px-1.5 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                                  <Trash2 className="h-3 w-3" />
+                                                </Button>
+                                              </AlertDialogTrigger>
+                                              <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                  <AlertDialogTitle>Remove camera?</AlertDialogTitle>
+                                                  <AlertDialogDescription>
+                                                    Remove <strong>{cam.label}</strong> from {venue.name}? This will also remove it from the Assets list.
+                                                  </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                  <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteCamera.mutate({ id: cam.id })}>
+                                                    Remove
+                                                  </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                              </AlertDialogContent>
+                                            </AlertDialog>
+                                          </div>
+                                          {editingCamId === cam.id ? (
+                                            <div className="flex items-center gap-2 mt-1.5 pl-5">
+                                              <Input
+                                                autoFocus
+                                                placeholder="e.g. Facing boom gate, wide angle view"
+                                                value={editingCamNotes}
+                                                onChange={e => setEditingCamNotes(e.target.value)}
+                                                onKeyDown={e => {
+                                                  if (e.key === "Enter") saveCamNotes(cam.id);
+                                                  if (e.key === "Escape") setEditingCamId(null);
+                                                }}
+                                                className="h-7 text-xs flex-1"
+                                              />
+                                              <Button size="sm" className="h-7 px-2 shrink-0" disabled={updateCamera.isPending} onClick={() => saveCamNotes(cam.id)}>
+                                                <Check className="h-3 w-3" />
                                               </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                              <AlertDialogHeader>
-                                                <AlertDialogTitle>Remove camera?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                  Remove <strong>{cam.label}</strong> from {venue.name}? This will also remove it from the Assets list.
-                                                </AlertDialogDescription>
-                                              </AlertDialogHeader>
-                                              <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteCamera.mutate({ id: cam.id })}>
-                                                  Remove
-                                                </AlertDialogAction>
-                                              </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                          </AlertDialog>
+                                              <Button size="sm" variant="outline" className="h-7 px-2 shrink-0 text-xs" disabled={updateCamera.isPending} onClick={() => saveCamNotes(cam.id, "")}>
+                                                Clear
+                                              </Button>
+                                              <Button size="sm" variant="ghost" className="h-7 px-2 shrink-0" onClick={() => setEditingCamId(null)}>
+                                                <X className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          ) : cam.notes ? (
+                                            <p className="text-xs text-muted-foreground mt-0.5 pl-5 italic">{cam.notes}</p>
+                                          ) : (
+                                            <p className="text-xs text-muted-foreground/40 mt-0.5 pl-5 italic">No coverage description</p>
+                                          )}
                                         </div>
                                       ))}
                                     </div>

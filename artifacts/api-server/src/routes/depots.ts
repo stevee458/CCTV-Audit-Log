@@ -20,6 +20,7 @@ async function buildDepotsResponse() {
       venueId: assetsTable.venueId,
       label: assetsTable.label,
       status: assetsTable.status,
+      notes: assetsTable.notes,
     })
     .from(assetsTable)
     .where(eq(assetsTable.type, "Camera"))
@@ -36,7 +37,7 @@ async function buildDepotsResponse() {
         code: v.code,
         cameras: cameras
           .filter((c) => c.venueId === v.id)
-          .map((c) => ({ id: c.id, label: c.label, status: c.status })),
+          .map((c) => ({ id: c.id, label: c.label, status: c.status, notes: c.notes ?? null })),
       })),
   }));
 }
