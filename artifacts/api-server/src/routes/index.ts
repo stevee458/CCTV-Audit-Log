@@ -10,6 +10,7 @@ import drivesRouter from "./drives";
 import assetsRouter from "./assets";
 import stockRouter from "./stock";
 import maintenanceRouter from "./maintenance";
+import depotsRouter from "./depots";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(drivesRouter);
 router.use(assetsRouter);
 router.use(stockRouter);
 router.use(maintenanceRouter);
+router.use(depotsRouter);
 
 export default router;

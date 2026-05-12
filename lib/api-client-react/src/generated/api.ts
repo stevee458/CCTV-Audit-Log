@@ -21,7 +21,9 @@ import type {
   AddVenueVisitInput,
   AdjustStockInput,
   Asset,
+  CameraAsset,
   CreateAssetInput,
+  CreateDepotInput,
   CreateFindingInput,
   CreateInspectionInput,
   CreateMaintenanceVisitInput,
@@ -30,7 +32,9 @@ import type {
   CreateStockRequestInput,
   CreateStockSkuInput,
   CreateUserInput,
+  CreateVenueInput,
   Depot,
+  DepotAdmin,
   Drive,
   DriveSummary,
   DriveWhereaboutsParams,
@@ -59,12 +63,15 @@ import type {
   StockSku,
   SwapDriveInput,
   UpdateAssetInput,
+  UpdateDepotInput,
   UpdateDriveInput,
   UpdateFindingInput,
   UpdateInspectionInput,
   UpdateStockSkuInput,
   UpdateUserInput,
+  UpdateVenueInput,
   User,
+  VenueAdmin,
   VenueInspectionVisit,
   ViolationCategory,
   WhereaboutsResult,
@@ -3937,3 +3944,180 @@ export const useCreateRepair = <
 > => {
   return useMutation(getCreateRepairMutationOptions(options));
 };
+
+// ─── Admin Depots ──────────────────────────────────────────────────────────
+
+export const getListAdminDepotsUrl = () => `/api/depots`;
+
+export const listAdminDepots = async (options?: RequestInit): Promise<DepotAdmin[]> =>
+  customFetch<DepotAdmin[]>(getListAdminDepotsUrl(), { ...options, method: "GET" });
+
+export const getListAdminDepotsQueryKey = () => [`/api/depots`] as const;
+
+export const getListAdminDepotsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminDepots>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listAdminDepots>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getListAdminDepotsQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminDepots>>> = ({ signal }) =>
+    listAdminDepots({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof listAdminDepots>>, TError, TData> & { queryKey: QueryKey };
+};
+
+export function useListAdminDepots<
+  TData = Awaited<ReturnType<typeof listAdminDepots>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listAdminDepots>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAdminDepotsQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const createDepot = async (createDepotInput: CreateDepotInput, options?: RequestInit): Promise<DepotAdmin> =>
+  customFetch<DepotAdmin>(`/api/depots`, {
+    ...options, method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createDepotInput),
+  });
+
+export const getCreateDepotMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof createDepot>>, TError, { data: BodyType<CreateDepotInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof createDepot>>, TError, { data: BodyType<CreateDepotInput> }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDepot>>, { data: BodyType<CreateDepotInput> }> = (props) =>
+    createDepot(props.data, requestOptions);
+  return { mutationKey: ["createDepot"], mutationFn, ...mutationOptions };
+};
+
+export const useCreateDepot = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof createDepot>>, TError, { data: BodyType<CreateDepotInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getCreateDepotMutationOptions(options));
+
+export const updateDepot = async (id: number, updateDepotInput: UpdateDepotInput, options?: RequestInit): Promise<DepotAdmin> =>
+  customFetch<DepotAdmin>(`/api/depots/${id}`, {
+    ...options, method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateDepotInput),
+  });
+
+export const getUpdateDepotMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateDepot>>, TError, { id: number; data: BodyType<UpdateDepotInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof updateDepot>>, TError, { id: number; data: BodyType<UpdateDepotInput> }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDepot>>, { id: number; data: BodyType<UpdateDepotInput> }> = (props) =>
+    updateDepot(props.id, props.data, requestOptions);
+  return { mutationKey: ["updateDepot"], mutationFn, ...mutationOptions };
+};
+
+export const useUpdateDepot = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateDepot>>, TError, { id: number; data: BodyType<UpdateDepotInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getUpdateDepotMutationOptions(options));
+
+export const deleteDepot = async (id: number, options?: RequestInit): Promise<OkResponse> =>
+  customFetch<OkResponse>(`/api/depots/${id}`, { ...options, method: "DELETE" });
+
+export const getDeleteDepotMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteDepot>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof deleteDepot>>, TError, { id: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDepot>>, { id: number }> = (props) =>
+    deleteDepot(props.id, requestOptions);
+  return { mutationKey: ["deleteDepot"], mutationFn, ...mutationOptions };
+};
+
+export const useDeleteDepot = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteDepot>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getDeleteDepotMutationOptions(options));
+
+export const createVenue = async (depotId: number, createVenueInput: CreateVenueInput, options?: RequestInit): Promise<VenueAdmin> =>
+  customFetch<VenueAdmin>(`/api/depots/${depotId}/venues`, {
+    ...options, method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createVenueInput),
+  });
+
+export const getCreateVenueMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof createVenue>>, TError, { depotId: number; data: BodyType<CreateVenueInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof createVenue>>, TError, { depotId: number; data: BodyType<CreateVenueInput> }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVenue>>, { depotId: number; data: BodyType<CreateVenueInput> }> = (props) =>
+    createVenue(props.depotId, props.data, requestOptions);
+  return { mutationKey: ["createVenue"], mutationFn, ...mutationOptions };
+};
+
+export const useCreateVenue = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof createVenue>>, TError, { depotId: number; data: BodyType<CreateVenueInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getCreateVenueMutationOptions(options));
+
+export const updateVenue = async (id: number, updateVenueInput: UpdateVenueInput, options?: RequestInit): Promise<VenueAdmin> =>
+  customFetch<VenueAdmin>(`/api/venues/${id}`, {
+    ...options, method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateVenueInput),
+  });
+
+export const getUpdateVenueMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateVenue>>, TError, { id: number; data: BodyType<UpdateVenueInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof updateVenue>>, TError, { id: number; data: BodyType<UpdateVenueInput> }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVenue>>, { id: number; data: BodyType<UpdateVenueInput> }> = (props) =>
+    updateVenue(props.id, props.data, requestOptions);
+  return { mutationKey: ["updateVenue"], mutationFn, ...mutationOptions };
+};
+
+export const useUpdateVenue = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateVenue>>, TError, { id: number; data: BodyType<UpdateVenueInput> }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getUpdateVenueMutationOptions(options));
+
+export const deleteVenue = async (id: number, options?: RequestInit): Promise<OkResponse> =>
+  customFetch<OkResponse>(`/api/venues/${id}`, { ...options, method: "DELETE" });
+
+export const getDeleteVenueMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteVenue>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof deleteVenue>>, TError, { id: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVenue>>, { id: number }> = (props) =>
+    deleteVenue(props.id, requestOptions);
+  return { mutationKey: ["deleteVenue"], mutationFn, ...mutationOptions };
+};
+
+export const useDeleteVenue = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteVenue>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getDeleteVenueMutationOptions(options));
+
+export const deleteAsset = async (id: number, options?: RequestInit): Promise<OkResponse> =>
+  customFetch<OkResponse>(`/api/assets/${id}`, { ...options, method: "DELETE" });
+
+export const getDeleteAssetMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError, { id: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAsset>>, { id: number }> = (props) =>
+    deleteAsset(props.id, requestOptions);
+  return { mutationKey: ["deleteAsset"], mutationFn, ...mutationOptions };
+};
+
+export const useDeleteAsset = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getDeleteAssetMutationOptions(options));

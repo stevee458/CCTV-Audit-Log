@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
-import { LogOut, LayoutDashboard, Search, Users, Menu, HardDrive, Wrench, Package, MapPin, Boxes, ArrowLeftRight, Download } from "lucide-react";
+import { LogOut, LayoutDashboard, Search, Users, Menu, HardDrive, Wrench, Package, MapPin, Boxes, ArrowLeftRight, Download, Building2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,6 +23,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin/assets", label: "Assets", icon: Boxes },
     { href: "/admin/stock", label: "Stock", icon: Package },
     { href: "/admin/visits", label: "Maintenance", icon: Wrench },
+    { href: "/admin/depots", label: "Depots", icon: Building2 },
     { href: "/admin/users", label: "Team", icon: Users },
   ];
 
@@ -86,22 +87,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4 justify-end">
+        <div className="flex w-full items-center gap-2 md:ml-auto justify-end">
           <SyncStatus />
-          {canInstall && (
-            <Button variant="ghost" size="sm" onClick={install} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 hidden sm:flex">
-              <Download className="h-4 w-4 mr-1.5" />
-              Install App
-            </Button>
-          )}
-          {user?.role === "super_admin" && (
-            <Button variant="ghost" size="sm" asChild className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 hidden sm:flex">
-              <Link href="/role-picker">
-                <ArrowLeftRight className="h-4 w-4 mr-1.5" />
-                Switch view
-              </Link>
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">
@@ -111,7 +98,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{user?.name}</p>
@@ -119,6 +106,21 @@ export function AdminLayout({ children }: { children: ReactNode }) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {user?.role === "super_admin" && (
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href="/role-picker" className="flex items-center w-full">
+                    <ArrowLeftRight className="mr-2 h-4 w-4" />
+                    Switch view
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {canInstall && (
+                <DropdownMenuItem onClick={install} className="cursor-pointer">
+                  <Download className="mr-2 h-4 w-4" />
+                  Install App
+                </DropdownMenuItem>
+              )}
+              {(user?.role === "super_admin" || canInstall) && <DropdownMenuSeparator />}
               <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:bg-destructive/10 cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out

@@ -85,6 +85,14 @@ router.post("/assets", requireAdmin, async (req, res) => {
   res.status(201).json(created);
 });
 
+router.delete("/assets/:id", requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
+  const [deleted] = await db.delete(assetsTable).where(eq(assetsTable.id, id)).returning();
+  if (!deleted) return res.status(404).json({ error: "Asset not found" });
+  res.json({ ok: true });
+});
+
 router.patch("/assets/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });

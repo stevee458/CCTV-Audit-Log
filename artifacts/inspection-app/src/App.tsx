@@ -25,6 +25,7 @@ import AdminAssets from "@/pages/admin/Assets";
 import AdminStock from "@/pages/admin/Stock";
 import AdminVisits from "@/pages/admin/Visits";
 import AdminWhereabouts from "@/pages/admin/Whereabouts";
+import AdminDepots from "@/pages/admin/Depots";
 import InspectorDashboard from "@/pages/inspector/Dashboard";
 import NewInspection from "@/pages/inspector/NewInspection";
 import InspectionWorkspace from "@/pages/inspector/InspectionWorkspace";
@@ -75,6 +76,7 @@ function Router() {
       <Route path="/admin/stock"><ProtectedRoute><AdminStock /></ProtectedRoute></Route>
       <Route path="/admin/visits"><ProtectedRoute><AdminVisits /></ProtectedRoute></Route>
       <Route path="/admin/whereabouts"><ProtectedRoute><AdminWhereabouts /></ProtectedRoute></Route>
+      <Route path="/admin/depots"><ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminDepots /></ProtectedRoute></Route>
 
       <Route path="/inspector"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><InspectorDashboard /></ProtectedRoute></Route>
       <Route path="/inspector/new"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><NewInspection /></ProtectedRoute></Route>

@@ -63,6 +63,43 @@ export interface Depot {
   venues: Venue[];
 }
 
+export interface CameraAsset {
+  id: number;
+  label: string;
+  status: string;
+}
+
+export interface VenueAdmin {
+  id: number;
+  name: string;
+  code: string;
+  cameras: CameraAsset[];
+}
+
+export interface DepotAdmin {
+  id: number;
+  name: string;
+  venues: VenueAdmin[];
+}
+
+export interface CreateDepotInput {
+  name: string;
+}
+
+export interface UpdateDepotInput {
+  name?: string;
+}
+
+export interface CreateVenueInput {
+  name: string;
+  code: string;
+}
+
+export interface UpdateVenueInput {
+  name?: string;
+  code?: string;
+}
+
 export type ViolationSubCategoryDefaultSeverity =
   (typeof ViolationSubCategoryDefaultSeverity)[keyof typeof ViolationSubCategoryDefaultSeverity];
 
