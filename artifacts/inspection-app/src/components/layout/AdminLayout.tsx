@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SyncStatus } from "@/components/offline/SyncStatus";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 
@@ -71,18 +72,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           {navItems.map((item) => {
             const isActive = location === item.href;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`transition-colors flex items-center gap-1.5 shrink-0 ${
-                  isActive
-                    ? "text-primary-foreground font-semibold"
-                    : "text-primary-foreground/60 hover:text-primary-foreground"
-                }`}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="hidden lg:inline">{item.label}</span>
-              </Link>
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={`transition-colors flex items-center gap-1.5 shrink-0 ${
+                      isActive
+                        ? "text-primary-foreground font-semibold"
+                        : "text-primary-foreground/60 hover:text-primary-foreground"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="hidden lg:inline">{item.label}</span>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{item.label}</TooltipContent>
+              </Tooltip>
             );
           })}
         </nav>
