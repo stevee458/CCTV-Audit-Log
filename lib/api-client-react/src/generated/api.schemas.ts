@@ -244,6 +244,7 @@ export interface InspectionSummary {
   findingsCount: number;
   violationsCount: number;
   highestSeverity: Severity | null;
+  clipNames: string[];
   createdAt: string;
   /** @nullable */
   completedAt: string | null;

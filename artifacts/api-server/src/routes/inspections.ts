@@ -85,6 +85,7 @@ async function loadSummaries(inspectionIds: number[]) {
         findingsCount: fs.length,
         violationsCount: violations.length,
         highestSeverity: highest,
+        clipNames: fs.map((f) => f.clipName).filter(Boolean),
         createdAt: r.createdAt.toISOString(),
         completedAt: r.completedAt ? r.completedAt.toISOString() : null,
       };

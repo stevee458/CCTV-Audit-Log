@@ -154,6 +154,7 @@ export const ListInspectionsResponseItem = zod.object({
   findingsCount: zod.number(),
   violationsCount: zod.number(),
   highestSeverity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
+  clipNames: zod.array(zod.string()),
   createdAt: zod.coerce.date(),
   completedAt: zod.coerce.date().nullable(),
 });
@@ -408,6 +409,7 @@ export const GetRecentInspectionsResponseItem = zod.object({
   findingsCount: zod.number(),
   violationsCount: zod.number(),
   highestSeverity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
+  clipNames: zod.array(zod.string()),
   createdAt: zod.coerce.date(),
   completedAt: zod.coerce.date().nullable(),
 });

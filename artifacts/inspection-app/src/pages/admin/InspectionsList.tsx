@@ -27,7 +27,7 @@ const severityShortLabels: Record<string, string> = {
   B: "Injury, Asset Loss, Incident requiring scrutiny, Risk of A",
   C: "Significant Failure to follow procedure, Risk of B",
   D: "Inactivity, Failure to follow procedure, Risk of C",
-  E: "Minor Infractions, Risk of D",
+  E: "No Violation",
 };
 
 export default function InspectionsList() {
@@ -257,8 +257,9 @@ export default function InspectionsList() {
                   <TableRow className="bg-muted/50">
                     <TableHead>DVR / Venue</TableHead>
                     <TableHead>Dates</TableHead>
-                    <TableHead>Inspector</TableHead>
+                    <TableHead>Insp.</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Clips</TableHead>
                     <TableHead className="text-right">Results</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
@@ -269,15 +270,16 @@ export default function InspectionsList() {
                       <TableRow key={i}>
                         <TableCell><Skeleton className="h-10 w-48" /></TableCell>
                         <TableCell><Skeleton className="h-10 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-8" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-24 ml-auto" /></TableCell>
                         <TableCell></TableCell>
                       </TableRow>
                     ))
                   ) : inspections?.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                         <div className="flex flex-col items-center justify-center">
                           <FileText className="h-8 w-8 mb-2 opacity-20" />
                           No inspections match filters
@@ -295,11 +297,24 @@ export default function InspectionsList() {
                           <div className="text-sm">Footage: {format(new Date(i.footageDate), 'MMM d, yyyy')}</div>
                           <div className="text-xs text-muted-foreground mt-0.5">Created: {format(new Date(i.createdAt), 'MMM d, yyyy')}</div>
                         </TableCell>
-                        <TableCell className="text-sm">{i.inspectorName}</TableCell>
+                        <TableCell className="text-sm font-mono font-medium">
+                          {i.inspectorName.split(" ").map((w: string) => w[0]).join("").toUpperCase()}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={i.status === 'completed' ? "bg-green-500/10 text-green-700 border-green-500/20" : "bg-amber-500/10 text-amber-700 border-amber-500/20"}>
                             {i.status === 'completed' ? 'Completed' : 'In Progress'}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {i.clipNames && i.clipNames.length > 0 ? (
+                            <div className="space-y-0.5">
+                              {i.clipNames.map((cn: string) => (
+                                <div key={cn} className="text-xs font-mono text-muted-foreground">{cn}</div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           {i.violationsCount > 0 ? (
