@@ -28,7 +28,7 @@ const severityLabels: Record<string, string> = {
   B: "B — Injury, Asset Loss, Incident requiring scrutiny, Risk of A",
   C: "C — Significant Failure to follow procedure, Risk of B",
   D: "D — Inactivity, Failure to follow procedure, Risk of C",
-  E: "E — Minor Infractions, Risk of D",
+  E: "E — No Violation",
 };
 
 const severityColors: Record<string, string> = {

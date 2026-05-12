@@ -15,6 +15,34 @@ import { requireAuth } from "../middlewares/auth";
 
 const isAdminRole = (r: string) => r === "admin" || r === "super_admin";
 
+function formatClipSeq(n: number): string {
+  const idx = n - 1;
+  const letterIdx = Math.floor(idx / 99);
+  const num = (idx % 99) + 1;
+  const letter = String.fromCharCode(65 + letterIdx);
+  return `${letter}${String(num).padStart(2, "0")}`;
+}
+
+function buildClipName(
+  venueCode: string,
+  clipNumber: number,
+  createdAt: Date,
+  outcome: string,
+  categoryName: string | null,
+  severity: string | null,
+): string {
+  const seq = formatClipSeq(clipNumber);
+  const dd = String(createdAt.getUTCDate()).padStart(2, "0");
+  const mm = String(createdAt.getUTCMonth() + 1).padStart(2, "0");
+  const dateStr = `${dd}${mm}`;
+  if (outcome === "no_violation") {
+    return `${venueCode}_${seq} ${dateStr} NV-E`;
+  }
+  const catStr = (categoryName ?? "Unknown").replace(/\s+/g, "").slice(0, 8);
+  const sevStr = severity ?? "";
+  return `${venueCode}_${seq} ${dateStr} ${catStr}-${sevStr}`;
+}
+
 const router: IRouter = Router();
 
 async function serializeFinding(id: number) {
@@ -87,6 +115,17 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
       .json({ error: "Violations require a category" });
   }
 
+  let categoryName: string | null = null;
+  if (outcome === "violation" && categoryId) {
+    const cats = await db
+      .select({ name: violationCategoriesTable.name })
+      .from(violationCategoriesTable)
+      .where(eq(violationCategoriesTable.id, categoryId))
+      .limit(1);
+    categoryName = cats[0]?.name ?? null;
+  }
+
+  const now = new Date();
   const finding = await db.transaction(async (tx) => {
     const [venue] = await tx
       .update(venuesTable)
@@ -94,7 +133,7 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
       .where(eq(venuesTable.id, i.venueId))
       .returning();
     const clipNumber = venue.nextClipNumber - 1;
-    const clipName = `${venue.code}_${String(clipNumber).padStart(3, "0")}`;
+    const clipName = buildClipName(venue.code, clipNumber, now, outcome, categoryName, outcome === "violation" ? (severity ?? null) : null);
     const [created] = await tx
       .insert(findingsTable)
       .values({
@@ -127,17 +166,19 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
     .select({
       finding: findingsTable,
       inspection: inspectionsTable,
+      venueCode: venuesTable.code,
     })
     .from(findingsTable)
     .innerJoin(
       inspectionsTable,
       eq(inspectionsTable.id, findingsTable.inspectionId),
     )
+    .innerJoin(venuesTable, eq(venuesTable.id, findingsTable.venueId))
     .where(eq(findingsTable.id, id))
     .limit(1);
   if (rows.length === 0)
     return res.status(404).json({ error: "Finding not found" });
-  const { inspection } = rows[0];
+  const { inspection, venueCode } = rows[0];
   if (!isAdminRole(req.user!.role) && inspection.inspectorId !== req.user!.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
@@ -171,6 +212,28 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   }
   if (parsed.data.incidentTime !== undefined) updates.incidentTime = parsed.data.incidentTime ?? null;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
+
+  // Regenerate clip_name to reflect any category/severity/outcome changes
+  const finalOutcome = outcome;
+  const finalCategoryId = updates.categoryId !== undefined ? updates.categoryId : existing.categoryId;
+  const finalSeverity = (updates.severity !== undefined ? updates.severity : existing.severity) ?? null;
+  let finalCategoryName: string | null = null;
+  if (finalOutcome === "violation" && finalCategoryId) {
+    const cats = await db
+      .select({ name: violationCategoriesTable.name })
+      .from(violationCategoriesTable)
+      .where(eq(violationCategoriesTable.id, finalCategoryId))
+      .limit(1);
+    finalCategoryName = cats[0]?.name ?? null;
+  }
+  updates.clipName = buildClipName(
+    venueCode,
+    existing.clipNumber,
+    existing.createdAt,
+    finalOutcome,
+    finalCategoryName,
+    finalSeverity,
+  );
 
   if (Object.keys(updates).length > 0) {
     await db.update(findingsTable).set(updates).where(eq(findingsTable.id, id));
