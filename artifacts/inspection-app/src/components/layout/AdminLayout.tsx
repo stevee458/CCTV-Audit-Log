@@ -67,27 +67,27 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <Logo className="h-9 w-auto brightness-0 invert" />
         </Link>
 
-        <nav className="hidden md:flex flex-1 items-center gap-6 text-sm font-medium">
+        <nav className="hidden md:flex flex-1 items-center gap-4 text-sm font-medium">
           {navItems.map((item) => {
             const isActive = location === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`transition-colors flex items-center gap-2 ${
+                className={`transition-colors flex items-center gap-1.5 shrink-0 ${
                   isActive
                     ? "text-primary-foreground font-semibold"
                     : "text-primary-foreground/60 hover:text-primary-foreground"
                 }`}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="hidden lg:inline">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex w-full items-center gap-2 md:ml-auto justify-end">
+        <div className="flex shrink-0 items-center gap-2 ml-auto">
           <SyncStatus />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
