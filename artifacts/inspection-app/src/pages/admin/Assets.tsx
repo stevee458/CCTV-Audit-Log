@@ -17,9 +17,23 @@ const ASSET_TYPES = ["DVR", "Camera", "Power Supply", "Hard Drive", "Cable"];
 
 export default function AdminAssets() {
   const [search, setSearch] = useState("");
-  const { data: assets } = useListAssets({ search: search || undefined });
+  const [filterDepotId, setFilterDepotId] = useState("");
+  const [filterVenueId, setFilterVenueId] = useState("");
+
   const { data: depots } = useListDepots();
-  const venues = depots?.flatMap(d => d.venues.map(v => ({ ...v, depotName: d.name }))) ?? [];
+  const allVenues = depots?.flatMap(d => d.venues.map(v => ({ ...v, depotName: d.name }))) ?? [];
+  const activeDepotId = filterDepotId && filterDepotId !== "all" ? filterDepotId : "";
+  const activeVenueId = filterVenueId && filterVenueId !== "all" ? filterVenueId : "";
+
+  const filteredVenues = activeDepotId
+    ? (depots?.find(d => d.id === Number(activeDepotId))?.venues.map(v => ({ ...v, depotName: depots.find(d => d.id === Number(activeDepotId))?.name ?? "" })) ?? [])
+    : allVenues;
+
+  const { data: assets } = useListAssets({
+    search: search || undefined,
+    venueId: activeVenueId ? Number(activeVenueId) : undefined,
+  });
+
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -53,7 +67,7 @@ export default function AdminAssets() {
               <div className="space-y-3">
                 <Select value={venueId} onValueChange={setVenueId}>
                   <SelectTrigger data-testid="select-asset-venue"><SelectValue placeholder="Venue" /></SelectTrigger>
-                  <SelectContent>{venues.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.depotName} · {v.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{allVenues.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.depotName} · {v.name}</SelectItem>)}</SelectContent>
                 </Select>
                 <Select value={type} onValueChange={setType}>
                   <SelectTrigger data-testid="select-asset-type"><SelectValue placeholder="Type" /></SelectTrigger>
@@ -71,7 +85,31 @@ export default function AdminAssets() {
           </Dialog>
         </div>
         <Card>
-          <CardHeader><Input placeholder="Search" value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm" data-testid="input-search-assets" /></CardHeader>
+          <CardHeader>
+            <div className="flex flex-wrap gap-3">
+              <Input
+                placeholder="Search assets..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="max-w-xs"
+                data-testid="input-search-assets"
+              />
+              <Select value={filterDepotId} onValueChange={v => { setFilterDepotId(v); setFilterVenueId(""); }}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="All depots" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All depots</SelectItem>
+                  {depots?.map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filterVenueId} onValueChange={setFilterVenueId} disabled={filteredVenues.length === 0}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="All venues" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All venues</SelectItem>
+                  {filteredVenues.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
           <CardContent>
             <Table>
               <TableHeader><TableRow><TableHead>Label</TableHead><TableHead>Type</TableHead><TableHead>Venue</TableHead><TableHead>Status</TableHead><TableHead>Serial</TableHead></TableRow></TableHeader>
