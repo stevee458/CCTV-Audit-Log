@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Download, FileText, AlertTriangle, Filter } from "lucide-react";
+import { CopyButton } from "@/components/CopyButton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -309,7 +310,12 @@ export default function InspectionsList() {
                           {i.clipNames && i.clipNames.length > 0 ? (
                             <div className="space-y-0.5">
                               {i.clipNames.map((cn: string) => (
-                                <div key={cn} className="text-xs font-mono text-muted-foreground">{cn}</div>
+                                <div key={cn} className="group flex items-center gap-0.5">
+                                  <span className="text-[10px] font-mono text-muted-foreground leading-tight">{cn}</span>
+                                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <CopyButton value={cn} label="clip name" />
+                                  </span>
+                                </div>
                               ))}
                             </div>
                           ) : (
