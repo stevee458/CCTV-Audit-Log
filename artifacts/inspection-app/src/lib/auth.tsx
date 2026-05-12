@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clearPersistedQueryCache();
         clearStoredScope();
         await clearOfflineData();
-        setLocation("/login");
+        window.location.replace("/login");
       }
     }
   });
