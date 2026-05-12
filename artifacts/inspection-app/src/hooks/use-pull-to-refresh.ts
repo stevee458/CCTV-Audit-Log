@@ -6,14 +6,12 @@ const MAX_PULL = 120;
 interface UsePullToRefreshOptions {
   onRefresh?: (() => Promise<void> | void) | undefined;
   isRefreshing: boolean;
-  scrollContainerRef: React.RefObject<HTMLElement | null>;
   indicatorRef: React.RefObject<HTMLElement | null>;
 }
 
 export function usePullToRefresh({
   onRefresh,
   isRefreshing,
-  scrollContainerRef,
   indicatorRef,
 }: UsePullToRefreshOptions) {
   const startYRef = useRef<number | null>(null);
@@ -40,18 +38,15 @@ export function usePullToRefresh({
   useEffect(() => {
     if (!onRefresh) return;
 
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
     const handleTouchStart = (e: TouchEvent) => {
-      if (container.scrollTop > 0) return;
+      if (window.scrollY > 0) return;
       startYRef.current = e.touches[0].clientY;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (isRefreshingRef.current) return;
       if (startYRef.current === null) return;
-      if (container.scrollTop > 0) {
+      if (window.scrollY > 0) {
         startYRef.current = null;
         return;
       }
@@ -94,16 +89,16 @@ export function usePullToRefresh({
       resetIndicator();
     };
 
-    container.addEventListener("touchstart", handleTouchStart, { passive: true });
-    container.addEventListener("touchmove", handleTouchMove, { passive: false });
-    container.addEventListener("touchend", handleTouchEnd, { passive: true });
-    container.addEventListener("touchcancel", handleTouchCancel, { passive: true });
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
+    document.addEventListener("touchcancel", handleTouchCancel, { passive: true });
 
     return () => {
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchmove", handleTouchMove);
-      container.removeEventListener("touchend", handleTouchEnd);
-      container.removeEventListener("touchcancel", handleTouchCancel);
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchcancel", handleTouchCancel);
     };
-  }, [scrollContainerRef, indicatorRef, onRefresh, resetIndicator]);
+  }, [indicatorRef, onRefresh, resetIndicator]);
 }

@@ -22,13 +22,11 @@ export function InspectorLayout({ children, onRefresh, isRefreshing = false }: I
   void _location;
   const { canInstall, install } = useInstallPrompt();
 
-  const scrollContainerRef = useRef<HTMLElement | null>(null);
   const indicatorRef = useRef<HTMLDivElement | null>(null);
 
   usePullToRefresh({
     onRefresh,
     isRefreshing,
-    scrollContainerRef,
     indicatorRef,
   });
 
@@ -93,26 +91,23 @@ export function InspectorLayout({ children, onRefresh, isRefreshing = false }: I
         </DropdownMenu>
       </header>
 
-      <main
-        ref={scrollContainerRef as React.RefObject<HTMLElement>}
-        className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto relative"
-        style={{ overscrollBehaviorY: "contain" }}
-      >
-        {onRefresh && (
-          <div
-            ref={indicatorRef}
-            className="absolute top-0 left-0 right-0 flex items-center justify-center py-3 z-20 pointer-events-none"
-            style={{ transform: "translateY(-100%)", opacity: 0 }}
-            aria-live="polite"
-            aria-label="Refreshing"
-          >
-            <div className="bg-background rounded-full shadow-md p-2 border">
-              <RefreshCw
-                className={`h-5 w-5 text-primary ${isRefreshing ? "animate-spin" : ""}`}
-              />
-            </div>
+      {onRefresh && (
+        <div
+          ref={indicatorRef}
+          className="fixed top-14 left-0 right-0 flex items-center justify-center py-3 z-20 pointer-events-none"
+          style={{ transform: "translateY(-100%)", opacity: 0 }}
+          aria-live="polite"
+          aria-label="Refreshing"
+        >
+          <div className="bg-background rounded-full shadow-md p-2 border">
+            <RefreshCw
+              className={`h-5 w-5 text-primary ${isRefreshing ? "animate-spin" : ""}`}
+            />
           </div>
-        )}
+        </div>
+      )}
+
+      <main className="flex-1 flex flex-col w-full max-w-3xl mx-auto">
         {children}
       </main>
     </div>
