@@ -31,6 +31,7 @@ import NewInspection from "@/pages/inspector/NewInspection";
 import InspectionWorkspace from "@/pages/inspector/InspectionWorkspace";
 import MyDrives from "@/pages/inspector/MyDrives";
 import MaintenanceDashboard from "@/pages/maintenance/Dashboard";
+import InspectorHandover from "@/pages/maintenance/InspectorHandover";
 import MaintenanceDrives from "@/pages/maintenance/Drives";
 import MaintenanceDriveDetail from "@/pages/maintenance/DriveDetail";
 import MaintenanceVisits from "@/pages/maintenance/Visits";
@@ -84,6 +85,7 @@ function Router() {
       <Route path="/inspector/drives"><ProtectedRoute allowedRoles={["inspector", "super_admin"]}><MyDrives /></ProtectedRoute></Route>
 
       <Route path="/maintenance"><ProtectedRoute allowedRoles={["maintenance", "super_admin"]}><MaintenanceDashboard /></ProtectedRoute></Route>
+      <Route path="/maintenance/inspector-handover"><ProtectedRoute allowedRoles={["maintenance", "super_admin"]}><InspectorHandover /></ProtectedRoute></Route>
       <Route path="/maintenance/drives"><ProtectedRoute><MaintenanceDrives /></ProtectedRoute></Route>
       <Route path="/maintenance/drives/:id"><ProtectedRoute><MaintenanceDriveDetail /></ProtectedRoute></Route>
       <Route path="/maintenance/visits"><ProtectedRoute><MaintenanceVisits /></ProtectedRoute></Route>

@@ -386,6 +386,84 @@ router.post("/drives/swap", requireMaintenance, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Maintenance direct handover with Inspector — collect or deliver in one step (no transit state)
+// Must be before /drives/:id/... routes to avoid conflict
+router.post("/drives/handover", requireMaintenance, async (req, res) => {
+  const direction = req.body.direction;
+  const driveId = Number(req.body.driveId);
+  const inspectorUserId = Number(req.body.inspectorUserId);
+  const confirmDriveId = typeof req.body.confirmDriveId === "number" ? req.body.confirmDriveId : null;
+  const confirmDriveName = typeof req.body.confirmDriveName === "string" ? req.body.confirmDriveName.trim() : "";
+
+  if (!["collect", "deliver"].includes(direction))
+    return res.status(400).json({ error: "direction must be 'collect' or 'deliver'" });
+  if (!Number.isInteger(driveId) || !Number.isInteger(inspectorUserId))
+    return res.status(400).json({ error: "Invalid request" });
+  if (confirmDriveId === null && !confirmDriveName)
+    return res.status(400).json({ error: "Drive confirmation (scan or typed name) is required" });
+
+  const now = new Date();
+  try {
+    await db.transaction(async (tx) => {
+      const [d] = await tx.select().from(drivesTable).where(eq(drivesTable.id, driveId));
+      if (!d) throw new Error("Drive not found");
+
+      if (confirmDriveId !== null) {
+        if (confirmDriveId !== d.id) throw new Error("Scanned drive does not match");
+      } else if (confirmDriveName !== d.name) {
+        throw new Error("Drive name confirmation does not match");
+      }
+
+      const [inspector] = await tx.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, inspectorUserId));
+      if (!inspector) throw new Error("Inspector not found");
+      if (inspector.role !== "inspector") throw new Error("Selected user is not an inspector");
+
+      if (direction === "collect") {
+        const validStatuses = ["With Inspector", "In transit to Maintenance", "In transit to Inspector"];
+        if (!validStatuses.includes(d.status)) {
+          throw new Error(`Cannot collect drive with status: ${d.status}`);
+        }
+        if (d.holderUserId !== inspectorUserId && d.status === "With Inspector") {
+          throw new Error("Drive is not held by the selected inspector");
+        }
+        // Close any open pending custody event
+        await tx.update(driveCustodyEventsTable)
+          .set({ acceptedAt: now })
+          .where(and(eq(driveCustodyEventsTable.driveId, driveId), isNull(driveCustodyEventsTable.acceptedAt)));
+        await tx.update(drivesTable)
+          .set({ status: "In Maintenance possession", holderUserId: req.user!.id, updatedAt: now })
+          .where(eq(drivesTable.id, driveId));
+        await tx.insert(driveCustodyEventsTable).values({
+          driveId,
+          direction: "inspector_to_maintenance",
+          fromUserId: inspectorUserId,
+          toUserId: req.user!.id,
+          releasedAt: now,
+          acceptedAt: now,
+        });
+      } else {
+        if (d.status !== "In Maintenance possession" || d.holderUserId !== req.user!.id) {
+          throw new Error("Drive must be in your possession to deliver");
+        }
+        await tx.update(drivesTable)
+          .set({ status: "With Inspector", holderUserId: inspectorUserId, updatedAt: now })
+          .where(eq(drivesTable.id, driveId));
+        await tx.insert(driveCustodyEventsTable).values({
+          driveId,
+          direction: "maintenance_to_inspector",
+          fromUserId: req.user!.id,
+          toUserId: inspectorUserId,
+          releasedAt: now,
+          acceptedAt: now,
+        });
+      }
+    });
+  } catch (e: any) {
+    return res.status(400).json({ error: e?.message || "Handover failed" });
+  }
+  res.json({ ok: true });
+});
+
 // Maintenance releases drive to a specific Inspector
 router.post("/drives/:id/release", requireMaintenance, async (req, res) => {
   const driveId = Number(req.params.id);

@@ -1,75 +1,87 @@
 import { Link } from "wouter";
 import { MaintenanceLayout } from "@/components/layout/MaintenanceLayout";
-import { useListDrives, useListStockRequests, useListMaintenanceVisits } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { HardDrive, Wrench, Package, Plus } from "lucide-react";
+import { Wrench, UserSearch, ChevronRight, HardDrive, Package } from "lucide-react";
 
 export default function MaintenanceDashboard() {
   const { user } = useAuth();
-  const { data: myDrives } = useListDrives({ holderUserId: user?.id });
-  const { data: pendingRequests } = useListStockRequests({ status: "Requested" });
-  const { data: visits } = useListMaintenanceVisits();
-
-  const inTransitToMe = myDrives?.filter(d => d.status === "In transit to Maintenance") ?? [];
-  const inMyPossession = myDrives?.filter(d => d.status === "In Maintenance possession") ?? [];
 
   return (
     <MaintenanceLayout>
-      <div className="p-4 space-y-4">
+      <div className="px-4 pt-6 pb-4 flex flex-col gap-4">
+        {/* Greeting */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome, {user?.name}</h1>
-          <p className="text-muted-foreground text-sm">Drives, stock, and venue visits at a glance.</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Where are you today?
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight mt-0.5">
+            {user?.name?.split(" ")[0] ?? "Welcome"}
+          </h1>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><HardDrive className="h-4 w-4" /> In transit</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold" data-testid="stat-in-transit">{inTransitToMe.length}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><HardDrive className="h-4 w-4" /> In hand</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold" data-testid="stat-in-hand">{inMyPossession.length}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Package className="h-4 w-4" /> Pending stock</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{pendingRequests?.length ?? 0}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Wrench className="h-4 w-4" /> Visits</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{visits?.length ?? 0}</div></CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Drives in transit to me</CardTitle>
-            <Button size="sm" variant="outline" asChild><Link href="/maintenance/drives">View all</Link></Button>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {inTransitToMe.length === 0 && <p className="text-sm text-muted-foreground">Nothing in transit.</p>}
-            {inTransitToMe.map(d => (
-              <Link key={d.id} href={`/maintenance/drives/${d.id}`} className="flex items-center justify-between p-3 rounded border hover-elevate" data-testid={`drive-${d.id}`}>
-                <div>
-                  <div className="font-medium">{d.name}</div>
-                  <div className="text-xs text-muted-foreground">{d.homeVenueName ?? "Inspector drive"}</div>
+        {/* AT DEPOT */}
+        <Link href="/maintenance/visits/new" className="block">
+          <div
+            className="w-full rounded-2xl overflow-hidden text-left"
+            style={{ background: "hsl(var(--primary))" }}
+          >
+            <div className="p-5">
+              <div className="flex items-start justify-between">
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: "rgba(59,130,246,0.2)" }}
+                >
+                  <Wrench className="h-6 w-6 text-blue-400" />
                 </div>
-                <Badge>{d.status}</Badge>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
+                <ChevronRight className="h-5 w-5 mt-1 text-primary-foreground/40" />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-1">At Depot</p>
+              <h2 className="text-xl font-bold text-primary-foreground leading-tight">Start a Venue Visit</h2>
+              <p className="text-sm mt-2 text-primary-foreground/55">
+                Log a scheduled maintenance visit, swap drives and record site work.
+              </p>
+            </div>
+            <div
+              className="px-5 py-3 flex items-center gap-3"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)" }}
+            >
+              <HardDrive className="h-3.5 w-3.5 text-primary-foreground/40" />
+              <span className="text-xs text-primary-foreground/40">Drive swap · Site log · Stock</span>
+            </div>
+          </div>
+        </Link>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button asChild size="lg" className="h-auto py-4 flex-col gap-1">
-            <Link href="/maintenance/visits/new"><Plus className="h-5 w-5" /><span>Start visit</span></Link>
-          </Button>
-          <Button asChild size="lg" variant="secondary" className="h-auto py-4 flex-col gap-1">
-            <Link href="/maintenance/requests/new"><Plus className="h-5 w-5" /><span>Request stock</span></Link>
-          </Button>
-        </div>
+        {/* AT INSPECTOR */}
+        <Link href="/maintenance/inspector-handover" className="block">
+          <div
+            className="w-full rounded-2xl overflow-hidden text-left"
+            style={{ background: "#1e3a5f" }}
+          >
+            <div className="p-5">
+              <div className="flex items-start justify-between">
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: "rgba(34,197,94,0.18)" }}
+                >
+                  <UserSearch className="h-6 w-6 text-green-400" />
+                </div>
+                <ChevronRight className="h-5 w-5 mt-1 text-white/40" />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-green-400 mb-1">At Inspector</p>
+              <h2 className="text-xl font-bold text-white leading-tight">Collect or Deliver a Drive</h2>
+              <p className="text-sm mt-2 text-white/55">
+                Hand over or receive drives directly with an Inspector in the field.
+              </p>
+            </div>
+            <div
+              className="px-5 py-3 flex items-center gap-3"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)" }}
+            >
+              <Package className="h-3.5 w-3.5 text-white/40" />
+              <span className="text-xs text-white/40">Select Inspector · Scan drive · Confirm</span>
+            </div>
+          </div>
+        </Link>
       </div>
     </MaintenanceLayout>
   );

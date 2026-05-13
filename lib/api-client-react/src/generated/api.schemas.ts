@@ -806,3 +806,11 @@ export const ListStockSkusKind = {
 export type ListStockRequestsParams = {
   status?: string;
 };
+
+export interface HandoverDriveInput {
+  direction: "collect" | "deliver";
+  driveId: number;
+  inspectorUserId: number;
+  confirmDriveId?: number;
+  confirmDriveName?: string;
+}
