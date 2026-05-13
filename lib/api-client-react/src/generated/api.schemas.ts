@@ -379,23 +379,6 @@ export interface SwapDriveInput {
   extractDriveId?: number | null;
 }
 
-export interface ReleaseDriveInput {
-  toUserId: number;
-  confirmDriveId?: number;
-  confirmDriveName?: string;
-}
-
-export interface ReturnDriveInput {
-  toUserId: number;
-  confirmDriveId?: number;
-  confirmDriveName?: string;
-}
-
-export interface AcceptDriveInput {
-  confirmDriveId?: number;
-  confirmDriveName?: string;
-}
-
 export interface WhereaboutsMatch {
   windowId: number;
   driveId: number;

@@ -1,79 +1,23 @@
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
 import { MaintenanceLayout } from "@/components/layout/MaintenanceLayout";
 import {
   useGetDrive,
-  useReleaseDrive,
-  useReturnDrive,
-  useAcceptDrive,
-  useListUsers,
   getListDrivesQueryKey,
   getGetDriveQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
-import { useAuth } from "@/lib/auth";
-import { ConfirmDriveDialog } from "@/components/ConfirmDriveDialog";
-import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
 import { driveStatusClass } from "@/lib/drive-status";
 
 export default function MaintenanceDriveDetail() {
   const { id } = useParams<{ id: string }>();
   const driveId = Number(id);
-  const [, _setLocation] = useLocation();
-  void _setLocation;
-  const { user } = useAuth();
   const { data: drive, isLoading } = useGetDrive(driveId);
-  const { data: users } = useListUsers();
-  const inspectors = users?.filter(u => u.role === "inspector") ?? [];
-  const maintainers = users?.filter(u => u.role === "maintenance") ?? [];
   const qc = useQueryClient();
-  const { toast } = useToast();
-
-  const [releaseTo, setReleaseTo] = useState<string>("");
-  const [returnTo, setReturnTo] = useState<string>("");
-  const [releaseOpen, setReleaseOpen] = useState(false);
-  const [acceptOpen, setAcceptOpen] = useState(false);
-  const [returnOpen, setReturnOpen] = useState(false);
-
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: getGetDriveQueryKey(driveId) });
-    qc.invalidateQueries({ queryKey: getListDrivesQueryKey() });
-  };
-
-  const release = useReleaseDrive({
-    mutation: {
-      onSuccess: () => { refresh(); setReleaseOpen(false); toast({ title: "Released" }); },
-      onError: (e) => {
-        if (isOfflineQueued(e)) { setReleaseOpen(false); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
-        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
-      },
-    },
-  });
-  const accept = useAcceptDrive({
-    mutation: {
-      onSuccess: () => { refresh(); setAcceptOpen(false); toast({ title: "Accepted" }); },
-      onError: (e) => {
-        if (isOfflineQueued(e)) { setAcceptOpen(false); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
-        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
-      },
-    },
-  });
-  const ret = useReturnDrive({
-    mutation: {
-      onSuccess: () => { refresh(); setReturnOpen(false); toast({ title: "Returned" }); },
-      onError: (e) => {
-        if (isOfflineQueued(e)) { setReturnOpen(false); toast({ title: "Saved offline", description: "Will sync when back online." }); return; }
-        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
-      },
-    },
-  });
 
   if (isLoading || !drive) return <MaintenanceLayout><div className="p-4">Loading...</div></MaintenanceLayout>;
 
@@ -83,7 +27,9 @@ export default function MaintenanceDriveDetail() {
   return (
     <MaintenanceLayout>
       <div className="p-4 space-y-4">
-        <Button variant="ghost" onClick={() => history.back()} className="-ml-3"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
+        <Button variant="ghost" onClick={() => history.back()} className="-ml-3">
+          <ArrowLeft className="h-4 w-4 mr-2" />Back
+        </Button>
 
         <Card>
           <CardHeader>
@@ -104,7 +50,9 @@ export default function MaintenanceDriveDetail() {
         <Card>
           <CardHeader><CardTitle className="text-base">Footage windows</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {drive.footageWindows.length === 0 && <p className="text-muted-foreground">No footage recorded yet.</p>}
+            {drive.footageWindows.length === 0 && (
+              <p className="text-muted-foreground">No footage recorded yet.</p>
+            )}
             {drive.footageWindows.slice().reverse().map(w => {
               const installed = new Date(w.installedAt);
               const ageDays = (Date.now() - installed.getTime()) / 86400000;
@@ -121,75 +69,16 @@ export default function MaintenanceDriveDetail() {
           </CardContent>
         </Card>
 
-        {drive.status === "In transit to Maintenance" && drive.holderUserId === user?.id && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Confirm receipt</CardTitle></CardHeader>
-            <CardContent>
-              <ConfirmDriveDialog
-                open={acceptOpen}
-                onOpenChange={setAcceptOpen}
-                driveId={drive.id}
-                driveName={drive.name}
-                title={`Accept ${drive.name}`}
-                description="Scan the drive QR code to confirm receipt."
-                direction="In transit to Maintenance → Maintenance possession"
-                trigger={<Button data-testid="btn-accept">Accept drive</Button>}
-                busy={accept.isPending}
-                onConfirm={(payload) => accept.mutate({ id: drive.id, data: payload })}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {drive.status === "In Maintenance possession" && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Release to inspector</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              <Select value={releaseTo} onValueChange={setReleaseTo}>
-                <SelectTrigger data-testid="select-release-to"><SelectValue placeholder="Select inspector" /></SelectTrigger>
-                <SelectContent>{inspectors.map(u => <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>)}</SelectContent>
-              </Select>
-              <ConfirmDriveDialog
-                open={releaseOpen}
-                onOpenChange={setReleaseOpen}
-                driveId={drive.id}
-                driveName={drive.name}
-                title={`Release ${drive.name}`}
-                description="Scan the drive QR code before handing to the inspector."
-                direction="Maintenance possession → In transit to Inspector"
-                trigger={<Button disabled={!releaseTo} data-testid="btn-release">Release</Button>}
-                busy={release.isPending}
-                confirmDisabled={!releaseTo}
-                onConfirm={(payload) => release.mutate({ id: drive.id, data: { toUserId: Number(releaseTo), ...payload } })}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {drive.status === "With Inspector" && drive.holderUserId === user?.id && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Return to maintenance</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              <Select value={returnTo} onValueChange={setReturnTo}>
-                <SelectTrigger data-testid="select-return-to"><SelectValue placeholder="Select maintainer" /></SelectTrigger>
-                <SelectContent>{maintainers.map(u => <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>)}</SelectContent>
-              </Select>
-              <ConfirmDriveDialog
-                open={returnOpen}
-                onOpenChange={setReturnOpen}
-                driveId={drive.id}
-                driveName={drive.name}
-                title={`Return ${drive.name}`}
-                description="Scan the drive QR code before handing back to maintenance."
-                direction="With Inspector → In transit to Maintenance"
-                trigger={<Button disabled={!returnTo} data-testid="btn-return">Return</Button>}
-                busy={ret.isPending}
-                confirmDisabled={!returnTo}
-                onConfirm={(payload) => ret.mutate({ id: drive.id, data: { toUserId: Number(returnTo), ...payload } })}
-              />
-            </CardContent>
-          </Card>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            qc.invalidateQueries({ queryKey: getGetDriveQueryKey(driveId) });
+            qc.invalidateQueries({ queryKey: getListDrivesQueryKey() });
+          }}
+        >
+          Refresh
+        </Button>
       </div>
     </MaintenanceLayout>
   );
