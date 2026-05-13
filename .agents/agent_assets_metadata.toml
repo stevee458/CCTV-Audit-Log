@@ -36,3 +36,9 @@ id = "QORnXTVn8z1tnY6A6Ntlk"
 uri = "file://prod-migration.txt"
 type = "text"
 title = "Prod DB Migration SQL (FK order fixed)"
+
+[[outputs]]
+id = "Ux_AVjdmV1603kdRvDtZu"
+uri = "file://drive-qr-labels.tar.gz"
+type = "unspecified"
+title = "Drive QR Labels — All Depots (HTML)"
