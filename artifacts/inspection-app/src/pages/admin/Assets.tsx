@@ -22,16 +22,27 @@ export default function AdminAssets() {
 
   const { data: depots } = useListDepots();
   const allVenues = depots?.flatMap(d => d.venues.map(v => ({ ...v, depotName: d.name }))) ?? [];
-  const activeDepotId = filterDepotId && filterDepotId !== "all" ? filterDepotId : "";
-  const activeVenueId = filterVenueId && filterVenueId !== "all" ? filterVenueId : "";
 
-  const filteredVenues = activeDepotId
-    ? (depots?.find(d => d.id === Number(activeDepotId))?.venues.map(v => ({ ...v, depotName: depots.find(d => d.id === Number(activeDepotId))?.name ?? "" })) ?? [])
+  const activeDepotId = filterDepotId && filterDepotId !== "all" ? Number(filterDepotId) : null;
+  const activeVenueId = filterVenueId && filterVenueId !== "all" ? Number(filterVenueId) : null;
+
+  const venueDropdownList = activeDepotId
+    ? (depots?.find(d => d.id === activeDepotId)?.venues ?? [])
     : allVenues;
 
-  const { data: assets } = useListAssets({
-    search: search || undefined,
-    venueId: activeVenueId ? Number(activeVenueId) : undefined,
+  // Fetch all assets once; filter in-memory
+  const { data: allAssets } = useListAssets();
+
+  const assets = (allAssets ?? []).filter(a => {
+    if (search && !a.label.toLowerCase().includes(search.toLowerCase()) &&
+        !a.type.toLowerCase().includes(search.toLowerCase()) &&
+        !(a.venueName ?? "").toLowerCase().includes(search.toLowerCase())) return false;
+    if (activeVenueId && a.venueId !== activeVenueId) return false;
+    if (activeDepotId && !activeVenueId) {
+      const depotVenueIds = new Set(depots?.find(d => d.id === activeDepotId)?.venues.map(v => v.id) ?? []);
+      if (!depotVenueIds.has(a.venueId)) return false;
+    }
+    return true;
   });
 
   const qc = useQueryClient();
@@ -101,11 +112,11 @@ export default function AdminAssets() {
                   {depots?.map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Select value={filterVenueId} onValueChange={setFilterVenueId} disabled={filteredVenues.length === 0}>
+              <Select value={filterVenueId} onValueChange={setFilterVenueId}>
                 <SelectTrigger className="w-[180px]"><SelectValue placeholder="All venues" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All venues</SelectItem>
-                  {filteredVenues.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.name}</SelectItem>)}
+                  {venueDropdownList.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
