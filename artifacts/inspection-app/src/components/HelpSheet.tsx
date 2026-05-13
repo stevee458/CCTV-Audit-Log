@@ -2,10 +2,12 @@ import { useState } from "react";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-type Role = "inspector" | "maintenance" | "admin";
+export type HelpRole = "inspector" | "maintenance" | "admin" | "general";
 
 interface FaqItem {
   q: string;
@@ -88,7 +90,7 @@ const MAINTENANCE_FAQS: FaqSection[] = [
       },
       {
         q: "How do I find which drive is at a specific venue?",
-        a: "Ask your admin to use the Whereabouts tool, or check the Drives list and filter by venue. Each drive detail page shows its current footage windows including venue history.",
+        a: "Ask your admin to use the Whereabouts tool, or check the Drives list and search by venue. Each drive detail page shows its current footage windows including venue history.",
       },
     ],
   },
@@ -203,76 +205,112 @@ const GENERAL_FAQS: FaqSection[] = [
   },
 ];
 
-const ROLE_SECTIONS: Record<Role, FaqSection[]> = {
+const ROLE_SECTIONS: Record<HelpRole, FaqSection[]> = {
   inspector: [...INSPECTOR_FAQS, ...GENERAL_FAQS],
   maintenance: [...MAINTENANCE_FAQS, ...GENERAL_FAQS],
   admin: [...ADMIN_FAQS, ...GENERAL_FAQS],
+  general: [...GENERAL_FAQS],
 };
 
 interface HelpSheetProps {
-  role: Role;
+  role: HelpRole;
+}
+
+function FaqContent({ sections }: { sections: FaqSection[] }) {
+  return (
+    <div className="space-y-6">
+      {sections.map((section) => (
+        <div key={section.title}>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-semibold text-foreground">{section.title}</h2>
+            {section.badge && (
+              <Badge variant="outline" className="text-xs py-0">
+                {section.badge}
+              </Badge>
+            )}
+          </div>
+          <Accordion type="multiple" className="w-full space-y-1">
+            {section.items.map((item, idx) => (
+              <AccordionItem
+                key={idx}
+                value={`${section.title}-${idx}`}
+                className="border rounded-lg px-3 data-[state=open]:bg-muted/40"
+              >
+                <AccordionTrigger className="text-sm text-left py-3 hover:no-underline font-medium leading-snug">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground pb-3 leading-relaxed">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function HelpSheet({ role }: HelpSheetProps) {
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
   const sections = ROLE_SECTIONS[role];
+
+  const trigger = (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label="Help"
+      onClick={() => setOpen(true)}
+      className="rounded-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 shrink-0"
+    >
+      <HelpCircle className="h-4 w-4" />
+    </Button>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        {trigger}
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetContent
+            side="bottom"
+            className="h-[85dvh] flex flex-col p-0 rounded-t-2xl"
+          >
+            <SheetHeader className="px-5 pt-5 pb-3 border-b shrink-0">
+              <SheetTitle className="flex items-center gap-2 text-lg">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Help &amp; FAQs
+              </SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <FaqContent sections={sections} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Help"
-        onClick={() => setOpen(true)}
-        className="rounded-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 shrink-0"
-      >
-        <HelpCircle className="h-4 w-4" />
-      </Button>
-
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent
-          side="bottom"
-          className="h-[85dvh] flex flex-col p-0 rounded-t-2xl"
-        >
-          <SheetHeader className="px-5 pt-5 pb-3 border-b shrink-0">
-            <SheetTitle className="flex items-center gap-2 text-lg">
+      {trigger}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-xl max-h-[80vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <HelpCircle className="h-5 w-5 text-primary" />
-              Help & FAQs
-            </SheetTitle>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-            {sections.map((section) => (
-              <div key={section.title}>
-                <div className="flex items-center gap-2 mb-3">
-                  <h2 className="text-sm font-semibold text-foreground">{section.title}</h2>
-                  {section.badge && (
-                    <Badge variant="outline" className="text-xs py-0">
-                      {section.badge}
-                    </Badge>
-                  )}
-                </div>
-                <Accordion type="multiple" className="w-full space-y-1">
-                  {section.items.map((item, idx) => (
-                    <AccordionItem
-                      key={idx}
-                      value={`${section.title}-${idx}`}
-                      className="border rounded-lg px-3 data-[state=open]:bg-muted/40"
-                    >
-                      <AccordionTrigger className="text-sm text-left py-3 hover:no-underline font-medium leading-snug">
-                        {item.q}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-sm text-muted-foreground pb-3 leading-relaxed">
-                        {item.a}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </div>
-            ))}
+              Help &amp; FAQs
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Frequently asked questions and guidance for using this app.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <FaqContent sections={sections} />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
