@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { createHash } from "crypto";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, lt } from "drizzle-orm";
 import { db, idempotencyKeysTable } from "@workspace/db";
 
 function hashRequest(method: string, path: string, body: unknown): string {
@@ -168,3 +168,17 @@ export const withIdempotency: RequestHandler = async (req, res, next) => {
 
   next();
 };
+
+/**
+ * Delete idempotency keys older than the given number of days.
+ * Safe to run at any time — in-flight keys (status IS NULL) that are
+ * genuinely old are stale and can be removed too.
+ */
+export async function pruneIdempotencyKeys(olderThanDays = 7): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+  const deleted = await db
+    .delete(idempotencyKeysTable)
+    .where(lt(idempotencyKeysTable.createdAt, cutoff))
+    .returning({ key: idempotencyKeysTable.key });
+  return deleted.length;
+}

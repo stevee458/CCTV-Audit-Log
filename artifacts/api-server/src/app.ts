@@ -5,7 +5,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { attachUser } from "./middlewares/auth";
-import { withIdempotency } from "./middlewares/idempotency";
+import { withIdempotency, pruneIdempotencyKeys } from "./middlewares/idempotency";
 import { seedReferenceData } from "./lib/seed";
 
 const app: Express = express();
@@ -39,5 +39,16 @@ app.use("/api", attachUser, withIdempotency, router);
 seedReferenceData().catch((err) => {
   logger.error({ err }, "Failed to seed reference data");
 });
+
+// Prune stale idempotency keys on startup then every 24 hours
+const PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+pruneIdempotencyKeys()
+  .then((n) => { if (n > 0) logger.info({ deleted: n }, "Pruned idempotency keys"); })
+  .catch(() => {});
+setInterval(() => {
+  pruneIdempotencyKeys()
+    .then((n) => { if (n > 0) logger.info({ deleted: n }, "Pruned idempotency keys"); })
+    .catch(() => {});
+}, PRUNE_INTERVAL_MS).unref();
 
 export default app;
