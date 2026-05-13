@@ -42,3 +42,9 @@ id = "Ux_AVjdmV1603kdRvDtZu"
 uri = "file://drive-qr-labels.tar.gz"
 type = "unspecified"
 title = "Drive QR Labels — All Depots (HTML)"
+
+[[outputs]]
+id = "4JQo49M22f30VuFyQq3bm"
+uri = "file://drive-qr-labels.zip"
+type = "unspecified"
+title = "Drive QR Labels — All Depots"
