@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SyncStatus } from "@/components/offline/SyncStatus";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
+import { HelpSheet } from "@/components/HelpSheet";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -94,6 +95,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
         <div className="flex shrink-0 items-center gap-2 ml-auto">
           <SyncStatus />
+          <HelpSheet role="admin" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">

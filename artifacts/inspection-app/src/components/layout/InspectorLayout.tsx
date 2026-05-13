@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { SyncStatus } from "@/components/offline/SyncStatus";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { HelpSheet } from "@/components/HelpSheet";
 
 interface InspectorLayoutProps {
   children: ReactNode;
@@ -54,6 +55,7 @@ export function InspectorLayout({ children, onRefresh, isRefreshing = false }: I
             </Link>
           </Button>
         )}
+        <HelpSheet role="inspector" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">

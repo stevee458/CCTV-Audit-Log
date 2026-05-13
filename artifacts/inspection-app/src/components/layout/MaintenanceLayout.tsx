@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SyncStatus } from "@/components/offline/SyncStatus";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
+import { HelpSheet } from "@/components/HelpSheet";
 
 export function MaintenanceLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -45,6 +46,7 @@ export function MaintenanceLayout({ children }: { children: ReactNode }) {
             </Link>
           </Button>
         )}
+        <HelpSheet role="maintenance" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary-foreground/10">
