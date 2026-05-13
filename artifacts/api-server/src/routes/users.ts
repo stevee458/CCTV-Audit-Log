@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq, asc } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { CreateUserBody, UpdateUserBody } from "@workspace/api-zod";
-import { requireAdmin, requireAuth } from "../middlewares/auth";
+import { requireAdmin, requireAuth, requireSuperAdmin } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
@@ -60,6 +60,10 @@ router.patch("/users/:id", requireAdmin, async (req, res) => {
   const parsed = UpdateUserBody.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid request" });
+  }
+  // Role and password changes are restricted to super_admin
+  if ((parsed.data.role !== undefined || parsed.data.password) && req.user?.role !== "super_admin") {
+    return res.status(403).json({ error: "Super admin access required" });
   }
   const updates: Partial<typeof usersTable.$inferInsert> = {};
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;

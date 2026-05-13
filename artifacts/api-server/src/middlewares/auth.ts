@@ -118,6 +118,18 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   next();
 }
 
+export function requireSuperAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: "Not signed in" });
+    return;
+  }
+  if (req.user.role !== "super_admin") {
+    res.status(403).json({ error: "Super admin access required" });
+    return;
+  }
+  next();
+}
+
 export function requireMaintenance(req: Request, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: "Not signed in" });

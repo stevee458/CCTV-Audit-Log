@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useAuth } from "@/lib/auth";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,8 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreHorizontal, Plus, ShieldCheck, ShieldAlert, ShieldPlus, Wrench, Loader2, UserX, UserCheck } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Plus, ShieldCheck, ShieldAlert, ShieldPlus, Wrench, Loader2, UserX, UserCheck, KeyRound } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -28,11 +29,20 @@ const userSchema = z.object({
   role: z.enum(["admin", "inspector", "maintenance", "super_admin"]),
 });
 
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 export default function UsersList() {
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === "super_admin";
   const { data: users, isLoading } = useListUsers();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [createOpen, setCreateOpen] = useState(false);
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<number | null>(null);
+  const [resetPasswordName, setResetPasswordName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const createMutation = useCreateUser({
     mutation: {
@@ -78,6 +88,16 @@ export default function UsersList() {
     updateMutation.mutate({ id, data: { role: newRole as "admin" | "inspector" | "maintenance" | "super_admin" } });
   };
 
+  const submitResetPassword = () => {
+    if (!resetPasswordUserId || newPassword.length < 6) return;
+    updateMutation.mutate(
+      { id: resetPasswordUserId, data: { password: newPassword } },
+      {
+        onSuccess: () => { setResetPasswordUserId(null); setNewPassword(""); },
+      }
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -87,6 +107,36 @@ export default function UsersList() {
             <p className="text-muted-foreground">Manage inspector and admin access.</p>
           </div>
           
+          {/* Reset Password Dialog */}
+          <Dialog open={resetPasswordUserId !== null} onOpenChange={open => { if (!open) { setResetPasswordUserId(null); setNewPassword(""); } }}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Reset Password — {resetPasswordName}</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">New Password</label>
+                  <Input
+                    type="password"
+                    placeholder="Min 6 characters"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && submitResetPassword()}
+                  />
+                  {newPassword.length > 0 && newPassword.length < 6 && (
+                    <p className="text-xs text-destructive">Password must be at least 6 characters</p>
+                  )}
+                </div>
+                <Button
+                  className="w-full"
+                  disabled={newPassword.length < 6 || updateMutation.isPending}
+                  onClick={submitResetPassword}
+                >
+                  {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Set New Password
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -234,7 +284,7 @@ export default function UsersList() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {(["admin", "inspector", "maintenance", "super_admin"] as const)
+                              {isSuperAdmin && (["admin", "inspector", "maintenance", "super_admin"] as const)
                                 .filter(r => r !== u.role)
                                 .map(r => (
                                   <DropdownMenuItem key={r} onClick={() => changeRole(u.id, r)}>
@@ -242,9 +292,15 @@ export default function UsersList() {
                                   </DropdownMenuItem>
                                 ))
                               }
+                              {isSuperAdmin && <DropdownMenuSeparator />}
                               <DropdownMenuItem onClick={() => toggleActive(u.id, u.active)}>
                                 {u.active ? <><UserX className="mr-2 h-4 w-4" /> Deactivate</> : <><UserCheck className="mr-2 h-4 w-4" /> Activate</>}
                               </DropdownMenuItem>
+                              {isSuperAdmin && (
+                                <DropdownMenuItem onClick={() => { setResetPasswordUserId(u.id); setResetPasswordName(u.name); setNewPassword(""); }}>
+                                  <KeyRound className="mr-2 h-4 w-4" /> Reset Password
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
