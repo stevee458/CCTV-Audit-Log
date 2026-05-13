@@ -86,6 +86,7 @@ export default function Login() {
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center text-center space-y-3">
           <Logo className="h-24 w-auto" />
+          <span className="text-xs text-muted-foreground/60 font-mono tracking-wide">v1.2</span>
           <p className="text-muted-foreground">Sign in to your account</p>
         </div>
 
