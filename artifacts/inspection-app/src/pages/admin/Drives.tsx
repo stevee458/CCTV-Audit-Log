@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer } from "lucide-react";
 import { driveStatusClass } from "@/lib/drive-status";
+import { formatAge } from "@/lib/age";
 
 export default function AdminDrives() {
   const [search, setSearch] = useState("");
@@ -89,6 +90,7 @@ export default function AdminDrives() {
                   <TableHead>Home venue</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Holder</TableHead>
+                  <TableHead>Commissioned</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -107,6 +109,11 @@ export default function AdminDrives() {
                     <TableCell>{d.homeVenueName ?? "—"}</TableCell>
                     <TableCell><Badge className={driveStatusClass(d.status)}>{d.status}</Badge></TableCell>
                     <TableCell>{d.holderName ?? "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {d.installedAt
+                        ? <span>{d.installedAt} <span className="opacity-60">({formatAge(d.installedAt)})</span></span>
+                        : "—"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

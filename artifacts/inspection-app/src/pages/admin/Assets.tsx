@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiErrorMessage } from "@/lib/api-error";
+import { formatAge } from "@/lib/age";
 import { Plus } from "lucide-react";
 
 const ASSET_TYPES = ["DVR", "Camera", "Power Supply", "Hard Drive", "Cable"];
@@ -53,6 +54,7 @@ export default function AdminAssets() {
   const [type, setType] = useState("");
   const [label, setLabel] = useState("");
   const [serial, setSerial] = useState("");
+  const [installedAt, setInstalledAt] = useState("");
 
   const create = useCreateAsset({
     mutation: {
@@ -60,7 +62,7 @@ export default function AdminAssets() {
         qc.invalidateQueries({ queryKey: getListAssetsQueryKey() });
         toast({ title: "Asset created" });
         setOpen(false);
-        setLabel(""); setSerial(""); setType(""); setVenueId("");
+        setLabel(""); setSerial(""); setType(""); setVenueId(""); setInstalledAt("");
       },
       onError: e => toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" }),
     },
@@ -86,9 +88,18 @@ export default function AdminAssets() {
                 </Select>
                 <Input placeholder="Label" value={label} onChange={e => setLabel(e.target.value)} data-testid="input-asset-label" />
                 <Input placeholder="Serial (optional)" value={serial} onChange={e => setSerial(e.target.value)} data-testid="input-asset-serial" />
+                <div className="space-y-1">
+                  <label className="text-sm text-muted-foreground">Date of installation (optional)</label>
+                  <Input
+                    type="date"
+                    value={installedAt}
+                    onChange={e => setInstalledAt(e.target.value)}
+                    data-testid="input-asset-installed-at"
+                  />
+                </div>
                 <Button
                   disabled={!venueId || !type || !label}
-                  onClick={() => create.mutate({ data: { venueId: Number(venueId), type, label, serial: serial || null } })}
+                  onClick={() => create.mutate({ data: { venueId: Number(venueId), type, label, serial: serial || null, installedAt: installedAt || null } })}
                   data-testid="btn-create-asset"
                 >Create</Button>
               </div>
@@ -123,7 +134,16 @@ export default function AdminAssets() {
           </CardHeader>
           <CardContent>
             <Table>
-              <TableHeader><TableRow><TableHead>Label</TableHead><TableHead>Type</TableHead><TableHead>Venue</TableHead><TableHead>Status</TableHead><TableHead>Serial</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Venue</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Serial</TableHead>
+                  <TableHead>Installed</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {assets?.map(a => (
                   <TableRow key={a.id} data-testid={`row-asset-${a.id}`}>
@@ -132,6 +152,11 @@ export default function AdminAssets() {
                     <TableCell>{a.venueName}</TableCell>
                     <TableCell><Badge variant="outline">{a.status}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{a.serial ?? "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {a.installedAt
+                        ? <span>{a.installedAt} <span className="opacity-60">({formatAge(a.installedAt)})</span></span>
+                        : "—"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

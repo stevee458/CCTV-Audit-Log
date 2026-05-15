@@ -80,6 +80,7 @@ export const drivesTable = pgTable(
     status: varchar("status", { length: 32 }).notNull().default("In Maintenance possession"),
     holderUserId: integer("holder_user_id").references(() => usersTable.id),
     notes: text("notes"),
+    installedAt: date("installed_at"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

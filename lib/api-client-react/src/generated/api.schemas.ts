@@ -347,6 +347,8 @@ export interface DriveSummary {
   holderUserId: number | null;
   /** @nullable */
   holderName: string | null;
+  /** @nullable */
+  installedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -379,6 +381,8 @@ export interface Drive {
   holderName: string | null;
   /** @nullable */
   notes: string | null;
+  /** @nullable */
+  installedAt: string | null;
   createdAt: string;
   updatedAt: string;
   footageWindows: DriveFootageWindow[];
@@ -388,6 +392,8 @@ export interface UpdateDriveInput {
   status?: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  installedAt?: string | null;
 }
 
 export interface SwapDriveInput {

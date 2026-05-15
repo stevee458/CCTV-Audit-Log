@@ -28,6 +28,7 @@ async function serializeDrive(driveId: number) {
       holderUserId: drivesTable.holderUserId,
       holderName: usersTable.name,
       notes: drivesTable.notes,
+      installedAt: drivesTable.installedAt,
       createdAt: drivesTable.createdAt,
       updatedAt: drivesTable.updatedAt,
     })
@@ -63,6 +64,7 @@ async function serializeDrive(driveId: number) {
     holderUserId: r.holderUserId,
     holderName: r.holderName,
     notes: r.notes,
+    installedAt: r.installedAt ?? null,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
     footageWindows: windows.map((w) => ({
@@ -107,6 +109,7 @@ async function listDrives(filters: {
       status: drivesTable.status,
       holderUserId: drivesTable.holderUserId,
       holderName: usersTable.name,
+      installedAt: drivesTable.installedAt,
       createdAt: drivesTable.createdAt,
       updatedAt: drivesTable.updatedAt,
     })
@@ -125,6 +128,7 @@ async function listDrives(filters: {
     status: r.status,
     holderUserId: r.holderUserId,
     holderName: r.holderName,
+    installedAt: r.installedAt ?? null,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   }));
@@ -281,6 +285,7 @@ router.patch("/drives/:id", requireMaintenance, async (req, res) => {
   const updates: Partial<typeof drivesTable.$inferInsert> = {};
   if (typeof req.body.status === "string") updates.status = req.body.status;
   if (typeof req.body.notes === "string" || req.body.notes === null) updates.notes = req.body.notes;
+  if (typeof req.body.installedAt === "string" || req.body.installedAt === null) updates.installedAt = req.body.installedAt ?? null;
   if (Object.keys(updates).length === 0) return res.status(400).json({ error: "No updates" });
   updates.updatedAt = new Date();
   const [updated] = await db.update(drivesTable).set(updates).where(eq(drivesTable.id, id)).returning();

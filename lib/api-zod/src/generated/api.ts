@@ -471,6 +471,7 @@ export const ListDrivesResponseItem = zod.object({
   status: zod.string(),
   holderUserId: zod.number().nullable(),
   holderName: zod.string().nullable(),
+  installedAt: zod.string().nullable(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -491,6 +492,7 @@ export const GetDriveResponse = zod.object({
   holderUserId: zod.number().nullable(),
   holderName: zod.string().nullable(),
   notes: zod.string().nullable(),
+  installedAt: zod.string().nullable(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
   footageWindows: zod.array(
@@ -513,6 +515,7 @@ export const UpdateDriveParams = zod.object({
 export const UpdateDriveBody = zod.object({
   status: zod.string().optional(),
   notes: zod.string().nullish(),
+  installedAt: zod.string().nullish(),
 });
 
 export const UpdateDriveResponse = zod.object({
@@ -526,6 +529,7 @@ export const UpdateDriveResponse = zod.object({
   holderUserId: zod.number().nullable(),
   holderName: zod.string().nullable(),
   notes: zod.string().nullable(),
+  installedAt: zod.string().nullable(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
   footageWindows: zod.array(
