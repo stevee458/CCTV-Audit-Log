@@ -33,6 +33,7 @@ interface DriveRow {
   homeVenueName: string | null;
   status: string;
   holderName: string | null;
+  notes: string | null;
   installedAt: string | null;
 }
 
@@ -97,7 +98,7 @@ export default function AdminDrives() {
     setEditName(d.name);
     setEditType(d.type);
     setEditHomeVenueId(d.homeVenueId ? String(d.homeVenueId) : "none");
-    setEditNotes("");
+    setEditNotes(d.notes ?? "");
     setEditInstalledAt(d.installedAt ?? "");
   }
 

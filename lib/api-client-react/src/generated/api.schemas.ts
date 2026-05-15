@@ -348,6 +348,8 @@ export interface DriveSummary {
   /** @nullable */
   holderName: string | null;
   /** @nullable */
+  notes: string | null;
+  /** @nullable */
   installedAt: string | null;
   createdAt: string;
   updatedAt: string;
