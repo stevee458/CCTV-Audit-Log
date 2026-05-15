@@ -447,8 +447,8 @@ router.post("/drives/handover", requireMaintenance, async (req, res) => {
           acceptedAt: now,
         });
       } else {
-        if (d.status !== "In Maintenance possession" || d.holderUserId !== req.user!.id) {
-          throw new Error("Drive must be in your possession to deliver");
+        if (d.status !== "In Maintenance possession") {
+          throw new Error("Drive must be in maintenance possession to deliver");
         }
         await tx.update(drivesTable)
           .set({ status: "With Inspector", holderUserId: inspectorUserId, updatedAt: now })

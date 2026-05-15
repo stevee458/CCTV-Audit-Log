@@ -37,10 +37,10 @@ export default function InspectorHandover() {
   const qc = useQueryClient();
 
   const { data: allUsers } = useListUsers();
-  const { data: myDrives } = useListDrives({ holderUserId: user?.id });
+  const { data: maintenanceDrives } = useListDrives({ status: "In Maintenance possession" });
 
   const inspectors = (allUsers ?? []).filter((u) => u.role === "inspector" && u.active);
-  const myDrivesInPossession = (myDrives ?? []).filter((d) => d.status === "In Maintenance possession");
+  const drivesInPossession = maintenanceDrives ?? [];
 
   const [step, setStep] = useState<Step>("inspector");
   const [selectedInspector, setSelectedInspector] = useState<User | null>(null);
@@ -58,8 +58,8 @@ export default function InspectorHandover() {
   }
 
   function handleSelectDirection(d: Direction) {
-    if (d === "deliver" && myDrivesInPossession.length === 0) {
-      toast({ title: "No drives to deliver", description: "You have no drives in your possession.", variant: "destructive" });
+    if (d === "deliver" && drivesInPossession.length === 0) {
+      toast({ title: "No drives to deliver", description: "No drives are currently in maintenance possession.", variant: "destructive" });
       return;
     }
     setDirection(d);
@@ -227,7 +227,7 @@ export default function InspectorHandover() {
                   ? "Scan the drive you are receiving from the Inspector"
                   : "Scan the drive you are handing to the Inspector"
               }
-              candidateDrives={direction === "deliver" ? myDrivesInPossession : undefined}
+              candidateDrives={direction === "deliver" ? drivesInPossession : undefined}
               onDetected={handleScanned}
             />
           </div>

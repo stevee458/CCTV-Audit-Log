@@ -112,7 +112,7 @@ export function DriveQrScanner({ label, expectedDriveId, expectedDriveName, cand
     } else if (candidateDrives && candidateDrives.length > 0) {
       const found = candidateDrives.find((c) => c.id === drive.id);
       if (!found) {
-        setMismatch(`Drive "${drive.name}" is not at this venue. Try again.`);
+        setMismatch(`Drive "${drive.name}" is not in maintenance possession. Try again.`);
         return;
       }
     }
