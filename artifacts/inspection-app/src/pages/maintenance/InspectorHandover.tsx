@@ -196,7 +196,7 @@ export default function InspectorHandover() {
                   <p className="text-base font-bold leading-tight">Hand drive TO Inspector</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     You → Inspector
-                    {myDrivesInPossession.length > 0 && ` · ${myDrivesInPossession.length} in hand`}
+                    {drivesInPossession.length > 0 && ` · ${drivesInPossession.length} in hand`}
                   </p>
                 </div>
               </div>
