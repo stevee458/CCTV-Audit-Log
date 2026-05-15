@@ -10,7 +10,7 @@ import {
   usersTable,
   inspectionsTable,
 } from "@workspace/db";
-import { requireAuth, requireMaintenance, requireAdmin } from "../middlewares/auth";
+import { requireAuth, requireMaintenance, requireMaintenanceOrAdmin, requireAdmin } from "../middlewares/auth";
 import { sendCsv } from "../lib/csv";
 
 const router: IRouter = Router();
@@ -279,7 +279,7 @@ router.get("/drives/:id/qr.png", requireAuth, async (req, res) => {
   res.send(buf);
 });
 
-router.patch("/drives/:id", requireMaintenance, async (req, res) => {
+router.patch("/drives/:id", requireMaintenanceOrAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const updates: Partial<typeof drivesTable.$inferInsert> = {};

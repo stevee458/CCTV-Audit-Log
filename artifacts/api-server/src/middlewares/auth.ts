@@ -142,6 +142,19 @@ export function requireMaintenance(req: Request, res: Response, next: NextFuncti
   next();
 }
 
+export function requireMaintenanceOrAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: "Not signed in" });
+    return;
+  }
+  const allowed = ["maintenance", "admin", "super_admin"];
+  if (!allowed.includes(req.user.role)) {
+    res.status(403).json({ error: "Maintenance or admin access required" });
+    return;
+  }
+  next();
+}
+
 export function requireInspector(req: Request, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: "Not signed in" });
