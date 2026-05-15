@@ -6,6 +6,7 @@ import {
   findingsTable,
   venuesTable,
   violationCategoriesTable,
+  usersTable,
 } from "@workspace/db";
 import {
   AddFindingBody,
@@ -14,6 +15,7 @@ import {
 import { requireAuth } from "../middlewares/auth";
 
 const isAdminRole = (r: string) => r === "admin" || r === "super_admin";
+const isMaintenanceOrAdmin = (r: string) => r === "maintenance" || isAdminRole(r);
 
 function formatClipSeq(n: number): string {
   const idx = n - 1;
@@ -38,6 +40,9 @@ function buildClipName(
   if (outcome === "no_violation") {
     return `${venueCode}_${seq} ${dateStr} NV-E`;
   }
+  if (outcome === "maintenance_issue") {
+    return `${venueCode}_${seq} ${dateStr} MI`;
+  }
   const catStr = (categoryName ?? "Unknown").replace(/\s+/g, "").slice(0, 8);
   const sevStr = severity ?? "";
   return `${venueCode}_${seq} ${dateStr} ${catStr}-${sevStr}`;
@@ -58,6 +63,8 @@ async function serializeFinding(id: number) {
       severity: findingsTable.severity,
       incidentTime: findingsTable.incidentTime,
       notes: findingsTable.notes,
+      resolvedAt: findingsTable.resolvedAt,
+      resolvedById: findingsTable.resolvedById,
       createdAt: findingsTable.createdAt,
     })
     .from(findingsTable)
@@ -80,6 +87,8 @@ async function serializeFinding(id: number) {
     severity: f.severity,
     incidentTime: f.incidentTime,
     notes: f.notes,
+    resolvedAt: f.resolvedAt ? f.resolvedAt.toISOString() : null,
+    resolvedById: f.resolvedById,
     createdAt: f.createdAt.toISOString(),
   };
 }
@@ -109,10 +118,12 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
   }
 
   const { outcome, categoryId, severity, incidentTime, notes } = parsed.data;
+
   if (outcome === "violation" && !categoryId) {
-    return res
-      .status(400)
-      .json({ error: "Violations require a category" });
+    return res.status(400).json({ error: "Violations require a category" });
+  }
+  if (outcome === "maintenance_issue" && !notes?.trim()) {
+    return res.status(400).json({ error: "Maintenance issues require a description in the notes field" });
   }
 
   let categoryName: string | null = null;
@@ -133,7 +144,14 @@ router.post("/inspections/:id/findings", requireAuth, async (req, res) => {
       .where(eq(venuesTable.id, i.venueId))
       .returning();
     const clipNumber = venue.nextClipNumber - 1;
-    const clipName = buildClipName(venue.code, clipNumber, now, outcome, categoryName, outcome === "violation" ? (severity ?? null) : null);
+    const clipName = buildClipName(
+      venue.code,
+      clipNumber,
+      now,
+      outcome,
+      categoryName,
+      outcome === "violation" ? (severity ?? null) : null,
+    );
     const [created] = await tx
       .insert(findingsTable)
       .values({
@@ -192,9 +210,11 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   const existing = rows[0].finding;
   const outcome = parsed.data.outcome ?? existing.outcome;
   if (parsed.data.outcome !== undefined) updates.outcome = parsed.data.outcome;
-  if (outcome === "no_violation") {
+
+  if (outcome === "no_violation" || outcome === "maintenance_issue") {
     updates.categoryId = null;
     updates.severity = null;
+    updates.incidentTime = null;
   } else {
     if (parsed.data.categoryId !== undefined)
       updates.categoryId = parsed.data.categoryId;
@@ -213,7 +233,6 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   if (parsed.data.incidentTime !== undefined) updates.incidentTime = parsed.data.incidentTime ?? null;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
 
-  // Regenerate clip_name to reflect any category/severity/outcome changes
   const finalOutcome = outcome;
   const finalCategoryId = updates.categoryId !== undefined ? updates.categoryId : existing.categoryId;
   const finalSeverity = (updates.severity !== undefined ? updates.severity : existing.severity) ?? null;
@@ -240,6 +259,36 @@ router.patch("/findings/:id", requireAuth, async (req, res) => {
   }
   const full = await serializeFinding(id);
   res.json(full);
+});
+
+router.patch("/findings/:id/resolve", requireAuth, async (req, res) => {
+  if (!isMaintenanceOrAdmin(req.user!.role)) {
+    return res.status(403).json({ error: "Only maintenance staff or admins can resolve findings" });
+  }
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select({ finding: findingsTable })
+    .from(findingsTable)
+    .where(eq(findingsTable.id, id))
+    .limit(1);
+  if (rows.length === 0) return res.status(404).json({ error: "Finding not found" });
+  const finding = rows[0].finding;
+
+  if (finding.outcome !== "maintenance_issue") {
+    return res.status(400).json({ error: "Only maintenance_issue findings can be resolved" });
+  }
+  if (finding.resolvedAt) {
+    return res.status(409).json({ error: "Finding is already resolved" });
+  }
+
+  await db
+    .update(findingsTable)
+    .set({ resolvedAt: new Date(), resolvedById: req.user!.id })
+    .where(eq(findingsTable.id, id));
+
+  res.json({ ok: true });
 });
 
 router.delete("/findings/:id", requireAuth, async (req, res) => {

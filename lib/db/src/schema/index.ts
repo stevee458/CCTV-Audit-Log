@@ -348,7 +348,7 @@ export const findingsTable = pgTable(
       .references(() => venuesTable.id),
     clipNumber: integer("clip_number").notNull(),
     clipName: text("clip_name").notNull(),
-    outcome: varchar("outcome", { length: 16 }).notNull(),
+    outcome: varchar("outcome", { length: 32 }).notNull(),
     categoryId: integer("category_id").references(
       () => violationCategoriesTable.id,
     ),
@@ -356,6 +356,8 @@ export const findingsTable = pgTable(
     notes: text("notes"),
     incidentTime: text("incident_time"),
     clientId: text("client_id"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedById: integer("resolved_by_id").references(() => usersTable.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

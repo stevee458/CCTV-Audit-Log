@@ -12,4 +12,5 @@ export type UpdateFindingInputOutcome =
 export const UpdateFindingInputOutcome = {
   no_violation: "no_violation",
   violation: "violation",
+  maintenance_issue: "maintenance_issue",
 } as const;

@@ -48,6 +48,7 @@ import type {
   ListStockRequestsParams,
   ListStockSkusParams,
   LoginInput,
+  MaintenanceIssue,
   MaintenanceVisit,
   MaintenanceVisitDetail,
   OkResponse,
@@ -3858,3 +3859,56 @@ export const useDeleteAsset = <TError = ErrorType<unknown>, TContext = unknown>(
   mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteAsset>>, TError, { id: number }, TContext>;
   request?: SecondParameter<typeof customFetch>;
 }) => useMutation(getDeleteAssetMutationOptions(options));
+
+export const resolveFinding = async (id: number, options?: RequestInit): Promise<{ ok: boolean }> =>
+  customFetch<{ ok: boolean }>(`/api/findings/${id}/resolve`, { ...options, method: "PATCH" });
+
+export const getResolveFindingMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof resolveFinding>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof resolveFinding>>, TError, { id: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveFinding>>, { id: number }> = (props) =>
+    resolveFinding(props.id, requestOptions);
+  return { mutationKey: ["resolveFinding"], mutationFn, ...mutationOptions };
+};
+
+export const useResolveFinding = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof resolveFinding>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}) => useMutation(getResolveFindingMutationOptions(options));
+
+export const getDepotMaintenanceIssuesUrl = (depotId: number) => `/api/depots/${depotId}/maintenance-issues`;
+
+export const getDepotMaintenanceIssues = async (depotId: number, options?: RequestInit): Promise<MaintenanceIssue[]> =>
+  customFetch<MaintenanceIssue[]>(getDepotMaintenanceIssuesUrl(depotId), { ...options, method: "GET" });
+
+export const getGetDepotMaintenanceIssuesQueryKey = (depotId: number) =>
+  ["getDepotMaintenanceIssues", depotId] as const;
+
+export const getGetDepotMaintenanceIssuesQueryOptions = <TData = Awaited<ReturnType<typeof getDepotMaintenanceIssues>>, TError = ErrorType<unknown>>(
+  depotId: number,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getDepotMaintenanceIssues>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryOptions<Awaited<ReturnType<typeof getDepotMaintenanceIssues>>, TError, TData> => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetDepotMaintenanceIssuesQueryKey(depotId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDepotMaintenanceIssues>>> = ({ signal }) =>
+    getDepotMaintenanceIssues(depotId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: !!depotId, ...queryOptions };
+};
+
+export const useGetDepotMaintenanceIssues = <TData = Awaited<ReturnType<typeof getDepotMaintenanceIssues>>, TError = ErrorType<unknown>>(
+  depotId: number,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getDepotMaintenanceIssues>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions = getGetDepotMaintenanceIssuesQueryOptions(depotId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  query.queryKey = queryOptions.queryKey;
+  return query;
+};

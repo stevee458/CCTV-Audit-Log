@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, Clock, MapPin, Plus, FileText, AlertTriangle, ShieldCheck, Loader2, Video, MoreVertical, Edit, Trash2, HardDrive, Building2, Timer } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, MapPin, Plus, FileText, AlertTriangle, ShieldCheck, Loader2, Video, MoreVertical, Edit, Trash2, HardDrive, Building2, Timer, Wrench } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -40,7 +40,7 @@ const severityColors: Record<string, string> = {
 };
 
 const findingSchema = z.object({
-  outcome: z.enum(["no_violation", "violation"]),
+  outcome: z.enum(["no_violation", "violation", "maintenance_issue"]),
   categoryId: z.coerce.number().optional().nullable(),
   severity: z.enum(["A", "B", "C", "D", "E"]).optional().nullable(),
   incidentTime: z.string().optional().nullable(),
@@ -57,7 +57,14 @@ const findingSchema = z.object({
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Time of incident is required for a violation", path: ["incidentTime"] });
     }
   }
+  if (data.outcome === "maintenance_issue") {
+    if (!data.notes?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "A description is required for a maintenance issue", path: ["notes"] });
+    }
+  }
 });
+
+type OutcomeSelection = "no_violation" | "violation" | "maintenance_issue";
 
 export default function InspectionWorkspace() {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +77,7 @@ export default function InspectionWorkspace() {
   const { data: categories } = useListViolationCategories();
 
   const [findingDialogOpen, setFindingDialogOpen] = useState(false);
-  const [outcomeSelection, setOutcomeSelection] = useState<"no_violation"|"violation"|null>(null);
+  const [outcomeSelection, setOutcomeSelection] = useState<OutcomeSelection | null>(null);
   const [editingFindingId, setEditingFindingId] = useState<number | null>(null);
 
   const completeMutation = useCompleteInspection({
@@ -139,12 +146,13 @@ export default function InspectionWorkspace() {
 
   const selectedCategoryId = form.watch("categoryId");
 
-  const handleOutcomeSelect = (outcome: "no_violation"|"violation") => {
+  const handleOutcomeSelect = (outcome: OutcomeSelection) => {
     setOutcomeSelection(outcome);
     form.setValue("outcome", outcome);
-    if (outcome === "no_violation") {
+    if (outcome === "no_violation" || outcome === "maintenance_issue") {
       form.setValue("categoryId", null);
       form.setValue("severity", null);
+      form.setValue("incidentTime", null);
     }
   };
 
@@ -203,6 +211,16 @@ export default function InspectionWorkspace() {
 
   const isCompleted = inspection.status === "completed";
 
+  const findingBorderColor = (finding: any) => {
+    if (finding.outcome === "violation") {
+      return finding.severity
+        ? `var(--color-chart-${finding.severity === "A" ? 1 : finding.severity === "B" ? 2 : finding.severity === "C" ? 3 : finding.severity === "D" ? 4 : 5})`
+        : "hsl(var(--destructive))";
+    }
+    if (finding.outcome === "maintenance_issue") return "hsl(38 92% 50%)";
+    return "hsl(var(--muted))";
+  };
+
   return (
     <InspectorLayout>
       <div className="flex flex-col h-full bg-muted/10">
@@ -219,7 +237,6 @@ export default function InspectionWorkspace() {
 
           <div className="flex justify-between items-start">
             <div className="space-y-1.5">
-              {/* Depot → Venue breadcrumb */}
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Building2 className="h-3.5 w-3.5 shrink-0" />
                 <span>{inspection.depotName}</span>
@@ -229,14 +246,12 @@ export default function InspectionWorkspace() {
                 <span className="text-muted-foreground/40 mx-0.5">({inspection.venueCode})</span>
               </div>
 
-              {/* Drive name as primary heading */}
               <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 <HardDrive className="h-5 w-5 text-muted-foreground shrink-0" />
                 {inspection.driveName || inspection.venueCode}
                 {isCompleted && <CheckCircle2 className="h-5 w-5 text-green-500" />}
               </h1>
 
-              {/* Date */}
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="mr-1 h-3.5 w-3.5" />
                 {format(new Date(inspection.footageDate), "d MMM yyyy")}
@@ -268,7 +283,7 @@ export default function InspectionWorkspace() {
               </div>
             ) : (
               inspection.findings.map((finding) => (
-                <Card key={finding.id} className="border-l-4 overflow-hidden relative" style={{ borderLeftColor: finding.outcome === 'violation' ? (finding.severity ? `var(--color-chart-${finding.severity === 'A' ? 1 : finding.severity === 'B' ? 2 : finding.severity === 'C' ? 3 : finding.severity === 'D' ? 4 : 5})` : 'hsl(var(--destructive))') : 'hsl(var(--muted))' }}>
+                <Card key={finding.id} className="border-l-4 overflow-hidden relative" style={{ borderLeftColor: findingBorderColor(finding) }}>
                   <CardContent className="p-3 pl-4 pr-10">
                     <div className="flex justify-between items-start mb-1">
                       <span className="font-mono text-sm font-semibold flex items-center text-foreground/80">
@@ -280,6 +295,11 @@ export default function InspectionWorkspace() {
                       {finding.outcome === "violation" ? (
                         <Badge variant="outline" className={finding.severity ? severityColors[finding.severity] : ""}>
                           {finding.severity}
+                        </Badge>
+                      ) : finding.outcome === "maintenance_issue" ? (
+                        <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/20">
+                          <Wrench className="h-3 w-3 mr-1" />
+                          Maintenance
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-green-500/10 text-green-700 hover:bg-green-500/10">No Violation</Badge>
@@ -361,7 +381,6 @@ export default function InspectionWorkspace() {
                 <DialogDescription>What is the outcome of the current clip?</DialogDescription>
               </DialogHeader>
 
-              {/* Context: depot / venue / drive */}
               <div className="px-6 pb-2">
                 <div className="bg-muted/60 rounded-lg px-3 py-2 text-xs text-muted-foreground space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -381,22 +400,30 @@ export default function InspectionWorkspace() {
                 </div>
               </div>
 
-              <div className="p-6 grid gap-4 pt-2">
+              <div className="p-6 grid gap-3 pt-2">
                 <Button
                   variant="outline"
-                  className="h-24 text-lg border-2 border-green-500/20 hover:border-green-500 hover:bg-green-500/5 text-green-700"
+                  className="h-20 text-base border-2 border-green-500/20 hover:border-green-500 hover:bg-green-500/5 text-green-700"
                   onClick={() => handleOutcomeSelect("no_violation")}
                 >
-                  <ShieldCheck className="mr-2 h-6 w-6 text-green-600" />
+                  <ShieldCheck className="mr-2 h-5 w-5 text-green-600" />
                   No Violation
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-24 text-lg border-2 border-red-500/20 hover:border-red-500 hover:bg-red-500/5 text-red-700"
+                  className="h-20 text-base border-2 border-red-500/20 hover:border-red-500 hover:bg-red-500/5 text-red-700"
                   onClick={() => handleOutcomeSelect("violation")}
                 >
-                  <AlertTriangle className="mr-2 h-6 w-6 text-red-600" />
+                  <AlertTriangle className="mr-2 h-5 w-5 text-red-600" />
                   Violation
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-20 text-base border-2 border-amber-500/20 hover:border-amber-500 hover:bg-amber-500/5 text-amber-700"
+                  onClick={() => handleOutcomeSelect("maintenance_issue")}
+                >
+                  <Wrench className="mr-2 h-5 w-5 text-amber-600" />
+                  Maintenance Issue
                 </Button>
               </div>
             </>
@@ -407,11 +434,14 @@ export default function InspectionWorkspace() {
                   <Button variant="ghost" size="icon" className="-ml-3 mr-2 h-8 w-8" onClick={() => setOutcomeSelection(null)}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  {outcomeSelection === "violation" ? "Record Violation" : "Confirm No Violation"}
+                  {outcomeSelection === "violation"
+                    ? "Record Violation"
+                    : outcomeSelection === "maintenance_issue"
+                    ? "Log Maintenance Issue"
+                    : "Confirm No Violation"}
                 </DialogTitle>
               </DialogHeader>
 
-              {/* Context: depot / venue / drive */}
               <div className="px-6 pt-3">
                 <div className="bg-muted/60 rounded-lg px-3 py-2 text-xs text-muted-foreground space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -525,9 +555,23 @@ export default function InspectionWorkspace() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes {outcomeSelection === "violation" ? "(Optional)" : "(Optional)"}</FormLabel>
+                        <FormLabel>
+                          {outcomeSelection === "maintenance_issue"
+                            ? "Description (required)"
+                            : outcomeSelection === "violation"
+                            ? "Notes (optional)"
+                            : "Notes (optional)"}
+                        </FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Additional details about the clip..." className="resize-none" {...field} />
+                          <Textarea
+                            placeholder={
+                              outcomeSelection === "maintenance_issue"
+                                ? "Describe the maintenance issue that needs attention..."
+                                : "Additional details about the clip..."
+                            }
+                            className="resize-none"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -537,12 +581,20 @@ export default function InspectionWorkspace() {
                   <div className="pt-2">
                     <Button
                       type="submit"
-                      className={outcomeSelection === "violation" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full bg-green-600 hover:bg-green-700 text-white"}
+                      className={
+                        outcomeSelection === "violation"
+                          ? "w-full bg-red-600 hover:bg-red-700 text-white"
+                          : outcomeSelection === "maintenance_issue"
+                          ? "w-full bg-amber-600 hover:bg-amber-700 text-white"
+                          : "w-full bg-green-600 hover:bg-green-700 text-white"
+                      }
                       size="lg"
                       disabled={addFindingMutation.isPending || updateFindingMutation.isPending}
                     >
                       {(addFindingMutation.isPending || updateFindingMutation.isPending) ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : outcomeSelection === "maintenance_issue" ? (
+                        <Wrench className="mr-2 h-5 w-5" />
                       ) : (
                         <CheckCircle2 className="mr-2 h-5 w-5" />
                       )}

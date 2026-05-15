@@ -1,11 +1,13 @@
 import { Router, type IRouter } from "express";
-import { asc, eq, count } from "drizzle-orm";
+import { asc, eq, count, isNull, and } from "drizzle-orm";
 import {
   db,
   depotsTable,
   venuesTable,
   assetsTable,
   inspectionsTable,
+  findingsTable,
+  usersTable,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 
@@ -128,6 +130,48 @@ router.delete("/venues/:id", requireAdmin, async (req, res) => {
   const [deleted] = await db.delete(venuesTable).where(eq(venuesTable.id, id)).returning();
   if (!deleted) return res.status(404).json({ error: "Venue not found" });
   res.json({ ok: true });
+});
+
+router.get("/depots/:id/maintenance-issues", requireAuth, async (req, res) => {
+  const depotId = Number(req.params.id);
+  if (!Number.isInteger(depotId)) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select({
+      id: findingsTable.id,
+      findingId: findingsTable.id,
+      venueId: venuesTable.id,
+      venueName: venuesTable.name,
+      venueCode: venuesTable.code,
+      inspectorName: usersTable.name,
+      reportedAt: findingsTable.createdAt,
+      clipName: findingsTable.clipName,
+      notes: findingsTable.notes,
+    })
+    .from(findingsTable)
+    .innerJoin(venuesTable, eq(venuesTable.id, findingsTable.venueId))
+    .innerJoin(inspectionsTable, eq(inspectionsTable.id, findingsTable.inspectionId))
+    .innerJoin(usersTable, eq(usersTable.id, inspectionsTable.inspectorId))
+    .where(
+      and(
+        eq(venuesTable.depotId, depotId),
+        eq(findingsTable.outcome, "maintenance_issue"),
+        isNull(findingsTable.resolvedAt),
+      ),
+    )
+    .orderBy(asc(findingsTable.createdAt));
+
+  res.json(rows.map((r) => ({
+    id: r.id,
+    findingId: r.findingId,
+    venueId: r.venueId,
+    venueName: r.venueName,
+    venueCode: r.venueCode,
+    inspectorName: r.inspectorName,
+    reportedAt: r.reportedAt.toISOString(),
+    clipName: r.clipName,
+    notes: r.notes ?? "",
+  })));
 });
 
 export default router;

@@ -10,8 +10,11 @@ import {
   useListAssets,
   useListDepots,
   useListStockSkus,
+  useGetDepotMaintenanceIssues,
+  useResolveFinding,
   getGetMaintenanceVisitQueryKey,
   getListDrivesQueryKey,
+  getGetDepotMaintenanceIssuesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,10 +24,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, ScanLine } from "lucide-react";
+import { ArrowLeft, Plus, ScanLine, Wrench, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { apiErrorMessage, isOfflineQueued } from "@/lib/api-error";
 import { DriveSwapScanModal } from "@/components/DriveSwapScanModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function VisitDetail() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +47,27 @@ export default function VisitDetail() {
   const { data: depots } = useListDepots();
   const qc = useQueryClient();
   const { toast } = useToast();
+
+  const depotId = visit?.depotId ?? 0;
+  const { data: maintenanceIssues } = useGetDepotMaintenanceIssues(depotId, {
+    query: { enabled: !!depotId },
+  });
+
+  const [confirmResolveId, setConfirmResolveId] = useState<number | null>(null);
+
+  const resolveMutation = useResolveFinding({
+    mutation: {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getGetDepotMaintenanceIssuesQueryKey(depotId) });
+        toast({ title: "Marked as repaired" });
+        setConfirmResolveId(null);
+      },
+      onError: (e) => {
+        toast({ title: "Failed", description: apiErrorMessage(e), variant: "destructive" });
+        setConfirmResolveId(null);
+      },
+    },
+  });
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: getGetMaintenanceVisitQueryKey(visitId) });
@@ -90,6 +124,8 @@ export default function VisitDetail() {
 
   if (!visit) return <MaintenanceLayout><div className="p-4">Loading...</div></MaintenanceLayout>;
 
+  const confirmingIssue = maintenanceIssues?.find(i => i.id === confirmResolveId);
+
   return (
     <MaintenanceLayout>
       <div className="p-4 space-y-4">
@@ -100,6 +136,58 @@ export default function VisitDetail() {
             <p className="text-sm text-muted-foreground">{format(new Date(visit.visitDate), "PPp")} by {visit.maintainerName}</p>
           </CardHeader>
         </Card>
+
+        {maintenanceIssues && maintenanceIssues.length > 0 && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2 text-amber-800">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                {maintenanceIssues.length} open maintenance {maintenanceIssues.length === 1 ? "issue" : "issues"}
+              </CardTitle>
+              <p className="text-xs text-amber-700/80">Mark each issue as repaired once you have addressed it on site.</p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {maintenanceIssues.map((issue) => (
+                <div key={issue.id} className="border border-amber-500/20 rounded-md p-3 bg-background space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Wrench className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                        <span className="font-mono text-xs font-semibold text-foreground/80">{issue.clipName}</span>
+                        <span className="text-xs text-muted-foreground">{issue.venueName} ({issue.venueCode})</span>
+                      </div>
+                      <p className="text-sm">{issue.notes}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Reported by {issue.inspectorName} · {format(new Date(issue.reportedAt), "d MMM yyyy")}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 border-amber-500/30 text-amber-800 hover:bg-amber-500/10"
+                      onClick={() => setConfirmResolveId(issue.id)}
+                      data-testid={`btn-resolve-${issue.id}`}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                      Mark as repaired
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {maintenanceIssues && maintenanceIssues.length === 0 && depotId && (
+          <Card className="border-green-500/20 bg-green-500/5">
+            <CardContent className="py-3">
+              <p className="text-sm text-green-700 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                No open maintenance issues for this depot.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader><CardTitle className="text-base">Venues visited</CardTitle></CardHeader>
@@ -264,6 +352,35 @@ export default function VisitDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={confirmResolveId !== null} onOpenChange={(open) => { if (!open) setConfirmResolveId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark as repaired?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmingIssue && (
+                <>
+                  <strong>{confirmingIssue.clipName}</strong> — {confirmingIssue.notes}
+                  <br /><br />
+                  Confirm that this maintenance issue has been physically addressed on site. This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resolveMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmResolveId !== null && resolveMutation.mutate({ id: confirmResolveId })}
+              disabled={resolveMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              data-testid="btn-confirm-resolve"
+            >
+              {resolveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+              Yes, mark as repaired
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MaintenanceLayout>
   );
 }

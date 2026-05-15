@@ -20,6 +20,12 @@ export interface Finding {
   categoryName: string | null;
   severity: Severity | null;
   /** @nullable */
+  incidentTime: string | null;
+  /** @nullable */
   notes: string | null;
+  /** @nullable */
+  resolvedAt: string | null;
+  /** @nullable */
+  resolvedById: number | null;
   createdAt: Date;
 }

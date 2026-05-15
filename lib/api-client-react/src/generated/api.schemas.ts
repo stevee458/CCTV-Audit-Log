@@ -206,6 +206,7 @@ export type FindingOutcome =
 export const FindingOutcome = {
   no_violation: "no_violation",
   violation: "violation",
+  maintenance_issue: "maintenance_issue",
 } as const;
 
 export interface Finding {
@@ -220,8 +221,26 @@ export interface Finding {
   categoryName: string | null;
   severity: Severity | null;
   /** @nullable */
+  incidentTime: string | null;
+  /** @nullable */
   notes: string | null;
+  /** @nullable */
+  resolvedAt: string | null;
+  /** @nullable */
+  resolvedById: number | null;
   createdAt: string;
+}
+
+export interface MaintenanceIssue {
+  id: number;
+  findingId: number;
+  venueId: number;
+  venueName: string;
+  venueCode: string;
+  inspectorName: string;
+  reportedAt: string;
+  clipName: string;
+  notes: string;
 }
 
 export interface InspectionSummary {

@@ -316,7 +316,7 @@ export const AddFindingParams = zod.object({
 });
 
 export const AddFindingBody = zod.object({
-  outcome: zod.enum(["no_violation", "violation"]),
+  outcome: zod.enum(["no_violation", "violation", "maintenance_issue"]),
   categoryId: zod.number().nullish(),
   severity: zod
     .union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()])
@@ -333,7 +333,7 @@ export const UpdateFindingParams = zod.object({
 });
 
 export const UpdateFindingBody = zod.object({
-  outcome: zod.enum(["no_violation", "violation"]).optional(),
+  outcome: zod.enum(["no_violation", "violation", "maintenance_issue"]).optional(),
   categoryId: zod.number().nullish(),
   severity: zod
     .union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()])
@@ -347,7 +347,7 @@ export const UpdateFindingResponse = zod.object({
   inspectionId: zod.number(),
   clipName: zod.string(),
   clipNumber: zod.number(),
-  outcome: zod.enum(["no_violation", "violation"]),
+  outcome: zod.enum(["no_violation", "violation", "maintenance_issue"]),
   categoryId: zod.number().nullable(),
   categoryName: zod.string().nullable(),
   severity: zod.union([zod.enum(["A", "B", "C", "D", "E"]), zod.null()]),
@@ -355,6 +355,38 @@ export const UpdateFindingResponse = zod.object({
   notes: zod.string().nullable(),
   createdAt: zod.coerce.date(),
 });
+
+/**
+ * @summary Resolve a maintenance issue finding
+ */
+export const ResolveFindingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ResolveFindingResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Get unresolved maintenance issues for a depot
+ */
+export const GetDepotMaintenanceIssuesParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDepotMaintenanceIssuesResponse = zod.array(
+  zod.object({
+    id: zod.number(),
+    findingId: zod.number(),
+    venueId: zod.number(),
+    venueName: zod.string(),
+    venueCode: zod.string(),
+    inspectorName: zod.string(),
+    reportedAt: zod.string(),
+    clipName: zod.string(),
+    notes: zod.string(),
+  }),
+);
 
 /**
  * @summary Delete a finding
