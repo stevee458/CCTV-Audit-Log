@@ -389,6 +389,10 @@ export interface Drive {
 }
 
 export interface UpdateDriveInput {
+  name?: string;
+  type?: string;
+  /** @nullable */
+  homeVenueId?: number | null;
   status?: string;
   /** @nullable */
   notes?: string | null;
@@ -464,6 +468,7 @@ export interface CreateAssetInput {
 }
 
 export interface UpdateAssetInput {
+  venueId?: number;
   type?: string;
   label?: string;
   /** @nullable */

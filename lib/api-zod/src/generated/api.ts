@@ -513,6 +513,9 @@ export const UpdateDriveParams = zod.object({
 });
 
 export const UpdateDriveBody = zod.object({
+  name: zod.string().optional(),
+  type: zod.string().optional(),
+  homeVenueId: zod.number().nullish(),
   status: zod.string().optional(),
   notes: zod.string().nullish(),
   installedAt: zod.string().nullish(),
@@ -677,6 +680,7 @@ export const UpdateAssetParams = zod.object({
 });
 
 export const UpdateAssetBody = zod.object({
+  venueId: zod.number().optional(),
   type: zod.string().optional(),
   label: zod.string().optional(),
   serial: zod.string().nullish(),

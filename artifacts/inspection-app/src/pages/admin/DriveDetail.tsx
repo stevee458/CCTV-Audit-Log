@@ -1,4 +1,4 @@
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useGetDrive, useUpdateDrive, getGetDriveQueryKey } from "@workspace/api-client-react";
@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { driveStatusClass } from "@/lib/drive-status";
 import { formatAge } from "@/lib/age";
 import { useToast } from "@/hooks/use-toast";
+import { ChevronLeft } from "lucide-react";
 
 export default function AdminDriveDetail() {
   const { id } = useParams<{ id: string }>();
@@ -53,6 +54,14 @@ export default function AdminDriveDetail() {
   return (
     <AdminLayout>
       <div className="space-y-4">
+        <div>
+          <Link href="/admin/drives">
+            <Button variant="ghost" size="sm" className="gap-1 pl-0 text-muted-foreground hover:text-foreground">
+              <ChevronLeft className="h-4 w-4" />
+              Drives
+            </Button>
+          </Link>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">{drive.name}</CardTitle>

@@ -98,6 +98,7 @@ router.patch("/assets/:id", requireAdmin, async (req, res) => {
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const updates: Partial<typeof assetsTable.$inferInsert> = {};
   const body = req.body as Record<string, unknown>;
+  if ("venueId" in body) updates.venueId = Number(body.venueId);
   if ("label" in body) updates.label = body.label as string;
   if ("serial" in body) updates.serial = body.serial as string | null;
   if ("status" in body) updates.status = body.status as string;

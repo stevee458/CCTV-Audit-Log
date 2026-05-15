@@ -283,6 +283,9 @@ router.patch("/drives/:id", requireMaintenanceOrAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
   const updates: Partial<typeof drivesTable.$inferInsert> = {};
+  if (typeof req.body.name === "string") updates.name = req.body.name;
+  if (typeof req.body.type === "string") updates.type = req.body.type;
+  if ("homeVenueId" in req.body) updates.homeVenueId = req.body.homeVenueId ? Number(req.body.homeVenueId) : null;
   if (typeof req.body.status === "string") updates.status = req.body.status;
   if (typeof req.body.notes === "string" || req.body.notes === null) updates.notes = req.body.notes;
   if (typeof req.body.installedAt === "string" || req.body.installedAt === null) updates.installedAt = req.body.installedAt ?? null;
