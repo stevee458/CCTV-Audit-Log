@@ -48,3 +48,9 @@ id = "4JQo49M22f30VuFyQq3bm"
 uri = "file://drive-qr-labels.zip"
 type = "unspecified"
 title = "Drive QR Labels — All Depots"
+
+[[outputs]]
+id = "xyqXwwxzlJEwBGZV1ztpn"
+uri = "file://exports/drives_by_depot_venue.csv"
+type = "table"
+title = "Drives by Depot & Venue"

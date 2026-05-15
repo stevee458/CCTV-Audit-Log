@@ -1,0 +1,89 @@
+Depot,Venue,Venue Code,Drive Name,Drive Type,Current Status
+Dobsonville (Putcoville),Cash Office,P_DO03,P_DO03-A,Venue Drive,In DVR
+Dobsonville (Putcoville),Cash Office,P_DO03,P_DO03-B,Venue Drive,In Maintenance possession
+Dobsonville (Putcoville),External Ticket Sales Office,P_DO05,P_DO05-A,Venue Drive,In DVR
+Dobsonville (Putcoville),External Ticket Sales Office,P_DO05,P_DO05-B,Venue Drive,In Maintenance possession
+Dobsonville (Putcoville),Fuel Bay,P_DO04,P_DO04-A,Venue Drive,In DVR
+Dobsonville (Putcoville),Fuel Bay,P_DO04,P_DO04-B,Venue Drive,In Maintenance possession
+Dobsonville (Putcoville),Main Gate,P_DO01,P_DO01-A,Venue Drive,In DVR
+Dobsonville (Putcoville),Main Gate,P_DO01,P_DO01-B,Venue Drive,In Maintenance possession
+Dobsonville (Putcoville),Stores and Tyre Bay,P_DO02,P_DO02-A,Venue Drive,In DVR
+Dobsonville (Putcoville),Stores and Tyre Bay,P_DO02,P_DO02-B,Venue Drive,In Maintenance possession
+Dobsonville (Putcoville),Upstairs Office,P_DO06,P_DO06-A,Venue Drive,In DVR
+Dobsonville (Putcoville),Upstairs Office,P_DO06,P_DO06-B,Venue Drive,In Maintenance possession
+Ekandustria,Cashier Cubicles,P_EK02,P_EK02-A,Venue Drive,In DVR
+Ekandustria,Cashier Cubicles,P_EK02,P_EK02-B,Venue Drive,With Inspector
+Ekandustria,Fuel Bay,P_EK03,P_EK03-A,Venue Drive,In DVR
+Ekandustria,Fuel Bay,P_EK03,P_EK03-B,Venue Drive,With Inspector
+Ekandustria,Main Gate,P_EK01,P_EK01-A,Venue Drive,In DVR
+Ekandustria,Main Gate,P_EK01,P_EK01-B,Venue Drive,With Inspector
+Ekandustria,Stores,P_EK04,P_EK04-A,Venue Drive,In DVR
+Ekandustria,Stores,P_EK04,P_EK04-B,Venue Drive,With Inspector
+Nancefield,Cash Office and Workshop,P_NA02,P_NA02-A,Venue Drive,In DVR
+Nancefield,Cash Office and Workshop,P_NA02,P_NA02-B,Venue Drive,With Inspector
+Nancefield,Entrance Gate,P_NA01,P_NA01-A,Venue Drive,In DVR
+Nancefield,Entrance Gate,P_NA01,P_NA01-B,Venue Drive,With Inspector
+Nancefield,Fuel Bay,P_NA03,P_NA03-A,Venue Drive,In DVR
+Nancefield,Fuel Bay,P_NA03,P_NA03-B,Venue Drive,With Inspector
+Roseville (TAM),Cash Office,P_TAM05,P_TAM05-A,Venue Drive,In DVR
+Roseville (TAM),Cash Office,P_TAM05,P_TAM05-B,Venue Drive,With Inspector
+Roseville (TAM),Cash Office Cubicles,P_TAM06,P_TAM06-A,Venue Drive,In DVR
+Roseville (TAM),Cash Office Cubicles,P_TAM06,P_TAM06-B,Venue Drive,With Inspector
+Roseville (TAM),Main Gate,P_TAM01,P_TAM01-A,Venue Drive,In DVR
+Roseville (TAM),Main Gate,P_TAM01,P_TAM01-B,Venue Drive,With Inspector
+Roseville (TAM),Management Offices Downstairs,P_TAM02,P_TAM02-A,Venue Drive,In DVR
+Roseville (TAM),Management Offices Downstairs,P_TAM02,P_TAM02-B,Venue Drive,With Inspector
+Roseville (TAM),Management Offices Upstairs,P_TAM03,P_TAM03-A,Venue Drive,In DVR
+Roseville (TAM),Management Offices Upstairs,P_TAM03,P_TAM03-B,Venue Drive,With Inspector
+Roseville (TAM),Secure Mobile Garage,P_TAM07,P_TAM07-A,Venue Drive,In DVR
+Roseville (TAM),Secure Mobile Garage,P_TAM07,P_TAM07-B,Venue Drive,With Inspector
+Roseville (TAM),SetRight Offices,P_TAM04,P_TAM04-A,Venue Drive,In DVR
+Roseville (TAM),SetRight Offices,P_TAM04,P_TAM04-B,Venue Drive,With Inspector
+Roseville (TAM),Tool Room 1,P_TAM08,P_TAM08-A,Venue Drive,In DVR
+Roseville (TAM),Tool Room 1,P_TAM08,P_TAM08-B,Venue Drive,With Inspector
+Roseville (TAM),Tool Room 2,P_TAM09,P_TAM09-A,Venue Drive,In DVR
+Roseville (TAM),Tool Room 2,P_TAM09,P_TAM09-B,Venue Drive,With Inspector
+Roseville (TAM),Tyre Bay and Tool Store,P_TAM11,P_TAM11-A,Venue Drive,In DVR
+Roseville (TAM),Tyre Bay and Tool Store,P_TAM11,P_TAM11-B,Venue Drive,With Inspector
+Roseville (TAM),Workshop Stores,P_TAM10,P_TAM10-A,Venue Drive,In DVR
+Roseville (TAM),Workshop Stores,P_TAM10,P_TAM10-B,Venue Drive,With Inspector
+Sandfontein,Cash Office,P_SA02,P_SA02-A,Venue Drive,In DVR
+Sandfontein,Cash Office,P_SA02,P_SA02-B,Venue Drive,In Maintenance possession
+Sandfontein,Main Gate,P_SA01,P_SA01-A,Venue Drive,In DVR
+Sandfontein,Main Gate,P_SA01,P_SA01-B,Venue Drive,In Maintenance possession
+Sandfontein,Main Stores,P_SA04,P_SA04-A,Venue Drive,In DVR
+Sandfontein,Main Stores,P_SA04,P_SA04-B,Venue Drive,In Maintenance possession
+Sandfontein,Tyre Bay,P_SA05,P_SA05-A,Venue Drive,In DVR
+Sandfontein,Tyre Bay,P_SA05,P_SA05-B,Venue Drive,In Maintenance possession
+Sandfontein,Workshop Offices,P_SA03,P_SA03-A,Venue Drive,In DVR
+Sandfontein,Workshop Offices,P_SA03,P_SA03-B,Venue Drive,In Maintenance possession
+Soshanguve,Depot Stores,P_SO04,P_SO04-A,Venue Drive,In DVR
+Soshanguve,Depot Stores,P_SO04,P_SO04-B,Venue Drive,In Maintenance possession
+Soshanguve,Entrance Gate,P_SO01,P_SO01-A,Venue Drive,In DVR
+Soshanguve,Entrance Gate,P_SO01,P_SO01-B,Venue Drive,In Maintenance possession
+Soshanguve,Fuel Bay,P_SO03,P_SO03-A,Venue Drive,In DVR
+Soshanguve,Fuel Bay,P_SO03,P_SO03-B,Venue Drive,In Maintenance possession
+Soshanguve,Revenue Office,P_SO02,P_SO02-A,Venue Drive,In DVR
+Soshanguve,Revenue Office,P_SO02,P_SO02-B,Venue Drive,In Maintenance possession
+Soweto (Putcoton),Body Shop,P_PU02,P_PU02-A,Venue Drive,In DVR
+Soweto (Putcoton),Body Shop,P_PU02,P_PU02-B,Venue Drive,With Inspector
+Soweto (Putcoton),Cash Office,P_PU06,P_PU06-A,Venue Drive,In DVR
+Soweto (Putcoton),Cash Office,P_PU06,P_PU06-B,Venue Drive,With Inspector
+Soweto (Putcoton),Fuel Bay,P_PU05,P_PU05-A,Venue Drive,In DVR
+Soweto (Putcoton),Fuel Bay,P_PU05,P_PU05-B,Venue Drive,With Inspector
+Soweto (Putcoton),Main Gate,P_PU01,P_PU01-A,Venue Drive,In DVR
+Soweto (Putcoton),Main Gate,P_PU01,P_PU01-B,Venue Drive,With Inspector
+Soweto (Putcoton),Stores,P_PU03,P_PU03-A,Venue Drive,In DVR
+Soweto (Putcoton),Stores,P_PU03,P_PU03-B,Venue Drive,With Inspector
+Soweto (Putcoton),Tyre Bay,P_PU04,P_PU04-A,Venue Drive,In DVR
+Soweto (Putcoton),Tyre Bay,P_PU04,P_PU04-B,Venue Drive,With Inspector
+Wynberg,Main Gate,P_WY01,P_WY01-A,Venue Drive,In DVR
+Wynberg,Main Gate,P_WY01,P_WY01-B,Venue Drive,With Inspector
+Wynberg,Stores,P_WY02,P_WY02-A,Venue Drive,In DVR
+Wynberg,Stores,P_WY02,P_WY02-B,Venue Drive,With Inspector
+Wynberg,Tyre Bay & Workshop Area,P_WY03,P_WY03-A,Venue Drive,In DVR
+Wynberg,Tyre Bay & Workshop Area,P_WY03,P_WY03-B,Venue Drive,With Inspector
+(Inspector Pool),(Inspector Pool),,INSP-01,Inspector Drive,In Maintenance possession
+(Inspector Pool),(Inspector Pool),,INSP-02,Inspector Drive,In Maintenance possession
+(Inspector Pool),(Inspector Pool),,INSP-03,Inspector Drive,In Maintenance possession
+(Inspector Pool),(Inspector Pool),,INSP-04,Inspector Drive,In Maintenance possession
